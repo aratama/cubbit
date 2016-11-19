@@ -12,10 +12,10 @@ exports.createBlockMapJS = function(noise){
                             var woodBlock = blockTypes.woodBlock;
                             var leavesBlock = blockTypes.leavesBlock;
 
-                            var runBlockIndex = PS["Graphics.Babylon.Example.Sandbox.BlockIndex"].runBlockIndex;
-                            var runChunkIndex = PS["Graphics.Babylon.Example.Sandbox.ChunkIndex"].runChunkIndex;
-                            var blockIndex = PS["Graphics.Babylon.Example.Sandbox.BlockIndex"].blockIndex;
-                            var chunkSize = PS["Graphics.Babylon.Example.Sandbox.Constants"].chunkSize;
+                            var runBlockIndex = PS["Game.Cubbit.BlockIndex"].runBlockIndex;
+                            var runChunkIndex = PS["Game.Cubbit.ChunkIndex"].runChunkIndex;
+                            var blockIndex = PS["Game.Cubbit.BlockIndex"].blockIndex;
+                            var chunkSize = PS["Game.Cubbit.Constants"].chunkSize;
 
                             var rci = runChunkIndex(index);
                             var cx = rci.x

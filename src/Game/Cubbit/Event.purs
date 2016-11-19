@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Event where
+module Game.Cubbit.Event where
 
 import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Eff (Eff)

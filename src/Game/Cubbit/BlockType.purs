@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.BlockType where
+module Game.Cubbit.BlockType where
 
 import Data.Generic (class Generic, gEq, gShow)
 import Data.Newtype (class Newtype)

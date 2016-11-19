@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.LocalIndex (LocalIndex, localIndex, runLocalIndex) where
+module Game.Cubbit.LocalIndex (LocalIndex, localIndex, runLocalIndex) where
 
 import Control.Alternative (pure)
 import Data.Foreign (toForeign, unsafeFromForeign)
@@ -6,7 +6,7 @@ import Data.Foreign.Class (class AsForeign, class IsForeign)
 import Data.Generic (class Generic, gCompare, gEq, gShow)
 import Data.Ord (class Ord)
 import Data.Show (show)
-import Graphics.Babylon.Example.Sandbox.Constants (chunkSize)
+import Game.Cubbit.Constants (chunkSize)
 import Prelude (class Eq, class Show, (+), (-), (*), (/), mod)
 import Data.Newtype (class Newtype)
 

@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.MiniMap where
+module Game.Cubbit.MiniMap where
 
 import Control.Alt (void)
 import Control.Bind (bind)
@@ -8,12 +8,12 @@ import Data.Int (toNumber) as Int
 import Data.Ring (negate)
 import Data.Show (show)
 import Data.Unit (Unit)
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk(..))
-import Graphics.Babylon.Example.Sandbox.ChunkIndex (runChunkIndex)
-import Graphics.Babylon.Example.Sandbox.Constants (chunkSize)
-import Graphics.Babylon.Example.Sandbox.Terrain (Terrain, getChunkMap, globalPositionToChunkIndex)
-import Graphics.Babylon.Example.Sandbox.Types (Effects)
-import Graphics.Babylon.Example.Sandbox.Vec (Vec)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkIndex (runChunkIndex)
+import Game.Cubbit.Constants (chunkSize)
+import Game.Cubbit.Terrain (Terrain, getChunkMap, globalPositionToChunkIndex)
+import Game.Cubbit.Types (Effects)
+import Game.Cubbit.Vec (Vec)
 import Graphics.Canvas (CanvasElement, arc, clearRect, closePath, fillPath, fillRect, fillText, getContext2D, lineTo, rotate, setFillStyle, setStrokeStyle, strokeRect, translate, withContext)
 import Prelude ((*), (-), (<>))
 

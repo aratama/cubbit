@@ -79,8 +79,8 @@ exports.createTerrainGeometryJS = function(chunkSize){
                     uvs.push(1.0 - CHIP_RATIO_2);
                 }
 
-                var runBlockIndex = PS["Graphics.Babylon.Example.Sandbox.BlockIndex"].runBlockIndex;
-                var blockIndex = PS["Graphics.Babylon.Example.Sandbox.BlockIndex"].blockIndex;
+                var runBlockIndex = PS["Game.Cubbit.BlockIndex"].runBlockIndex;
+                var blockIndex = PS["Game.Cubbit.BlockIndex"].blockIndex;
                 var airBlock = blockTypes.airBlock;
                 var grassBlock = blockTypes.grassBlock;
                 var waterBlock = blockTypes.waterBlock;

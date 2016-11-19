@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Vec where
+module Game.Cubbit.Vec where
 
 import Prelude ((&&), (==))
 

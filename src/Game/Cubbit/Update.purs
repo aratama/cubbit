@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Update (update, pickBlock) where
+module Game.Cubbit.Update (update, pickBlock) where
 
 import Control.Alt (void)
 import Control.Alternative (pure)
@@ -20,12 +20,12 @@ import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (moveWithCollisions)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setCheckCollisions, getPosition, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
-import Graphics.Babylon.Example.Sandbox.BlockIndex (BlockIndex, runBlockIndex)
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk(..))
-import Graphics.Babylon.Example.Sandbox.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Graphics.Babylon.Example.Sandbox.MeshBuilder (createChunkMesh)
-import Graphics.Babylon.Example.Sandbox.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlock, lookupChunk)
-import Graphics.Babylon.Example.Sandbox.Types (Effects, Mode(..), State(State), Materials)
+import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
+import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlock, lookupChunk)
+import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)

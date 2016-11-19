@@ -1,9 +1,9 @@
-module Graphics.Babylon.Example.Sandbox.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex, chunkIndexDistance) where
+module Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex, chunkIndexDistance) where
 
 import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
 import Data.Generic (class Generic, gCompare, gEq)
 import Data.Ord (class Ord, abs, max)
-import Graphics.Babylon.Example.Sandbox.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
+import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Prelude (class Eq, class Show, show, (-), (<$>))
 
 newtype ChunkIndex = ChunkIndex BlockIndex

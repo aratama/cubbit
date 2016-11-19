@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.BlockIndex (BlockIndex, blockIndex, runBlockIndex) where
+module Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex) where
 
 import Control.Alternative (pure)
 import Data.Foreign (toForeign, unsafeFromForeign)

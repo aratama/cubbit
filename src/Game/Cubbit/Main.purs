@@ -1,0 +1,48 @@
+module Main (main) where
+
+import Control.Alt (void)
+import Control.Alternative (pure)
+import Control.Bind (bind, when)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (error, log)
+import Control.Monad.Eff.Ref (modifyRef, newRef)
+import Data.Foldable (for_)
+import Data.Maybe (Maybe(..))
+import Data.Nullable (toMaybe, toNullable)
+import Data.Ring (negate)
+import Data.Unit (Unit, unit)
+import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
+import Graphics.Babylon.AbstractMesh (getSkeleton, onCollisionPositionChangeObservable, setPosition, setReceiveShadows, setRenderingGroupId)
+import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, setCheckCollisions) as AbstractMesh
+import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
+import Graphics.Babylon.Color3 (createColor3)
+import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
+import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
+import Graphics.Babylon.Engine (createEngine, runRenderLoop)
+import Game.Cubbit.Event (onKeyDown)
+import Game.Cubbit.Terrain (emptyTerrain)
+import Game.Cubbit.Types (Effects, Mode(..), State(State))
+import Game.Cubbit.UI (initializeUI)
+import Game.Cubbit.Update (update)
+import Game.Cubbit.Main (main) as Cubbit
+import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera, setCheckCollisions)
+import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
+import Graphics.Babylon.Light (setDiffuse)
+import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
+import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance, setMaterial)
+import Graphics.Babylon.Observable (add) as Observable
+import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogEnd, setFogMode, setFogStart)
+import Graphics.Babylon.SceneLoader (importMesh)
+import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
+import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDiffuseTexture, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
+import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
+import Graphics.Babylon.Texture (createTexture, sKYBOX_MODE, setCoordinatesMode)
+import Graphics.Babylon.Types (AbstractMesh)
+import Graphics.Babylon.Vector3 (createVector3, runVector3)
+import Graphics.Babylon.Viewport (createViewport)
+import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
+import Graphics.Canvas (CanvasElement, getCanvasElementById)
+import Prelude ((#), ($), (<$>), (==), (-), (+), negate, (<), (>), (&&), (<>), show)
+
+main :: forall eff. Eff (Effects eff) Unit
+main = Cubbit.main

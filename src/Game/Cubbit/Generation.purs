@@ -1,8 +1,8 @@
-module Graphics.Babylon.Example.Sandbox.Generation where
+module Game.Cubbit.Generation where
 
-import Graphics.Babylon.Example.Sandbox.BlockType (BlockTypes, blockTypes)
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk)
-import Graphics.Babylon.Example.Sandbox.ChunkIndex (ChunkIndex)
+import Game.Cubbit.BlockType (BlockTypes, blockTypes)
+import Game.Cubbit.Chunk (Chunk)
+import Game.Cubbit.ChunkIndex (ChunkIndex)
 
 import PerlinNoise (Noise, createNoise, simplex2)
 

@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Terrain (
+module Game.Cubbit.Terrain (
  ChunkWithMesh(..), Terrain, emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
  lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
@@ -13,14 +13,14 @@ import Data.ShowMap (ShowMap, empty, insert, lookup, size)
 import Data.Unit (Unit)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (dispose)
-import Graphics.Babylon.Example.Sandbox.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Graphics.Babylon.Example.Sandbox.BlockType (BlockType, airBlock)
-import Graphics.Babylon.Example.Sandbox.BoxelMap (lookup) as Boxel
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk(..))
-import Graphics.Babylon.Example.Sandbox.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
-import Graphics.Babylon.Example.Sandbox.Constants (chunkSize)
-import Graphics.Babylon.Example.Sandbox.LocalIndex (LocalIndex, localIndex)
-import Graphics.Babylon.Example.Sandbox.Vec (Vec)
+import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
+import Game.Cubbit.BlockType (BlockType, airBlock)
+import Game.Cubbit.BoxelMap (lookup) as Boxel
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
+import Game.Cubbit.Constants (chunkSize)
+import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
+import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Types (Mesh)
 import Prelude ((*), (/), (+), (-), ($), (==))

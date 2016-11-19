@@ -1,6 +1,6 @@
-module Graphics.Babylon.Example.Sandbox.AABB where
+module Game.Cubbit.AABB where
 
-import Graphics.Babylon.Example.Sandbox.Vec (Vec)
+import Game.Cubbit.Vec (Vec)
 
 type AABB = { position :: Vec, size :: Vec }
 

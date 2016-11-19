@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.VertexDataPropsData (VertexDataPropsData(VertexDataPropsData)) where
+module Game.Cubbit.VertexDataPropsData (VertexDataPropsData(VertexDataPropsData)) where
 
 import Control.Bind (bind)
 import Data.Foreign (toForeign)
@@ -6,7 +6,7 @@ import Data.Foreign.Class (readProp, write, class AsForeign, class IsForeign)
 import Prelude (pure, ($))
 
 import Graphics.Babylon.VertexData (VertexDataProps)
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk)
+import Game.Cubbit.Chunk (Chunk)
 
 newtype VertexDataPropsData = VertexDataPropsData {
     terrain :: Chunk,

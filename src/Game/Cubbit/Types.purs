@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Types where
+module Game.Cubbit.Types where
 
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Now (NOW)
@@ -6,8 +6,8 @@ import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
 import Data.Maybe (Maybe)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.Example.Sandbox.Terrain (Terrain)
-import Graphics.Babylon.Example.Sandbox.Vec (Vec)
+import Game.Cubbit.Terrain (Terrain)
+import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.StandardMaterial (StandardMaterial)
 import Graphics.Babylon.Types (AbstractMesh)

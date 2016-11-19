@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.Main (main) where
+module Game.Cubbit.Main (main) where
 
 import Control.Alt (void)
 import Control.Alternative (pure)
@@ -19,11 +19,11 @@ import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
 import Graphics.Babylon.Engine (createEngine, runRenderLoop)
-import Graphics.Babylon.Example.Sandbox.Event (onKeyDown)
-import Graphics.Babylon.Example.Sandbox.Terrain (emptyTerrain)
-import Graphics.Babylon.Example.Sandbox.Types (Effects, Mode(..), State(State))
-import Graphics.Babylon.Example.Sandbox.UI (initializeUI)
-import Graphics.Babylon.Example.Sandbox.Update (update)
+import Game.Cubbit.Event (onKeyDown)
+import Game.Cubbit.Terrain (emptyTerrain)
+import Game.Cubbit.Types (Effects, Mode(..), State(State))
+import Game.Cubbit.UI (initializeUI)
+import Game.Cubbit.Update (update)
 import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera, setCheckCollisions)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)

@@ -1,4 +1,4 @@
-module Graphics.Babylon.Example.Sandbox.UI (initializeUI) where
+module Game.Cubbit.UI (initializeUI) where
 
 import Control.Alt (void)
 import Control.Alternative (pure)
@@ -11,14 +11,14 @@ import Data.Unit (Unit, unit)
 import Graphics.Babylon (Canvas)
 import Graphics.Babylon.AbstractMesh (setIsVisible, setPosition) as AbstractMesh
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
-import Graphics.Babylon.Example.Sandbox.BlockType (grassBlock)
-import Graphics.Babylon.Example.Sandbox.BoxelMap (delete, insert)
-import Graphics.Babylon.Example.Sandbox.Chunk (Chunk(..))
-import Graphics.Babylon.Example.Sandbox.Event (onButtonClick, onMouseClick, onMouseMove)
-import Graphics.Babylon.Example.Sandbox.MeshBuilder (updateChunkMesh)
-import Graphics.Babylon.Example.Sandbox.Terrain (globalIndexToChunkIndex, globalIndexToLocalIndex, lookupChunk)
-import Graphics.Babylon.Example.Sandbox.Types (Effects, Mode(..), State(State), Materials)
-import Graphics.Babylon.Example.Sandbox.Update (pickBlock)
+import Game.Cubbit.BlockType (grassBlock)
+import Game.Cubbit.BoxelMap (delete, insert)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove)
+import Game.Cubbit.MeshBuilder (updateChunkMesh)
+import Game.Cubbit.Terrain (globalIndexToChunkIndex, globalIndexToLocalIndex, lookupChunk)
+import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
+import Game.Cubbit.Update (pickBlock)
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Scene (getDebugLayer, setActiveCameras)

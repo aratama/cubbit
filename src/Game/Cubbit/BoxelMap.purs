@@ -1,9 +1,9 @@
-module Graphics.Babylon.Example.Sandbox.BoxelMap (BoxelMap, empty, lookup, insert, delete) where
+module Game.Cubbit.BoxelMap (BoxelMap, empty, lookup, insert, delete) where
 
 import Data.Functor (class Functor)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
-import Graphics.Babylon.Example.Sandbox.LocalIndex (LocalIndex)
+import Game.Cubbit.LocalIndex (LocalIndex)
 
 foreign import data BoxelMap :: * -> *
 

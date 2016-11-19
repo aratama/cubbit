@@ -3,9 +3,9 @@ module Graphics.Babylon.Test where
 import Control.Bind (bind)
 import Data.Unit (Unit)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.Example.Sandbox.BlockIndex (blockIndex, runBlockIndex)
-import Graphics.Babylon.Example.Sandbox.ChunkIndex (chunkIndex)
-import Graphics.Babylon.Example.Sandbox.Terrain (globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex)
+import Game.Cubbit.BlockIndex (blockIndex, runBlockIndex)
+import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.Terrain (globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex)
 import Prelude (mod, negate, ($), (&&), (<), (==))
 import Test.StrongCheck (SC, assert, assertEq, quickCheck)
 
