@@ -67,8 +67,8 @@ exports.createBlockMapJS = function(noise){
                                 for(var lx = 0; lx <= chunkSize - 1; lx++){
                                     var gx = chunkSize * cx + lx
                                     var gz = chunkSize * cz + lz
-                                    var r = Math.random();
-                                    if(0.99 < r){
+                                    var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
+                                    if((r % 100) === 2){
                                         // get height
                                         var top = null;
                                         for(var ly = chunkSize - 1; 0 <= ly; ly--){

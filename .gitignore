@@ -6,6 +6,7 @@ example/sandbox/public/worker.js
 .psc-ide-port
 **/*.blend1
 **/*.log
+public/index.js
 
 # Windows image file caches
 Thumbs.db
