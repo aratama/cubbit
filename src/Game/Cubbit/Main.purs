@@ -5,14 +5,20 @@ import Control.Alternative (pure)
 import Control.Bind (bind, when)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (error, log)
-import Control.Monad.Eff.Ref (modifyRef, newRef)
+import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
+import Control.MonadPlus (guard)
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..))
+import Data.List ((..))
+import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Ring (negate)
 import Data.Unit (Unit, unit)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Event (onKeyDown)
-import Game.Cubbit.Terrain (emptyTerrain)
+import Game.Cubbit.Generation (createBlockMap)
+import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.Terrain (Terrain(..), emptyTerrain, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
@@ -103,7 +109,7 @@ runApp canvasGL canvas2d = do
         cameraPosition <- createVector3 3.0 17.0 3.0
 
         cam <- createFreeCamera "free-camera" cameraPosition scene
-        setCheckCollisions true cam
+        -- setCheckCollisions true cam
 
         -- target the camera to scene origin
         cameraTarget <- createVector3 0.0 15.0 0.0
@@ -245,6 +251,24 @@ runApp canvasGL canvas2d = do
                     z: state.velocity.z
                 }
             }
+
+    -- load initial chunks
+    do
+        let indices = do
+                x <- (- loadDistance) .. loadDistance
+                y <- (- loadDistance) .. loadDistance
+                z <- (- loadDistance) .. loadDistance
+                pure (chunkIndex x y z)
+        for_ indices \index -> do
+            State state@{ terrain: Terrain terrain } <- readRef ref
+            let boxMap = createBlockMap terrain.noise index
+            let result = { blocks: boxMap, standardMaterialMesh: Nothing }
+            modifyRef ref \(State state) -> State state {
+                terrain = insertChunk result state.terrain
+            }
+        for_ indices \index -> do
+            createChunkMesh ref materials scene index
+
 
     engine # runRenderLoop do
         update ref scene materials shadowMap cursor camera

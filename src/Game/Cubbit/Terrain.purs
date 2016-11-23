@@ -1,16 +1,16 @@
 module Game.Cubbit.Terrain (
  ChunkWithMesh(..), Terrain(..), emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
- lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
+ lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
 ) where
 
-import Control.Bind (bind)
+import Control.Bind (bind, pure)
 import Control.Monad.Eff (Eff)
 import Data.EuclideanRing (mod)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.ShowMap (ShowMap, empty, insert, lookup, size)
-import Data.Unit (Unit)
+import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (BlockType, airBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
@@ -29,7 +29,7 @@ import Prelude ((*), (/), (+), (-), ($), (==))
 
 type ChunkWithMesh = {
     blocks :: Chunk,
-    standardMaterialMesh :: Mesh
+    standardMaterialMesh :: Maybe Mesh
 }
 
 newtype Terrain = Terrain {
@@ -73,10 +73,12 @@ globalIndexToChunkIndex b = chunkIndex (f bi.x) (f bi.y) (f bi.z)
 lookupChunk :: ChunkIndex -> Terrain -> Maybe ChunkWithMesh
 lookupChunk index (Terrain terrain) = lookup index terrain.map
 
-lookupBlock :: Vec -> Terrain -> Maybe BlockType
-lookupBlock p (Terrain terrain) = do
-        let chunkIndex = globalPositionToChunkIndex p.x p.y p.z
-        let globalIndex = globalPositionToGlobalIndex p.x p.y p.z
+lookupBlockByVec :: Vec -> Terrain -> Maybe BlockType
+lookupBlockByVec p (Terrain terrain) = lookupBlock (globalPositionToGlobalIndex p.x p.y p.z) (Terrain terrain)
+
+lookupBlock :: BlockIndex -> Terrain -> Maybe BlockType
+lookupBlock globalIndex (Terrain terrain) = do
+        let chunkIndex = globalIndexToChunkIndex globalIndex
         let localIndex = globalIndexToLocalIndex globalIndex
         { blocks: Chunk chunk@{ blocks } } <- lookup chunkIndex terrain.map
         blockType <- Boxel.lookup localIndex blocks
@@ -97,5 +99,6 @@ insertChunk cmesh@{ blocks: Chunk chunk@{ index } } (Terrain chunks) = Terrain c
 }
 
 disposeChunk :: forall eff. ChunkWithMesh -> Eff (babylon :: BABYLON | eff) Unit
-disposeChunk chunk = do
-    dispose true $ meshToAbstractMesh chunk.standardMaterialMesh
+disposeChunk chunk = case chunk.standardMaterialMesh of
+    Nothing -> pure unit
+    Just mesh -> dispose true $ meshToAbstractMesh mesh

@@ -24,7 +24,7 @@ import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlock, lookupChunk)
+import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
@@ -74,7 +74,7 @@ pickBlock scene cursor (State state) screenX screenY = do
             let dy = abs (p.y - round p.y)
             let dz = abs (p.z - round p.z)
             let minDelta = min dx (min dy dz)
-            let lookupBlock' x y z = lookupBlock { x, y, z } state.terrain
+            let lookupBlock' x y z = lookupBlockByVec { x, y, z } state.terrain
 
             let putCursor bi = do
                     let rbi = runBlockIndex bi
@@ -155,9 +155,9 @@ update ref scene materials shadowMap cursor camera = do
                     forE (ci.y - shadowRange) (ci.y + shadowRange) \dy -> do
                         forE (ci.z - shadowRange) (ci.z + shadowRange) \dz -> do
                             case lookupChunk (chunkIndex dx dy dz) state.terrain of
-                                Nothing -> pure unit
-                                Just chunkData@{ blocks: Chunk chunk } -> void do
-                                    pushSTArray list (meshToAbstractMesh chunkData.standardMaterialMesh)
+                                Just chunkData@{ standardMaterialMesh: Just mesh } -> void do
+                                    pushSTArray list (meshToAbstractMesh mesh)
+                                _ -> pure unit
                 pure list
 
             setRenderList chunks shadowMap
@@ -189,7 +189,9 @@ update ref scene materials shadowMap cursor camera = do
             for_ (getChunkMap st.terrain) \(dat@{ blocks: Chunk chunk }) -> do
                 let r = chunkIndexDistance chunk.index cameraPositionChunkIndex
                 let enabled = r <= collesionEnabledRange
-                AbstractMesh.setCheckCollisions enabled (meshToAbstractMesh dat.standardMaterialMesh)
+                case dat.standardMaterialMesh of
+                    Nothing -> pure unit
+                    Just mesh -> AbstractMesh.setCheckCollisions enabled (meshToAbstractMesh mesh)
 
 
 
@@ -202,7 +204,7 @@ update ref scene materials shadowMap cursor camera = do
                         z: state.position.z + state.velocity.z
                     }
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex next.x next.y next.z)
-            let st' = case lookupBlock next terrain of
+            let st' = case lookupBlockByVec next terrain of
                             Nothing -> st {
                                 position = next,
                                 velocity = st.velocity { y = state.velocity.y - 0.01 }

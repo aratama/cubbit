@@ -31,7 +31,7 @@ exports.mapBoxelMap = function(f){
     }
 }
 
-exports._lookup = function(key){
+exports.lookupNullable = function(key){
     return function(map){
         return map[key];
     }
