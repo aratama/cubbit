@@ -150,7 +150,7 @@ update ref scene materials shadowMap cursor camera = do
             let ci = runChunkIndex cameraPositionChunkIndex
             chunks <- runSTArray do
                 list <- emptySTArray
-                -- for_ state.alicia \mesh -> pushSTArray list mesh
+                -- for_ state.playerMeshes \mesh -> pushSTArray list mesh
                 forE (ci.x - shadowRange) (ci.x + shadowRange) \dx -> do
                     forE (ci.y - shadowRange) (ci.y + shadowRange) \dy -> do
                         forE (ci.z - shadowRange) (ci.z + shadowRange) \dz -> do
@@ -218,7 +218,7 @@ update ref scene materials shadowMap cursor camera = do
 
             writeRef ref (State st')
 
-            for_ st.alicia \mesh -> void do
+            for_ st.playerMeshes \mesh -> void do
                 position <- createVector3 st'.position.x (st'.position.y + 0.501) st'.position.z
                 AbstractMesh.setPosition position mesh
 

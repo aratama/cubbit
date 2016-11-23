@@ -1,9 +1,9 @@
-module Game.Cubbit.Generation where
+module Game.Cubbit.Generation (createBlockMap) where
 
 import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.Chunk (Chunk)
-import Game.Cubbit.ChunkIndex (ChunkIndex)
-
+import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
+import Game.Cubbit.Constants (chunkSize)
 import PerlinNoise (Noise, createNoise, simplex2)
 
 maxHeight :: Int
@@ -15,7 +15,27 @@ terrainScale = 0.01
 waterBlockHeight :: Int
 waterBlockHeight = 3
 
-createBlockMap :: ChunkIndex -> Int -> Chunk
-createBlockMap index seed = createBlockMapJS (createNoise seed) simplex2 index terrainScale  waterBlockHeight maxHeight blockTypes
+type GenerateReferences = {
+    chunkSize :: Int,
+    terrainScale :: Number,
+    waterBlockHeight :: Int,
+    maxHeight :: Int,
+    blockTypes :: BlockTypes,
+    simplex2 :: Number -> Number -> Noise -> Number,
+    runChunkIndex :: ChunkIndex -> { x :: Int, y :: Int, z :: Int }
+}
+generateReferences :: GenerateReferences
+generateReferences = {
+    chunkSize: chunkSize,
+    terrainScale: 0.01,
+    waterBlockHeight: 3,
+    maxHeight: 25,
+    blockTypes: blockTypes,
+    simplex2: simplex2,
+    runChunkIndex: runChunkIndex
+}
 
-foreign import createBlockMapJS :: Noise -> (Number -> Number -> Noise -> Number) -> ChunkIndex -> Number -> Int ->Int -> BlockTypes -> Chunk
+foreign import _createBlockMapJS :: GenerateReferences -> Noise -> ChunkIndex -> Chunk
+
+createBlockMap :: Noise -> ChunkIndex -> Chunk
+createBlockMap = _createBlockMapJS generateReferences

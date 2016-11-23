@@ -1,5 +1,5 @@
 module Game.Cubbit.Terrain (
- ChunkWithMesh(..), Terrain, emptyTerrain,
+ ChunkWithMesh(..), Terrain(..), emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
  lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
 ) where
@@ -11,8 +11,6 @@ import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
 import Data.ShowMap (ShowMap, empty, insert, lookup, size)
 import Data.Unit (Unit)
-import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (dispose)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (BlockType, airBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
@@ -21,8 +19,11 @@ import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
 import Game.Cubbit.Vec (Vec)
+import Graphics.Babylon (BABYLON)
+import Graphics.Babylon.AbstractMesh (dispose)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Types (Mesh)
+import PerlinNoise (Noise, createNoise)
 import Prelude ((*), (/), (+), (-), ($), (==))
 
 
@@ -31,13 +32,16 @@ type ChunkWithMesh = {
     standardMaterialMesh :: Mesh
 }
 
-newtype Terrain = Terrain { map :: ShowMap ChunkIndex ChunkWithMesh }
+newtype Terrain = Terrain {
+    map :: ShowMap ChunkIndex ChunkWithMesh,
+    noise :: Noise
+}
 
 getChunkMap :: Terrain -> ShowMap ChunkIndex ChunkWithMesh
 getChunkMap (Terrain t) = t.map
 
-emptyTerrain :: Terrain
-emptyTerrain = Terrain { map: empty }
+emptyTerrain :: Int -> Terrain
+emptyTerrain seed = Terrain { map: empty, noise: createNoise seed }
 
 chunkCount :: Terrain -> Int
 chunkCount (Terrain t) = size t.map

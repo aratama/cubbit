@@ -1,11 +1,5 @@
 module Game.Cubbit.MeshBuilder (createTerrainGeometry, updateChunkMesh, createChunkMesh) where
 
-import Game.Cubbit.BlockType (BlockTypes, blockTypes)
-import Game.Cubbit.Chunk (Chunk)
-import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
-import Game.Cubbit.Constants (chunkSize)
-import Game.Cubbit.VertexDataPropsData (VertexDataPropsData)
-
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void)
@@ -14,32 +8,45 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
-import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (setUseVertexColors, setRenderingGroupId, setReceiveShadows)
-import Game.Cubbit.Generation (createBlockMap)
-import Game.Cubbit.MeshBuilder (createTerrainGeometry)
-import Game.Cubbit.Types (Materials, State(State))
+import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
-import Game.Cubbit.Terrain (insertChunk, ChunkWithMesh, disposeChunk, lookupChunk)
+import Game.Cubbit.Constants (chunkSize)
+import Game.Cubbit.Generation (createBlockMap)
+import Game.Cubbit.MeshBuilder (createTerrainGeometry)
+import Game.Cubbit.Terrain (ChunkWithMesh, Terrain(Terrain), disposeChunk, insertChunk, lookupChunk)
+import Game.Cubbit.Types (Materials, State(State))
 import Game.Cubbit.VertexDataPropsData (VertexDataPropsData(..))
+import Graphics.Babylon (BABYLON)
+import Graphics.Babylon.AbstractMesh (setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh, setMaterial)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps, applyToMesh, createVertexData)
 import Prelude (($), (=<<))
 
+type CreateTerrainGeometryReferences = {
+    chunkSize :: Int,
+    blockTypes :: BlockTypes,
+    runChunkIndex :: ChunkIndex -> { x :: Int, y :: Int, z :: Int }
+}
 
+createTerrainGeometryReferences :: CreateTerrainGeometryReferences
+createTerrainGeometryReferences = {
+    chunkSize: chunkSize,
+    blockTypes: blockTypes,
+    runChunkIndex: runChunkIndex
+}
 
-foreign import createTerrainGeometryJS :: Int -> BlockTypes -> (ChunkIndex -> { x :: Int, y :: Int, z :: Int }) -> Chunk -> VertexDataPropsData
+foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Chunk -> VertexDataPropsData
 
 createTerrainGeometry :: Chunk -> VertexDataPropsData
-createTerrainGeometry = createTerrainGeometryJS chunkSize blockTypes runChunkIndex
+createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
 createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
 createChunkMesh ref materials scene index = do
-    State state <- readRef ref
-    let boxMap = createBlockMap index 0
+    State state@{ terrain: Terrain terrain } <- readRef ref
+    let boxMap = createBlockMap terrain.noise index
     case createTerrainGeometry boxMap of
         VertexDataPropsData verts -> void do
             case lookupChunk index state.terrain of

@@ -197,7 +197,7 @@ runApp canvasGL canvas2d = do
 
     ref <- newRef $ State {
         mode: Move,
-        terrain: emptyTerrain,
+        terrain: emptyTerrain 0,
         mousePosition: { x: 0, y: 0 },
         debugLayer: false,
         yaw: 0.0,
@@ -206,7 +206,7 @@ runApp canvasGL canvas2d = do
         velocity: { x: 0.0, y: 0.2, z: 0.0 },
         minimap: false,
         totalFrames: 0,
-        alicia: []
+        playerMeshes: []
     }
 
     initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials
@@ -230,7 +230,7 @@ runApp canvasGL canvas2d = do
                 skeleton <- getSkeleton mesh
                 beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
             modifyRef ref \(State state) -> State state {
-                alicia = result
+                playerMeshes = result
             }
             pure unit
 

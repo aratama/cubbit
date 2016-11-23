@@ -32,7 +32,7 @@ newtype State = State {
     totalFrames :: Int,
     minimap :: Boolean,
 
-    alicia :: Array AbstractMesh
+    playerMeshes :: Array AbstractMesh
 }
 
 type Materials = {
