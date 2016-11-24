@@ -8,7 +8,7 @@ import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
 import Control.MonadPlus (guard)
 import Data.Foldable (for_)
-import Data.List ((..))
+import Data.List (List(..), (..))
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Ring (negate)
@@ -18,7 +18,7 @@ import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(..), emptyTerrain, insertChunk, lookupChunk)
+import Game.Cubbit.Terrain (MeshLoadingState(..), Terrain(..), emptyTerrain, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
@@ -56,7 +56,7 @@ shadowMapSize :: Int
 shadowMapSize = 4096
 
 loadDistance :: Int
-loadDistance = 4
+loadDistance = 8
 
 unloadDistance :: Int
 unloadDistance = 8
@@ -212,6 +212,7 @@ runApp canvasGL canvas2d = do
         velocity: { x: 0.0, y: 0.2, z: 0.0 },
         minimap: false,
         totalFrames: 0,
+        updateList: Nil,
         playerMeshes: []
     }
 
@@ -255,14 +256,14 @@ runApp canvasGL canvas2d = do
     -- load initial chunks
     do
         let indices = do
-                x <- (- loadDistance) .. loadDistance
-                y <- (- loadDistance) .. loadDistance
-                z <- (- loadDistance) .. loadDistance
+                x <- (- 2) .. 2
+                y <- (- 2) .. 2
+                z <- (- 2) .. 2
                 pure (chunkIndex x y z)
         for_ indices \index -> do
             State state@{ terrain: Terrain terrain } <- readRef ref
             let boxMap = createBlockMap terrain.noise index
-            let result = { blocks: boxMap, standardMaterialMesh: Nothing }
+            let result = { blocks: boxMap, standardMaterialMesh: MeshNotLoaded }
             modifyRef ref \(State state) -> State state {
                 terrain = insertChunk result state.terrain
             }

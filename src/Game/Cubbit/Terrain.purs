@@ -1,5 +1,5 @@
 module Game.Cubbit.Terrain (
- ChunkWithMesh(..), Terrain(..), emptyTerrain,
+ ChunkWithMesh(..), Terrain(..), emptyTerrain, MeshLoadingState(..),
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
  lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
 ) where
@@ -27,9 +27,11 @@ import PerlinNoise (Noise, createNoise)
 import Prelude ((*), (/), (+), (-), ($), (==))
 
 
+data MeshLoadingState = MeshNotLoaded | MeshLoaded Mesh | EmptyMeshLoaded
+
 type ChunkWithMesh = {
     blocks :: Chunk,
-    standardMaterialMesh :: Maybe Mesh
+    standardMaterialMesh :: MeshLoadingState
 }
 
 newtype Terrain = Terrain {
@@ -100,5 +102,6 @@ insertChunk cmesh@{ blocks: Chunk chunk@{ index } } (Terrain chunks) = Terrain c
 
 disposeChunk :: forall eff. ChunkWithMesh -> Eff (babylon :: BABYLON | eff) Unit
 disposeChunk chunk = case chunk.standardMaterialMesh of
-    Nothing -> pure unit
-    Just mesh -> dispose true $ meshToAbstractMesh mesh
+    MeshNotLoaded -> pure unit
+    MeshLoaded mesh -> dispose true $ meshToAbstractMesh mesh
+    EmptyMeshLoaded -> pure unit

@@ -6,6 +6,7 @@ import Control.Monad (void)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
+import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
@@ -16,7 +17,7 @@ import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
-import Game.Cubbit.Terrain (ChunkWithMesh, Terrain(Terrain), disposeChunk, globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
+import Game.Cubbit.Terrain (MeshLoadingState(..), ChunkWithMesh, Terrain(Terrain), disposeChunk, globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Materials, State(State))
 import Game.Cubbit.VertexDataPropsData (VertexDataPropsData(..))
 import Graphics.Babylon (BABYLON)
@@ -24,8 +25,8 @@ import Graphics.Babylon.AbstractMesh (setUseVertexColors, setRenderingGroupId, s
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh, setMaterial)
 import Graphics.Babylon.Types (Mesh, Scene)
-import Graphics.Babylon.VertexData (VertexDataProps, applyToMesh, createVertexData)
-import Prelude (($), (=<<))
+import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
+import Prelude (($), (=<<), (<))
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -51,7 +52,7 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
-createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
 createChunkMesh ref materials scene index = do
     State state@{ terrain: Terrain terrain } <- readRef ref
 
@@ -60,15 +61,21 @@ createChunkMesh ref materials scene index = do
                     Just m -> m.blocks
 
     case createTerrainGeometry (Terrain terrain) boxMap of
-        VertexDataPropsData verts -> void do
+        VertexDataPropsData verts@{ standardMaterialBlocks: VertexDataProps vertices } -> do
             case lookupChunk index state.terrain of
                 Nothing -> pure unit
                 Just chunkData -> disposeChunk chunkData
-            standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-            let result = { blocks: verts.terrain, standardMaterialMesh: Just standardMaterialMesh }
+
+            result <- if 0 < length vertices.indices
+                then do
+                    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
+                    pure { blocks: verts.terrain, standardMaterialMesh: MeshLoaded standardMaterialMesh }
+                else do
+                    pure { blocks: verts.terrain, standardMaterialMesh: EmptyMeshLoaded }
             modifyRef ref \(State state) -> State state {
                 terrain = insertChunk result state.terrain
             }
+            pure (0 < length vertices.indices)
 
 generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Eff (babylon :: BABYLON | eff) Mesh
 generateMesh index verts mat scene = do
@@ -99,7 +106,7 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Just chunkData -> disposeChunk chunkData
 
     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-    mesh <- pure { blocks: verts.terrain, standardMaterialMesh: Just standardMaterialMesh }
+    mesh <- pure { blocks: verts.terrain, standardMaterialMesh: MeshLoaded standardMaterialMesh }
     liftEff $ writeRef ref $ State state {
         terrain = insertChunk mesh state.terrain
     }

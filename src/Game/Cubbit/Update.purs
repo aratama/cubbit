@@ -6,26 +6,28 @@ import Control.Bind (bind, when, (>>=))
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
+import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.MonadPlus (guard)
 import DOM (DOM)
 import Data.Array (head, (..))
 import Data.Array.ST (emptySTArray, pushSTArray, runSTArray)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
+import Data.List (List(..), fromFoldable, nub)
 import Data.Maybe (Maybe(Just, Nothing), isNothing)
 import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
-import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (moveWithCollisions)
-import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setCheckCollisions, getPosition, setPosition) as AbstractMesh
-import Graphics.Babylon.Camera (getPosition) as Camera
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (MeshLoadingState(..), Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
+import Graphics.Babylon (BABYLON)
+import Graphics.Babylon.AbstractMesh (moveWithCollisions)
+import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setCheckCollisions, getPosition, setPosition) as AbstractMesh
+import Graphics.Babylon.Camera (getPosition) as Camera
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
@@ -42,7 +44,7 @@ shadowMapSize :: Int
 shadowMapSize = 4096
 
 loadDistance :: Int
-loadDistance = 4
+loadDistance = 8
 
 unloadDistance :: Int
 unloadDistance = 8
@@ -155,7 +157,7 @@ update ref scene materials shadowMap cursor camera = do
                     forE (ci.y - shadowRange) (ci.y + shadowRange) \dy -> do
                         forE (ci.z - shadowRange) (ci.z + shadowRange) \dz -> do
                             case lookupChunk (chunkIndex dx dy dz) state.terrain of
-                                Just chunkData@{ standardMaterialMesh: Just mesh } -> void do
+                                Just chunkData@{ standardMaterialMesh: MeshLoaded mesh } -> void do
                                     pushSTArray list (meshToAbstractMesh mesh)
                                 _ -> pure unit
                 pure list
@@ -166,20 +168,51 @@ update ref scene materials shadowMap cursor camera = do
 
         -- load chunk
         do
-            let indices = do
-                    let ci = runChunkIndex cameraPositionChunkIndex
-                    x <- (ci.x - loadDistance) .. (ci.x + loadDistance)
-                    y <- (ci.y - 1) .. (ci.y + 1)
-                    z <- (ci.z - loadDistance) .. (ci.z + loadDistance)
-                    guard (isNothing (lookupChunk (chunkIndex x y z) state.terrain))
-                    pure (chunkIndex x y z)
+            case state.updateList of
+                Nil -> do
+                    let indices = do
+                            let ci = runChunkIndex cameraPositionChunkIndex
+                            x <- (ci.x - loadDistance) .. (ci.x + loadDistance)
+                            y <- (ci.y - 1) .. (ci.y + 1)
+                            z <- (ci.z - loadDistance) .. (ci.z + loadDistance)
+                            guard (isNothing (lookupChunk (chunkIndex x y z) state.terrain))
+                            pure (chunkIndex x y z)
 
-            case head indices of
-                Nothing -> pure unit
-                Just index -> do
-                    createChunkMesh ref materials scene index
-                    log $ "load chunk: " <> show index
-                    log $ "total chunks:" <> show (chunkCount state.terrain + 1)
+
+                    tailRecM (case _ of
+                        Nil -> pure (Done unit)
+                        Cons index tail -> do
+                            result <- createChunkMesh ref materials scene index
+                            log $ "load chunk: " <> show index
+                            log $ "total chunks:" <> show (chunkCount state.terrain + 1)
+
+                            let i = runChunkIndex index
+                            modifyRef ref (\(State state) -> State state {
+                                updateList = nub (state.updateList <> fromFoldable [
+                                    chunkIndex (i.x - 1) i.y i.z,
+                                    chunkIndex (i.x + 1) i.y i.z,
+                                    chunkIndex i.x (i.y - 1) i.z,
+                                    chunkIndex i.x (i.y + 1) i.z,
+                                    chunkIndex i.x i.y (i.z - 1),
+                                    chunkIndex i.x i.y (i.z + 1)
+                                ])
+                            })
+
+                            pure if result then Done unit else Loop tail
+
+                    ) (fromFoldable indices)
+
+                Cons index tail -> do
+
+                    case lookupChunk index state.terrain of
+                        Nothing -> pure unit
+                        Just _ -> do
+                            createChunkMesh ref materials scene index
+                            pure unit
+
+                    modifyRef ref (\(State state) -> State state {
+                        updateList = tail
+                    })
 
 
         -- set collesion
@@ -190,8 +223,9 @@ update ref scene materials shadowMap cursor camera = do
                 let r = chunkIndexDistance chunk.index cameraPositionChunkIndex
                 let enabled = r <= collesionEnabledRange
                 case dat.standardMaterialMesh of
-                    Nothing -> pure unit
-                    Just mesh -> AbstractMesh.setCheckCollisions enabled (meshToAbstractMesh mesh)
+                    MeshNotLoaded -> pure unit
+                    MeshLoaded mesh -> AbstractMesh.setCheckCollisions enabled (meshToAbstractMesh mesh)
+                    EmptyMeshLoaded -> pure unit
 
 
 

@@ -4,10 +4,12 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
+import Data.List (List)
 import Data.Maybe (Maybe)
-import Graphics.Babylon (BABYLON)
+import Game.Cubbit.ChunkIndex (ChunkIndex)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
+import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.StandardMaterial (StandardMaterial)
 import Graphics.Babylon.Types (AbstractMesh)
@@ -32,6 +34,7 @@ newtype State = State {
     totalFrames :: Int,
     minimap :: Boolean,
 
+    updateList :: List ChunkIndex,
     playerMeshes :: Array AbstractMesh
 }
 
