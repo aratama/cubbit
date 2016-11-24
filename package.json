@@ -1,17 +1,22 @@
 {
-  "name": "cubbit",
-  "version": "0.0.1",
-  "main": "index.js",
-  "scripts": {
-    "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
-    "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
-    "server": "start http-server public",
-    "clean": ""
-  },
-  "author": "",
-  "license": "All rights reserved",
-  "directories": {
-    "example": "example"
-  },
-  "description": ""
+    "name": "cubbit",
+    "version": "0.0.1",
+    "main": "index.js",
+    "scripts": {
+        "pretest": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
+        "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
+        "posttest": "node public/index.js",
+
+        "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
+        "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
+
+        "server": "start http-server public",
+        "clean": ""
+    },
+    "author": "",
+    "license": "All rights reserved",
+    "directories": {
+        "example": "example"
+    },
+    "description": ""
 }

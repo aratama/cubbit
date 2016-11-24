@@ -7,3 +7,4 @@ import Game.Cubbit.Types (Effects)
 
 main :: forall eff. Eff (Effects eff) Unit
 main = Cubbit.main
+

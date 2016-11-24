@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "purescript-st": "^2.0.0",
-    "purescript-strongcheck": "^2.0.0",
+    "purescript-strongcheck": "^2.0.1",
     "purescript-aff": "^2.0.1",
     "purescript-now": "^2.0.0",
     "purescript-maps": "^2.0.1",
