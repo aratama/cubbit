@@ -1,7 +1,7 @@
 {
     "name": "cubbit",
     "version": "0.0.1",
-    "main": "index.js",
+    "main": "",
     "scripts": {
         "pretest": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
         "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
@@ -13,10 +13,10 @@
         "server": "start http-server public",
         "clean": ""
     },
-    "author": "",
-    "license": "All rights reserved",
+    "author": "aratama",
+    "license": "UNLICENSED",
     "directories": {
-        "example": "example"
+        "public": "public"
     },
     "description": ""
 }
