@@ -1,11 +1,11 @@
 {
   "name": "cubbit",
   "description": "",
-  "main": "index.js",
+  "main": "",
   "authors": [
-    "aratama <aratama@example.com>"
+    "aratama"
   ],
-  "license": "All rights reserved",
+  "license": "UNLICENSED",
   "homepage": "",
   "ignore": [
     "**/.*",
@@ -17,16 +17,16 @@
   "dependencies": {
     "purescript-eff": "^2.0.0",
     "purescript-dom": "^3.1.0",
-    "purescript-babylon": "https://github.com/aratama/purescript-babylon.git"
-  },
-  "devDependencies": {
+    "purescript-babylon": "https://github.com/aratama/purescript-babylon.git",
     "purescript-st": "^2.0.0",
-    "purescript-strongcheck": "^2.0.1",
     "purescript-aff": "^2.0.1",
     "purescript-now": "^2.0.0",
     "purescript-maps": "^2.0.1",
     "purescript-console": "^2.0.0",
     "purescript-canvas": "^2.0.0",
     "purescript-newtype": "^1.1.0"
+  },
+  "devDependencies": {
+    "purescript-strongcheck": "^2.0.1"
   }
 }
