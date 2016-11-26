@@ -213,7 +213,9 @@ runApp canvasGL canvas2d = do
         minimap: false,
         totalFrames: 0,
         updateList: Nil,
-        playerMeshes: []
+        playerMeshes: [],
+        updateIndex: toNullable Nothing,
+        pickableMeshList: Nil
     }
 
     initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials
@@ -271,6 +273,7 @@ runApp canvasGL canvas2d = do
             createChunkMesh ref materials scene index
 
 
+    -- start game loop
     engine # runRenderLoop do
         update ref scene materials shadowMap cursor camera
         render scene

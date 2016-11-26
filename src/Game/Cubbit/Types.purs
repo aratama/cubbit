@@ -6,6 +6,7 @@ import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
 import Data.List (List)
 import Data.Maybe (Maybe)
+import Data.Nullable (Nullable)
 import Game.Cubbit.ChunkIndex (ChunkIndex)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
@@ -35,7 +36,11 @@ newtype State = State {
     minimap :: Boolean,
 
     updateList :: List ChunkIndex,
-    playerMeshes :: Array AbstractMesh
+    playerMeshes :: Array AbstractMesh,
+
+
+    updateIndex :: Nullable ForeachIndex,
+    pickableMeshList :: List ChunkIndex
 }
 
 type Materials = {
@@ -43,3 +48,4 @@ type Materials = {
     waterBoxMat :: Material
 }
 
+foreign import data ForeachIndex :: *

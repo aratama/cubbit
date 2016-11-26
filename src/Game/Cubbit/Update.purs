@@ -3,9 +3,11 @@ module Game.Cubbit.Update (update, pickBlock) where
 import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind, when, (>>=))
+import Control.Comonad.Store (store)
+import Control.Comonad.Store.Class (seeks)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (log)
-import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
+import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.MonadPlus (guard)
 import DOM (DOM)
@@ -13,8 +15,9 @@ import Data.Array (head, (..))
 import Data.Array.ST (emptySTArray, pushSTArray, runSTArray)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
-import Data.List (List(..), fromFoldable, nub)
-import Data.Maybe (Maybe(Just, Nothing), isNothing)
+import Data.List (List(..), elem, fromFoldable, notElem, nub, (:))
+import Data.Maybe (Maybe(..), isNothing)
+import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
@@ -23,9 +26,9 @@ import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (MeshLoadingState(..), Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
+import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (moveWithCollisions)
+import Graphics.Babylon.AbstractMesh (moveWithCollisions, setIsPickable)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setCheckCollisions, getPosition, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
@@ -38,7 +41,7 @@ import Graphics.Babylon.TargetCamera (getRotation)
 import Graphics.Babylon.Types (AbstractMesh, Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3, toVector3)
 import Math (round)
-import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==))
+import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==), (#), (<), (<=), negate, (&&))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -168,64 +171,89 @@ update ref scene materials shadowMap cursor camera = do
 
         -- load chunk
         do
-            case state.updateList of
-                Nil -> do
-                    let indices = do
-                            let ci = runChunkIndex cameraPositionChunkIndex
-                            x <- (ci.x - loadDistance) .. (ci.x + loadDistance)
-                            y <- (ci.y - 1) .. (ci.y + 1)
-                            z <- (ci.z - loadDistance) .. (ci.z + loadDistance)
-                            guard (isNothing (lookupChunk (chunkIndex x y z) state.terrain))
-                            pure (chunkIndex x y z)
+            let costLimit = 100
+            costRef <- newRef 0
+
+            unit # tailRecM \_ -> do
+                cost <- readRef costRef
+                if costLimit < cost
+                    then pure (Done unit)
+                    else do
+                        State st <- readRef ref
+                        case st.updateList of
+                            Nil -> pure (Done unit)
+                            Cons index tail -> do
+                                case lookupChunk index st.terrain of
+                                    Nothing -> void do
+                                        modifyRef costRef ((+) 1)
+                                    Just _ -> void do
+                                        createChunkMesh ref materials scene index
+                                        modifyRef costRef ((+) 10)
+                                modifyRef ref (\(State st) -> State st {
+                                    updateList = tail
+                                })
+                                pure (Loop unit)
+
+            let loop s e f =    tailRecM (\i -> do
+                                    cost <- readRef costRef
+                                    if i <= e && cost < costLimit
+                                        then do
+                                            f i
+                                            pure (Loop (i + 1))
+                                        else pure (Done unit)
+                                ) s
 
 
-                    tailRecM (case _ of
-                        Nil -> pure (Done unit)
-                        Cons index tail -> do
-                            result <- createChunkMesh ref materials scene index
-                            log $ "load chunk: " <> show index
-                            log $ "total chunks:" <> show (chunkCount state.terrain + 1)
 
-                            let i = runChunkIndex index
-                            modifyRef ref (\(State state) -> State state {
-                                updateList = nub (state.updateList <> fromFoldable [
-                                    chunkIndex (i.x - 1) i.y i.z,
-                                    chunkIndex (i.x + 1) i.y i.z,
-                                    chunkIndex i.x (i.y - 1) i.z,
-                                    chunkIndex i.x (i.y + 1) i.z,
-                                    chunkIndex i.x i.y (i.z - 1),
-                                    chunkIndex i.x i.y (i.z + 1)
-                                ])
-                            })
+            let ci = runChunkIndex cameraPositionChunkIndex
 
-                            pure if result then Done unit else Loop tail
+            nextIndex <- foreachBlocks 8 ci.x ci.y ci.z state.updateIndex \x y z -> do
+                let index = chunkIndex x y z
+                State st <- readRef ref
+                case lookupChunk index state.terrain of
+                    Just _ -> do
+                        --modifyRef costRef ((+) 0)
+                        pure 1
+                    Nothing -> do
+                        result <- createChunkMesh ref materials scene index
+                        -- log $ "load chunk: " <> show index
+                        log $ "total chunks:" <> show (chunkCount st.terrain + 1)
 
-                    ) (fromFoldable indices)
+                        let i = runChunkIndex index
+                        modifyRef ref (\(State st) -> State st {
+                            updateList = nub (st.updateList <> fromFoldable [
+                                chunkIndex (i.x - 1) i.y i.z,
+                                chunkIndex (i.x + 1) i.y i.z,
+                                chunkIndex i.x (i.y - 1) i.z,
+                                chunkIndex i.x (i.y + 1) i.z,
+                                chunkIndex i.x i.y (i.z - 1),
+                                chunkIndex i.x i.y (i.z + 1)
+                            ])
+                        })
 
-                Cons index tail -> do
-
-                    case lookupChunk index state.terrain of
-                        Nothing -> pure unit
-                        Just _ -> do
-                            createChunkMesh ref materials scene index
-                            pure unit
-
-                    modifyRef ref (\(State state) -> State state {
-                        updateList = tail
-                    })
+                        pure 100
 
 
-        -- set collesion
+            modifyRef ref \(State st) -> State st {
+                updateIndex = toNullable (Just nextIndex)
+            }
 
-        do
-            State st <- readRef ref
-            for_ (getChunkMap st.terrain) \(dat@{ blocks: Chunk chunk }) -> do
-                let r = chunkIndexDistance chunk.index cameraPositionChunkIndex
-                let enabled = r <= collesionEnabledRange
-                case dat.standardMaterialMesh of
-                    MeshNotLoaded -> pure unit
-                    MeshLoaded mesh -> AbstractMesh.setCheckCollisions enabled (meshToAbstractMesh mesh)
-                    EmptyMeshLoaded -> pure unit
+
+            forE (ci.x - 1) (ci.x + 1) \x ->
+                forE (ci.y - 1) (ci.y + 1) \y ->
+                    forE (ci.z - 1) (ci.z + 1) \z -> do
+                        State st <- readRef ref
+                        let index = chunkIndex x y z
+                        when (notElem index st.pickableMeshList) do
+                            case lookupChunk index st.terrain of
+                                Just { standardMaterialMesh: MeshLoaded mesh } -> void do
+                                    setIsPickable true (meshToAbstractMesh mesh)
+                                    AbstractMesh.setCheckCollisions true (meshToAbstractMesh mesh)
+                                    writeRef ref $ State st {
+                                        pickableMeshList = index : st.pickableMeshList
+                                    }
+                                _ -> pure unit
+
 
 
 
@@ -279,3 +307,9 @@ update ref scene materials shadowMap cursor camera = do
             cameraRot <- getRotation (freeCameraToTargetCamera camera) >>= runVector3
             -- renderMiniMap state.terrain pos cameraRot minimap
             pure unit
+
+
+
+
+
+foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

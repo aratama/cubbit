@@ -21,7 +21,7 @@ import Game.Cubbit.Terrain (MeshLoadingState(..), ChunkWithMesh, Terrain(Terrain
 import Game.Cubbit.Types (Materials, State(State))
 import Game.Cubbit.VertexDataPropsData (VertexDataPropsData(..))
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (setUseVertexColors, setRenderingGroupId, setReceiveShadows)
+import Graphics.Babylon.AbstractMesh (setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh, setMaterial)
 import Graphics.Babylon.Types (Mesh, Scene)
@@ -89,6 +89,7 @@ generateMesh index verts mat scene = do
     setReceiveShadows true (meshToAbstractMesh terrainMesh)
     setUseVertexColors true (meshToAbstractMesh terrainMesh)
     setMaterial mat terrainMesh
+    setIsPickable false (meshToAbstractMesh terrainMesh)
     pure terrainMesh
 
 
