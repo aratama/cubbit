@@ -1,13 +1,14 @@
 module Game.Cubbit.MiniMap where
 
 import Control.Alt (void)
+import Control.Applicative (pure)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Ring (negate)
 import Data.Show (show)
-import Data.Unit (Unit)
+import Data.Unit (Unit, unit)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
@@ -19,7 +20,7 @@ import Prelude ((*), (-), (<>))
 
 renderMiniMap :: forall eff. Terrain -> Vec -> Vec -> CanvasElement -> Eff (Effects eff) Unit
 renderMiniMap terrain pos cameraRot minimap = void do
-
+{-
     mapContext <- getContext2D minimap
 
     let i = runChunkIndex (globalPositionToChunkIndex pos.x pos.y pos.z)
@@ -84,5 +85,6 @@ renderMiniMap terrain pos cameraRot minimap = void do
     fillText mapContext ("ix: " <> show i.x) 10.0 80.0
     fillText mapContext ("iy: " <> show i.y) 10.0 100.0
     fillText mapContext ("iz: " <> show i.z) 10.0 120.0
-
+-}
+    pure unit
 

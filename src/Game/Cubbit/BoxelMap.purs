@@ -1,5 +1,6 @@
 module Game.Cubbit.BoxelMap (BoxelMap, empty, lookup, lookupNullable, insert, delete) where
 
+
 import Data.Functor (class Functor)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
@@ -22,4 +23,5 @@ foreign import insert :: forall a. LocalIndex -> a -> BoxelMap a -> BoxelMap a
 foreign import delete :: forall a. LocalIndex -> BoxelMap a -> BoxelMap a
 
 foreign import empty :: forall a. BoxelMap a
+
 

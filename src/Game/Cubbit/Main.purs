@@ -13,12 +13,12 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Ring (negate)
 import Data.Unit (Unit, unit)
-import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (MeshLoadingState(..), Terrain(..), emptyTerrain, insertChunk, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(..), emptyTerrain, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
@@ -50,7 +50,7 @@ import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Prelude ((#), ($), (<$>), (==), (-), (+), negate, (<), (>), (&&), (<>), show)
+import Prelude ((#), ($), (<$>), (==), (-), (+), negate, (<), (>), (&&), (<>), show, (/))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -85,7 +85,7 @@ runApp canvasGL canvas2d = do
         setFogDensity 0.01 sce
         setFogStart 250.0 sce
         setFogEnd 1000.0 sce
-        fogColor <- createColor3 0.8 0.8 1.0
+        fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
         setFogColor fogColor sce
         setCollisionsEnabled true sce
         pure sce
@@ -201,9 +201,10 @@ runApp canvasGL canvas2d = do
 
         pure { boxMat: standardMaterialToMaterial boxMat, waterBoxMat: waterMaterial }
 
+    terrain <- emptyTerrain 0
     ref <- newRef $ State {
         mode: Move,
-        terrain: emptyTerrain 0,
+        terrain: terrain,
         mousePosition: { x: 0, y: 0 },
         debugLayer: false,
         yaw: 0.0,
@@ -266,9 +267,8 @@ runApp canvasGL canvas2d = do
             State state@{ terrain: Terrain terrain } <- readRef ref
             let boxMap = createBlockMap terrain.noise index
             let result = { blocks: boxMap, standardMaterialMesh: MeshNotLoaded }
-            modifyRef ref \(State state) -> State state {
-                terrain = insertChunk result state.terrain
-            }
+            insertChunk result state.terrain
+
         for_ indices \index -> do
             createChunkMesh ref materials scene index
 

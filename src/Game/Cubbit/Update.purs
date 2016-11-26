@@ -22,10 +22,10 @@ import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (MeshLoadingState(..), Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (moveWithCollisions, setIsPickable)
@@ -88,33 +88,45 @@ pickBlock scene cursor (State state) screenX screenY = do
 
             case state.mode of
                 Put -> if minDelta == dx then do
-                        case lookupBlock' (p.x + 0.5) p.y p.z, lookupBlock' (p.x - 0.5) p.y p.z of
+                        l <- lookupBlock' (p.x + 0.5) p.y p.z
+                        r <- lookupBlock' (p.x - 0.5) p.y p.z
+                        case l, r of
                             Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex (p.x - 0.5) p.y p.z
                             Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex (p.x + 0.5) p.y p.z
                             _, _ -> pure Nothing
                         else if minDelta == dy then do
-                                case lookupBlock' p.x (p.y + 0.5) p.z, lookupBlock' p.x (p.y - 0.5) p.z of
+                                m <- lookupBlock' p.x (p.y + 0.5) p.z
+                                n <- lookupBlock' p.x (p.y - 0.5) p.z
+                                case m, n of
                                     Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y - 0.5) p.z
                                     Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y + 0.5) p.z
                                     _, _ -> pure Nothing
                             else do
-                                case lookupBlock' p.x p.y (p.z + 0.5), lookupBlock' p.x p.y (p.z - 0.5) of
+                                x <- lookupBlock' p.x p.y (p.z + 0.5)
+                                y <- lookupBlock' p.x p.y (p.z - 0.5)
+                                case x, y of
                                     Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z - 0.5)
                                     Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z + 0.5)
                                     _, _ -> pure Nothing
 
                 Remove -> if minDelta == dx then do
-                        case lookupBlock' (p.x + 0.5) p.y p.z, lookupBlock' (p.x - 0.5) p.y p.z of
+                        l <- lookupBlock' (p.x + 0.5) p.y p.z
+                        r <- lookupBlock' (p.x - 0.5) p.y p.z
+                        case l, r of
                             Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex (p.x + 0.5) p.y p.z
                             Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex (p.x - 0.5) p.y p.z
                             _, _ -> pure Nothing
                         else if minDelta == dy then do
-                                case lookupBlock' p.x (p.y + 0.5) p.z, lookupBlock' p.x (p.y - 0.5) p.z of
+                                m <- lookupBlock' p.x (p.y + 0.5) p.z
+                                n <- lookupBlock' p.x (p.y - 0.5) p.z
+                                case m, n of
                                     Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y + 0.5) p.z
                                     Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y - 0.5) p.z
                                     _, _ -> pure Nothing
                             else do
-                                case lookupBlock' p.x p.y (p.z + 0.5), lookupBlock' p.x p.y (p.z - 0.5) of
+                                x <- lookupBlock' p.x p.y (p.z + 0.5)
+                                y <- lookupBlock' p.x p.y (p.z - 0.5)
+                                case x, y of
                                     Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z + 0.5)
                                     Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z - 0.5)
                                     _, _ -> pure Nothing
@@ -159,7 +171,8 @@ update ref scene materials shadowMap cursor camera = do
                 forE (ci.x - shadowRange) (ci.x + shadowRange) \dx -> do
                     forE (ci.y - shadowRange) (ci.y + shadowRange) \dy -> do
                         forE (ci.z - shadowRange) (ci.z + shadowRange) \dz -> do
-                            case lookupChunk (chunkIndex dx dy dz) state.terrain of
+                            chunkMaybe <- lookupChunk (chunkIndex dx dy dz) state.terrain
+                            case chunkMaybe of
                                 Just chunkData@{ standardMaterialMesh: MeshLoaded mesh } -> void do
                                     pushSTArray list (meshToAbstractMesh mesh)
                                 _ -> pure unit
@@ -183,7 +196,8 @@ update ref scene materials shadowMap cursor camera = do
                         case st.updateList of
                             Nil -> pure (Done unit)
                             Cons index tail -> do
-                                case lookupChunk index st.terrain of
+                                chunkMaybe <- lookupChunk index st.terrain
+                                case chunkMaybe of
                                     Nothing -> void do
                                         modifyRef costRef ((+) 1)
                                     Just _ -> void do
@@ -210,14 +224,16 @@ update ref scene materials shadowMap cursor camera = do
             nextIndex <- foreachBlocks 8 ci.x ci.y ci.z state.updateIndex \x y z -> do
                 let index = chunkIndex x y z
                 State st <- readRef ref
-                case lookupChunk index state.terrain of
+                chunkMaybe <- lookupChunk index state.terrain
+                case chunkMaybe of
                     Just _ -> do
                         --modifyRef costRef ((+) 0)
                         pure 1
                     Nothing -> do
                         result <- createChunkMesh ref materials scene index
                         -- log $ "load chunk: " <> show index
-                        log $ "total chunks:" <> show (chunkCount st.terrain + 1)
+                        size <- chunkCount st.terrain
+                        log $ "total chunks:" <> show (size + 1)
 
                         let i = runChunkIndex index
                         modifyRef ref (\(State st) -> State st {
@@ -245,7 +261,8 @@ update ref scene materials shadowMap cursor camera = do
                         State st <- readRef ref
                         let index = chunkIndex x y z
                         when (notElem index st.pickableMeshList) do
-                            case lookupChunk index st.terrain of
+                            chunkMaybe <- lookupChunk index st.terrain
+                            case chunkMaybe of
                                 Just { standardMaterialMesh: MeshLoaded mesh } -> void do
                                     setIsPickable true (meshToAbstractMesh mesh)
                                     AbstractMesh.setCheckCollisions true (meshToAbstractMesh mesh)
@@ -266,7 +283,8 @@ update ref scene materials shadowMap cursor camera = do
                         z: state.position.z + state.velocity.z
                     }
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex next.x next.y next.z)
-            let st' = case lookupBlockByVec next terrain of
+            blockMaybe <- lookupBlockByVec next terrain
+            let st' = case blockMaybe of
                             Nothing -> st {
                                 position = next,
                                 velocity = st.velocity { y = state.velocity.y - 0.01 }

@@ -1,5 +1,5 @@
 module Game.Cubbit.Terrain (
- ChunkWithMesh(..), Terrain(..), emptyTerrain, MeshLoadingState(..),
+ Terrain(..), emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
  lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
 ) where
@@ -9,13 +9,13 @@ import Control.Monad.Eff (Eff)
 import Data.EuclideanRing (mod)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
-import Data.ShowMap (ShowMap, empty, insert, lookup, size)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (BlockType, airBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
-import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkMap (ChunkMap, createChunkMap, insert, lookup, size)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
 import Game.Cubbit.Vec (Vec)
@@ -26,26 +26,20 @@ import Graphics.Babylon.Types (Mesh)
 import PerlinNoise (Noise, createNoise)
 import Prelude ((*), (/), (+), (-), ($), (==))
 
-
-data MeshLoadingState = MeshNotLoaded | MeshLoaded Mesh | EmptyMeshLoaded
-
-type ChunkWithMesh = {
-    blocks :: Chunk,
-    standardMaterialMesh :: MeshLoadingState
-}
-
 newtype Terrain = Terrain {
-    map :: ShowMap ChunkIndex ChunkWithMesh,
+    map :: ChunkMap,
     noise :: Noise
 }
 
-getChunkMap :: Terrain -> ShowMap ChunkIndex ChunkWithMesh
+getChunkMap :: Terrain -> ChunkMap
 getChunkMap (Terrain t) = t.map
 
-emptyTerrain :: Int -> Terrain
-emptyTerrain seed = Terrain { map: empty, noise: createNoise seed }
+emptyTerrain :: forall eff. Int -> Eff eff Terrain
+emptyTerrain seed = do
+    map <- createChunkMap
+    pure (Terrain { map, noise: createNoise seed })
 
-chunkCount :: Terrain -> Int
+chunkCount :: forall eff. Terrain -> Eff eff Int
 chunkCount (Terrain t) = size t.map
 
 globalPositionToChunkIndex :: Number -> Number -> Number -> ChunkIndex
@@ -72,19 +66,22 @@ globalIndexToChunkIndex b = chunkIndex (f bi.x) (f bi.y) (f bi.z)
 
 
 
-lookupChunk :: ChunkIndex -> Terrain -> Maybe ChunkWithMesh
+lookupChunk :: forall eff. ChunkIndex -> Terrain -> Eff eff (Maybe ChunkWithMesh)
 lookupChunk index (Terrain terrain) = lookup index terrain.map
 
-lookupBlockByVec :: Vec -> Terrain -> Maybe BlockType
+lookupBlockByVec :: forall eff. Vec -> Terrain -> Eff eff (Maybe BlockType)
 lookupBlockByVec p (Terrain terrain) = lookupBlock (globalPositionToGlobalIndex p.x p.y p.z) (Terrain terrain)
 
-lookupBlock :: BlockIndex -> Terrain -> Maybe BlockType
+lookupBlock :: forall eff. BlockIndex -> Terrain -> Eff eff (Maybe BlockType)
 lookupBlock globalIndex (Terrain terrain) = do
         let chunkIndex = globalIndexToChunkIndex globalIndex
         let localIndex = globalIndexToLocalIndex globalIndex
-        { blocks: Chunk chunk@{ blocks } } <- lookup chunkIndex terrain.map
-        blockType <- Boxel.lookup localIndex blocks
-        if blockType == airBlock then Nothing else Just blockType
+        chunkMaybe <- lookup chunkIndex terrain.map
+        case chunkMaybe of
+            Just { blocks: Chunk chunk@{ blocks } } -> case  Boxel.lookup localIndex blocks of
+                Just blockType -> pure if blockType == airBlock then Nothing else Just blockType
+                _ -> pure Nothing
+            _ -> pure Nothing
 
 globalIndexToLocalIndex :: BlockIndex -> LocalIndex
 globalIndexToLocalIndex index = localIndex cx cy cz
@@ -95,10 +92,8 @@ globalIndexToLocalIndex index = localIndex cx cy cz
     cy = globalIndex.y - chunkSize * chunkIndex.y
     cz = globalIndex.z - chunkSize * chunkIndex.z
 
-insertChunk :: ChunkWithMesh -> Terrain -> Terrain
-insertChunk cmesh@{ blocks: Chunk chunk@{ index } } (Terrain chunks) = Terrain chunks {
-    map = insert index cmesh chunks.map
-}
+insertChunk :: forall eff. ChunkWithMesh -> Terrain -> Eff eff Unit
+insertChunk cmesh@{ blocks: Chunk chunk@{ index } } (Terrain chunks) = insert index cmesh chunks.map
 
 disposeChunk :: forall eff. ChunkWithMesh -> Eff (babylon :: BABYLON | eff) Unit
 disposeChunk chunk = case chunk.standardMaterialMesh of

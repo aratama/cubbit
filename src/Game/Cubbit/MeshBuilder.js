@@ -9,6 +9,8 @@ exports.createTerrainGeometryJS = function(references){
             var globalIndexToChunkIndex = references.globalIndexToChunkIndex;
             var globalIndexToLocalIndex = references.globalIndexToLocalIndex;
 
+            var chunkMap = terrain.map.map;
+
             var TEXTURE_SIZE = 4096;
             var CHIP_SIZE = 64;
             var CHIP_RATIO_0 = 0;
@@ -111,7 +113,7 @@ exports.createTerrainGeometryJS = function(references){
                     return blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz] !== airBlock;
                 }else{
                     var gi = blockIndex(gx)(gy)(gz);
-                    var chunkWithMesh = terrain.map[globalIndexToChunkIndex(gi)];
+                    var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
                     if(chunkWithMesh){
                         var block = chunkWithMesh.blocks.blocks[globalIndexToLocalIndex(gi)];
                         return block !== airBlock;

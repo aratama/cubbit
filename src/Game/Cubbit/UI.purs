@@ -100,7 +100,8 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
             Nothing -> pure unit
             Just blockIndex -> do
                 let chunkIndex = globalIndexToChunkIndex blockIndex
-                case lookupChunk chunkIndex state.terrain of
+                chunkMaybe <- lookupChunk chunkIndex state.terrain
+                case chunkMaybe of
                     Nothing -> pure unit
                     Just chunkData@{ blocks: Chunk chunk } -> void do
                         let localIndex = globalIndexToLocalIndex blockIndex
