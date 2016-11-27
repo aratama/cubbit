@@ -8,6 +8,8 @@ exports.foreachBlocks = function(size){
                             var cost = 0;
                             var limit = 100;
 
+                            //console.log(JSON.stringify(index));
+
                             if( ! index){
                                 index = { size: size, cx: cx, cy: cy, cz: cz, i: 0, n: -size, m: -size };
                             }else if(index.size != size || index.cx != cx || index.cy != cy || index.cz != cz){
@@ -16,23 +18,23 @@ exports.foreachBlocks = function(size){
                                 index.cy = cy;
                                 index.cz = cz;
                                 index.i = 0;
-                                index.n = -size;
-                                index.m = -size;
+                                index.n = -index.i;
+                                index.m = -index.i;
                             }
 
                             if(size <= index.i){
                                 index.i = 0;
-                                index.n = -size;
-                                index.m = -size;
+                                index.n = -index.i;
+                                index.m = -index.i;
                                 return index;
-                            }else if(size < index.n){
+                            }else if(index.i < index.n){
                                 index.i += 1;
-                                index.n = -size;
-                                index.m = -size;
+                                index.n = -index.i;
+                                index.m = -index.i;
                                 return index;
-                            }else if(size < index.m){
+                            }else if(index.i < index.m){
                                 index.n += 1;
-                                index.m = -size;
+                                index.m = -index.i;
                                 return index;
                             }else{
                                 var i = index.i;

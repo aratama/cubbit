@@ -17,6 +17,11 @@ foreign import _lookup :: forall eff. ChunkIndex -> ChunkMap -> Eff eff (Nullabl
 lookup :: forall eff. ChunkIndex -> ChunkMap -> Eff eff (Maybe ChunkWithMesh)
 lookup index map = toMaybe <$> _lookup index map
 
+foreign import _peekAt :: forall eff. Int -> ChunkMap -> Eff eff (Nullable ChunkWithMesh)
+
+peekAt :: forall eff. Int -> ChunkMap -> Eff eff (Maybe ChunkWithMesh)
+peekAt index map = toMaybe <$> _peekAt index map
+
 foreign import insert :: forall eff. ChunkIndex -> ChunkWithMesh -> ChunkMap -> Eff eff Unit
 
 foreign import delete :: forall eff. ChunkIndex -> ChunkMap -> Eff eff Unit

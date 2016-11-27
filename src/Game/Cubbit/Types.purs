@@ -40,6 +40,7 @@ newtype State = State {
 
 
     updateIndex :: Nullable ForeachIndex,
+    unloadingChunkIndex :: Int,
     pickableMeshList :: List ChunkIndex
 }
 

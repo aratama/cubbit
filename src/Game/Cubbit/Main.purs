@@ -56,12 +56,6 @@ import Prelude ((#), ($), (<$>), (==), (-), (+), negate, (<), (>), (&&), (<>), s
 shadowMapSize :: Int
 shadowMapSize = 4096
 
-loadDistance :: Int
-loadDistance = 8
-
-unloadDistance :: Int
-unloadDistance = 8
-
 skyBoxRenderingGruop :: Int
 skyBoxRenderingGruop = 0
 
@@ -237,6 +231,7 @@ runApp canvasGL canvas2d = do
         updateList: Nil,
         playerMeshes: [],
         updateIndex: toNullable Nothing,
+        unloadingChunkIndex: 0,
         pickableMeshList: Nil
     }
 

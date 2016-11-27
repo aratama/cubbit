@@ -24,8 +24,10 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
+import Game.Cubbit.ChunkMap (delete, peekAt)
+import Game.Cubbit.Constants (loadDistance, unloadDistance)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain, chunkCount, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(..), chunkCount, disposeChunk, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (moveWithCollisions, setIsPickable)
@@ -45,12 +47,6 @@ import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==), (#), (<), (<=), nega
 
 shadowMapSize :: Int
 shadowMapSize = 4096
-
-loadDistance :: Int
-loadDistance = 8
-
-unloadDistance :: Int
-unloadDistance = 8
 
 skyBoxRenderingGruop :: Int
 skyBoxRenderingGruop = 0
@@ -221,7 +217,7 @@ update ref scene materials shadowMap cursor camera = do
 
             let ci = runChunkIndex cameraPositionChunkIndex
 
-            nextIndex <- foreachBlocks 8 ci.x ci.y ci.z state.updateIndex \x y z -> do
+            nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
                 let index = chunkIndex x y z
                 State st <- readRef ref
                 chunkMaybe <- lookupChunk index state.terrain
@@ -270,6 +266,31 @@ update ref scene materials shadowMap cursor camera = do
                                         pickableMeshList = index : st.pickableMeshList
                                     }
                                 _ -> pure unit
+
+
+        -- unload sequence
+        do
+            State st@{ terrain: Terrain terrain@{ map } } <- readRef ref
+            chunkMaybe <- peekAt st.unloadingChunkIndex map
+            case chunkMaybe of
+                Nothing -> pure unit
+                Just chunkWithMesh@{ blocks: Chunk chunk } -> do
+
+                    when (unloadDistance <= chunkIndexDistance cameraPositionChunkIndex chunk.index) do
+
+                        when (chunk.index == chunkIndex 0 0 0) do
+                            log "000"
+                            log "000"
+                            log "000"
+
+
+                        disposeChunk chunkWithMesh
+                        delete chunk.index map
+                        let ci = runChunkIndex chunk.index
+                        log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
+            writeRef ref $ State st {
+                unloadingChunkIndex = st.unloadingChunkIndex + 1
+            }
 
 
 
