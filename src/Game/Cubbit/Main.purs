@@ -23,7 +23,7 @@ import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
-import Graphics.Babylon.AbstractMesh (getSkeleton, onCollisionPositionChangeObservable, setPosition, setReceiveShadows, setRenderingGroupId)
+import Graphics.Babylon.AbstractMesh (setMaterial, getSkeleton, onCollisionPositionChangeObservable, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, setCheckCollisions) as AbstractMesh
 import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
 import Graphics.Babylon.Color3 (createColor3)
@@ -34,11 +34,12 @@ import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraT
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
 import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
-import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance, setMaterial)
+import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
 import Graphics.Babylon.Observable (add) as Observable
 import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogEnd, setFogMode, setFogStart)
 import Graphics.Babylon.SceneLoader (importMesh)
 import Graphics.Babylon.ScreenSpaceCanvas2D (createScreenSpaceCanvas2D)
+import Graphics.Babylon.ShaderMaterial (createShaderMaterial, setColor3, setFloats, setTexture, setVector3, shaderMaterialToMaterial)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
 import Graphics.Babylon.Size (createSize)
 import Graphics.Babylon.Sprite2D (createSprite2D, sprite2DToPrim2DBase)
@@ -152,7 +153,7 @@ runApp canvasGL canvas2d = do
         mat <- createStandardMaterial "cursormat" scene
         setWireframe true (standardMaterialToMaterial mat)
         setZOffset (negate 0.01) (standardMaterialToMaterial mat)
-        setMaterial (standardMaterialToMaterial mat) cursorbox
+        setMaterial (standardMaterialToMaterial mat) (meshToAbstractMesh cursorbox)
         pure cursorbox
 
     -- skybox
@@ -172,12 +173,28 @@ runApp canvasGL canvas2d = do
 
         skyboxMesh <- createBox "skybox" 1000.0 scene
         setRenderingGroupId skyBoxRenderingGruop (meshToAbstractMesh skyboxMesh)
-        setMaterial (standardMaterialToMaterial skyboxMaterial) skyboxMesh
+        setMaterial (standardMaterialToMaterial skyboxMaterial) (meshToAbstractMesh skyboxMesh)
         setInfiniteDistance true skyboxMesh
         pure skyboxMesh
 
     -- prepare materials
     materials <- do
+
+
+        cellShadingMaterial <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
+            uniforms: ["world", "viewProjection"],
+            samplers: ["textureSampler"]
+        }
+        lightPosition <- createVector3 0.0 20.0 (-10.0)
+        lightColor <- createColor3 1.0 1.0 1.0
+        cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene
+        setTexture "textureSampler" cellShadingMaterialTexture cellShadingMaterial
+        setVector3 "vLightPosition" lightPosition cellShadingMaterial
+        setFloats "ToonThresholds" [0.2, 0.1, 0.0, 0.0] cellShadingMaterial
+        setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] cellShadingMaterial
+        setColor3 "vLightColor" lightColor cellShadingMaterial
+
+
         texture <- createTexture "texture.png" scene
         boxMat <- createStandardMaterial "grass-block" scene
         grassSpecular <- createColor3 0.0 0.0 0.0
@@ -199,7 +216,11 @@ runApp canvasGL canvas2d = do
                 setDiffuseTexture texture mat
                 pure (standardMaterialToMaterial mat)
 
-        pure { boxMat: standardMaterialToMaterial boxMat, waterBoxMat: waterMaterial }
+        pure {
+            boxMat: standardMaterialToMaterial boxMat,
+            waterBoxMat: waterMaterial,
+            cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial
+        }
 
     terrain <- emptyTerrain 0
     ref <- newRef $ State {
@@ -238,7 +259,10 @@ runApp canvasGL canvas2d = do
                 setRenderingGroupId 1 mesh
                 setReceiveShadows true mesh
                 skeleton <- getSkeleton mesh
+                --setMaterial materials.cellShadingMaterial mesh
                 beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
+
+                setMaterial materials.cellShadingMaterial mesh
             modifyRef ref \(State state) -> State state {
                 playerMeshes = result
             }

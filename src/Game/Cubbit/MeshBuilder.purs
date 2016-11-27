@@ -21,9 +21,9 @@ import Game.Cubbit.Terrain (Terrain(Terrain), disposeChunk, globalIndexToChunkIn
 import Game.Cubbit.Types (Materials, State(State))
 import Game.Cubbit.VertexDataPropsData (VertexDataPropsData(..))
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
+import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (Material)
-import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh, setMaterial)
+import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
 import Prelude (($), (=<<), (<))
@@ -75,7 +75,7 @@ createChunkMesh ref materials scene index = do
                 else do
                     pure { blocks: verts.terrain, standardMaterialMesh: EmptyMeshLoaded }
             insertChunk result state.terrain
-            
+
             pure (0 < length vertices.indices)
 
 generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Eff (babylon :: BABYLON | eff) Mesh
@@ -89,7 +89,7 @@ generateMesh index verts mat scene = do
     setRenderingGroupId 1 (meshToAbstractMesh terrainMesh)
     setReceiveShadows true (meshToAbstractMesh terrainMesh)
     setUseVertexColors true (meshToAbstractMesh terrainMesh)
-    setMaterial mat terrainMesh
+    setMaterial mat (meshToAbstractMesh terrainMesh)
     setIsPickable false (meshToAbstractMesh terrainMesh)
     pure terrainMesh
 
