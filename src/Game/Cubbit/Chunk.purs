@@ -23,6 +23,9 @@ instance asForeign_TerrainMap :: AsForeign Chunk where
 data MeshLoadingState = MeshNotLoaded | MeshLoaded Mesh | EmptyMeshLoaded
 
 type ChunkWithMesh = {
+    x :: Int,
+    y :: Int,
+    z :: Int,
     blocks :: Chunk,
     standardMaterialMesh :: MeshLoadingState
 }

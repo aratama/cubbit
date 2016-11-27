@@ -24,7 +24,7 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.ChunkMap (delete, peekAt)
+import Game.Cubbit.ChunkMap (delete, peekAt, size, sort)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(..), chunkCount, disposeChunk, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
@@ -270,6 +270,29 @@ update ref scene materials shadowMap cursor camera = do
 
         -- unload sequence
         do
+
+            let ci = runChunkIndex cameraPositionChunkIndex
+            State st@{ terrain: Terrain terrain }<- readRef ref
+            sort ci.x ci.y ci.z terrain.map
+
+            tailRecM (\i -> if 100 < i then pure (Done unit) else do
+                s <- size terrain.map
+                chunkWithMeshMaybe <- peekAt (s - 1) terrain.map
+                case chunkWithMeshMaybe of
+                    Nothing -> pure (Loop (i + 1))
+                    Just chunkWithMesh@{ blocks: Chunk chunk } -> do
+                        let distance = chunkIndexDistance cameraPositionChunkIndex chunk.index
+                        if unloadDistance <= distance
+                            then do
+                                disposeChunk chunkWithMesh
+                                delete chunk.index terrain.map
+                                let ci = runChunkIndex chunk.index
+                                log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
+                                pure (Loop (i + 20))
+                            else pure (Loop (i + 1))
+            ) 0
+{-
+        do
             State st@{ terrain: Terrain terrain@{ map } } <- readRef ref
             chunkMaybe <- peekAt st.unloadingChunkIndex map
             case chunkMaybe of
@@ -291,7 +314,7 @@ update ref scene materials shadowMap cursor camera = do
             writeRef ref $ State st {
                 unloadingChunkIndex = st.unloadingChunkIndex + 1
             }
-
+-}
 
 
 

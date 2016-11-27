@@ -14,7 +14,7 @@ import Data.Nullable (toMaybe, toNullable)
 import Data.Ring (negate)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
-import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
@@ -285,7 +285,14 @@ runApp canvasGL canvas2d = do
         for_ indices \index -> do
             State state@{ terrain: Terrain terrain } <- readRef ref
             let boxMap = createBlockMap terrain.noise index
-            let result = { blocks: boxMap, standardMaterialMesh: MeshNotLoaded }
+            let ci = runChunkIndex index
+            let result = {
+                        x: ci.x,
+                        y: ci.y,
+                        z: ci.z,
+                        blocks: boxMap,
+                        standardMaterialMesh: MeshNotLoaded
+                    }
             insertChunk result state.terrain
 
         for_ indices \index -> do

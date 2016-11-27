@@ -24,3 +24,5 @@ exports.runBlockIndex = function(bits){
     var y = cy - _2_15;
     return { x: x, y: y, z: z }
 }
+
+

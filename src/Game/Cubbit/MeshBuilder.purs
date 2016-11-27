@@ -68,13 +68,20 @@ createChunkMesh ref materials scene index = do
                 Nothing -> pure unit
                 Just chunkData -> disposeChunk chunkData
 
+            let ci = runChunkIndex index
             result <- if 0 < length vertices.indices
                 then do
                     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-                    pure { blocks: verts.terrain, standardMaterialMesh: MeshLoaded standardMaterialMesh }
+                    pure (MeshLoaded standardMaterialMesh)
                 else do
-                    pure { blocks: verts.terrain, standardMaterialMesh: EmptyMeshLoaded }
-            insertChunk result state.terrain
+                    pure EmptyMeshLoaded
+            insertChunk {
+                x: ci.x,
+                y: ci.y,
+                z: ci.z,
+                blocks: verts.terrain,
+                standardMaterialMesh: result
+            } state.terrain
 
             pure (0 < length vertices.indices)
 
@@ -109,6 +116,13 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Just chunkData -> disposeChunk chunkData
 
     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-    mesh <- pure { blocks: verts.terrain, standardMaterialMesh: MeshLoaded standardMaterialMesh }
+    let ci = runChunkIndex index
+    mesh <- pure {
+        x: ci.x,
+        y: ci.y,
+        z: ci.z,
+        blocks: verts.terrain,
+        standardMaterialMesh: MeshLoaded standardMaterialMesh
+    }
     insertChunk mesh state.terrain
 
