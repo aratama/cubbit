@@ -71,3 +71,13 @@ exports.size = function(obj){
         return obj.list.length;
     }
 }
+
+exports.slice = function(begin){
+    return function(end){
+        return function(obj){
+            return function(){
+                return obj.list.slice(begin, end);
+            }
+        }
+    }
+}

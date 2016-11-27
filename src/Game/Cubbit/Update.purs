@@ -8,14 +8,15 @@ import Control.Comonad.Store.Class (seeks)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
+import Control.Monad.List.Trans (zipWith)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import Control.MonadPlus (guard)
 import DOM (DOM)
-import Data.Array (head, (..))
+import Data.Array (catMaybes, head)
 import Data.Array.ST (emptySTArray, pushSTArray, runSTArray)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
-import Data.List (List(..), elem, fromFoldable, notElem, nub, (:))
+import Data.List (List(..), elem, fromFoldable, notElem, nub, (:), (..))
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
@@ -24,7 +25,7 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.ChunkMap (delete, peekAt, size, sort)
+import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(..), chunkCount, disposeChunk, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
@@ -43,7 +44,7 @@ import Graphics.Babylon.TargetCamera (getRotation)
 import Graphics.Babylon.Types (AbstractMesh, Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3, toVector3)
 import Math (round)
-import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==), (#), (<), (<=), negate, (&&))
+import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==), (#), (<), (<=), negate, (&&), (<$>))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -136,7 +137,9 @@ update ref scene materials shadowMap cursor camera = do
 
         modifyRef ref \(State state) -> State state { totalFrames = state.totalFrames + 1 }
 
-        State state <- readRef ref
+        State state@{ terrain: Terrain ter } <- readRef ref
+
+        activeChunks <- slice 0 125 ter.map
 
         -- update camera position
         cameraPosition <- Camera.getPosition (freeCameraToCamera camera) >>= runVector3
@@ -156,25 +159,11 @@ update ref scene materials shadowMap cursor camera = do
                             setPosition r cursor
 
         -- update shadow rendering list
-
-
-        when (mod state.totalFrames 10 == 0) do
-            let shadowRange = 0
-            let ci = runChunkIndex cameraPositionChunkIndex
-            chunks <- runSTArray do
-                list <- emptySTArray
-                -- for_ state.playerMeshes \mesh -> pushSTArray list mesh
-                forE (ci.x - shadowRange) (ci.x + shadowRange) \dx -> do
-                    forE (ci.y - shadowRange) (ci.y + shadowRange) \dy -> do
-                        forE (ci.z - shadowRange) (ci.z + shadowRange) \dz -> do
-                            chunkMaybe <- lookupChunk (chunkIndex dx dy dz) state.terrain
-                            case chunkMaybe of
-                                Just chunkData@{ standardMaterialMesh: MeshLoaded mesh } -> void do
-                                    pushSTArray list (meshToAbstractMesh mesh)
-                                _ -> pure unit
-                pure list
-
-            setRenderList chunks shadowMap
+        let shdowRenderingMeshes = (catMaybes ( (\chunk -> case chunk.standardMaterialMesh of
+                    MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                    _ -> Nothing
+                ) <$> activeChunks))
+        setRenderList shdowRenderingMeshes shadowMap
 
 
 
@@ -232,15 +221,13 @@ update ref scene materials shadowMap cursor camera = do
                         log $ "total chunks:" <> show (size + 1)
 
                         let i = runChunkIndex index
+                        let news = do
+                                x <- (-1) .. 1
+                                y <- (-1) .. 1
+                                z <- (-1) .. 1
+                                pure (chunkIndex (i.x + x) (i.y + y) (i.z + z))
                         modifyRef ref (\(State st) -> State st {
-                            updateList = nub (st.updateList <> fromFoldable [
-                                chunkIndex (i.x - 1) i.y i.z,
-                                chunkIndex (i.x + 1) i.y i.z,
-                                chunkIndex i.x (i.y - 1) i.z,
-                                chunkIndex i.x (i.y + 1) i.z,
-                                chunkIndex i.x i.y (i.z - 1),
-                                chunkIndex i.x i.y (i.z + 1)
-                            ])
+                            updateList = nub (st.updateList <> news)
                         })
 
                         pure 100
@@ -249,24 +236,6 @@ update ref scene materials shadowMap cursor camera = do
             modifyRef ref \(State st) -> State st {
                 updateIndex = toNullable (Just nextIndex)
             }
-
-
-            forE (ci.x - 1) (ci.x + 1) \x ->
-                forE (ci.y - 1) (ci.y + 1) \y ->
-                    forE (ci.z - 1) (ci.z + 1) \z -> do
-                        State st <- readRef ref
-                        let index = chunkIndex x y z
-                        when (notElem index st.pickableMeshList) do
-                            chunkMaybe <- lookupChunk index st.terrain
-                            case chunkMaybe of
-                                Just { standardMaterialMesh: MeshLoaded mesh } -> void do
-                                    setIsPickable true (meshToAbstractMesh mesh)
-                                    AbstractMesh.setCheckCollisions true (meshToAbstractMesh mesh)
-                                    writeRef ref $ State st {
-                                        pickableMeshList = index : st.pickableMeshList
-                                    }
-                                _ -> pure unit
-
 
         -- unload sequence
         do
@@ -291,30 +260,6 @@ update ref scene materials shadowMap cursor camera = do
                                 pure (Loop (i + 20))
                             else pure (Loop (i + 1))
             ) 0
-{-
-        do
-            State st@{ terrain: Terrain terrain@{ map } } <- readRef ref
-            chunkMaybe <- peekAt st.unloadingChunkIndex map
-            case chunkMaybe of
-                Nothing -> pure unit
-                Just chunkWithMesh@{ blocks: Chunk chunk } -> do
-
-                    when (unloadDistance <= chunkIndexDistance cameraPositionChunkIndex chunk.index) do
-
-                        when (chunk.index == chunkIndex 0 0 0) do
-                            log "000"
-                            log "000"
-                            log "000"
-
-
-                        disposeChunk chunkWithMesh
-                        delete chunk.index map
-                        let ci = runChunkIndex chunk.index
-                        log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
-            writeRef ref $ State st {
-                unloadingChunkIndex = st.unloadingChunkIndex + 1
-            }
--}
 
 
 
@@ -349,26 +294,6 @@ update ref scene materials shadowMap cursor camera = do
                 AbstractMesh.setPosition position mesh
 
 
-
-            pure unit
-            {-}
-
-            let velocity = {
-                        x: if state.position.x == currentPosition.x then 0.0 else state.velocity.x,
-                        y: (if state.position.y == currentPosition.y then 0.0 else state.velocity.y) - 0.01,
-                        z: if state.position.z == currentPosition.z then 0.0 else state.velocity.z
-                    }
-            modifyRef ref \(State state) -> State state {
-                position = currentPosition,
-                velocity = velocity
-            }
--}
-
-        do
-            pos <- Camera.getPosition (freeCameraToCamera camera) >>= runVector3
-            cameraRot <- getRotation (freeCameraToTargetCamera camera) >>= runVector3
-            -- renderMiniMap state.terrain pos cameraRot minimap
-            pure unit
 
 
 

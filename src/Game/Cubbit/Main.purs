@@ -4,55 +4,48 @@ import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind, when)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (error, log)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
-import Control.MonadPlus (guard)
 import Data.Foldable (for_)
 import Data.List (List(..), (..))
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
-import Data.Ring (negate)
 import Data.Unit (Unit, unit)
-import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
+import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded))
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
-import Game.Cubbit.Constants (fogDensity, fogEnd, fogStart)
+import Game.Cubbit.Constants (fogDensity)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(..), emptyTerrain, insertChunk, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), emptyTerrain, insertChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
-import Graphics.Babylon.AbstractMesh (setMaterial, getSkeleton, onCollisionPositionChangeObservable, setPosition, setReceiveShadows, setRenderingGroupId)
-import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, setCheckCollisions) as AbstractMesh
+import Graphics.Babylon.AbstractMesh (getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
+import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible) as AbstractMesh
 import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
 import Graphics.Babylon.Engine (createEngine, runRenderLoop)
-import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera, setCheckCollisions)
+import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
 import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
 import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
-import Graphics.Babylon.Observable (add) as Observable
-import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogEnd, setFogMode, setFogStart)
+import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
 import Graphics.Babylon.SceneLoader (importMesh)
-import Graphics.Babylon.ScreenSpaceCanvas2D (createScreenSpaceCanvas2D)
 import Graphics.Babylon.ShaderMaterial (createShaderMaterial, setColor3, setFloats, setTexture, setVector3, shaderMaterialToMaterial)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
-import Graphics.Babylon.Size (createSize)
-import Graphics.Babylon.Sprite2D (createSprite2D, sprite2DToPrim2DBase)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDiffuseTexture, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (createTexture, sKYBOX_MODE, setCoordinatesMode)
-import Graphics.Babylon.Types (AbstractMesh)
-import Graphics.Babylon.Vector3 (createVector3, runVector3)
+import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Prelude ((#), ($), (<$>), (==), (-), (+), negate, (<), (>), (&&), (<>), show, (/))
+import Prelude (negate, (#), ($), (+), (/), (<$>), (==))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -79,8 +72,8 @@ runApp canvasGL canvas2d = do
         sce <- createScene engine
         setFogMode fOGMODE_EXP sce
         setFogDensity fogDensity sce
-        setFogStart fogStart sce
-        setFogEnd fogEnd sce
+        --setFogStart fogStart sce
+        --setFogEnd fogEnd sce
         fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
         setFogColor fogColor sce
         setCollisionsEnabled true sce
@@ -185,7 +178,7 @@ runApp canvasGL canvas2d = do
         cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene
         setTexture "textureSampler" cellShadingMaterialTexture cellShadingMaterial
         setVector3 "vLightPosition" lightPosition cellShadingMaterial
-        setFloats "ToonThresholds" [0.2, 0.1, 0.0, 0.0] cellShadingMaterial
+        setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] cellShadingMaterial
         setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] cellShadingMaterial
         setColor3 "vLightColor" lightColor cellShadingMaterial
 
@@ -217,10 +210,10 @@ runApp canvasGL canvas2d = do
             cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial
         }
 
-    terrain <- emptyTerrain 0
+    initialTerrain <- emptyTerrain 0
     ref <- newRef $ State {
         mode: Move,
-        terrain: terrain,
+        terrain: initialTerrain,
         mousePosition: { x: 0, y: 0 },
         debugLayer: false,
         yaw: 0.0,
@@ -232,8 +225,7 @@ runApp canvasGL canvas2d = do
         updateList: Nil,
         playerMeshes: [],
         updateIndex: toNullable Nothing,
-        unloadingChunkIndex: 0,
-        pickableMeshList: Nil
+        unloadingChunkIndex: 0
     }
 
     initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials

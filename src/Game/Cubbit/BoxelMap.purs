@@ -24,4 +24,3 @@ foreign import delete :: forall a. LocalIndex -> BoxelMap a -> BoxelMap a
 
 foreign import empty :: forall a. BoxelMap a
 
-
