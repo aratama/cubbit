@@ -15,6 +15,7 @@ import Data.Ring (negate)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
+import Game.Cubbit.Constants (fogDensity, fogEnd, fogStart)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
@@ -77,9 +78,9 @@ runApp canvasGL canvas2d = do
     scene <- do
         sce <- createScene engine
         setFogMode fOGMODE_EXP sce
-        setFogDensity 0.01 sce
-        setFogStart 250.0 sce
-        setFogEnd 1000.0 sce
+        setFogDensity fogDensity sce
+        setFogStart fogStart sce
+        setFogEnd fogEnd sce
         fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
         setFogColor fogColor sce
         setCollisionsEnabled true sce
