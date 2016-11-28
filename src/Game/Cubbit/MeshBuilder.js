@@ -94,7 +94,8 @@ exports.createTerrainGeometryJS = function(references){
                 return { offset: 0, indices: [], positions: [], normals: [], uvs: [], colors: [] }
             }
 
-            var meshData = prepareArray();
+            var standardMaterialBlockStore = prepareArray();
+            var waterBlockStore = prepareArray();
 
             var chunkIndex = runChunkIndex(chunk.index);
             var ox = chunkSize * chunkIndex.x;
@@ -110,15 +111,16 @@ exports.createTerrainGeometryJS = function(references){
                     0 <= ly && ly < chunkSize &&
                     0 <= lz && lz < chunkSize
                 ){
-                    return blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz] !== airBlock;
+                    var t = blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz];
+                    return t !== airBlock && t !== waterBlock;
                 }else{
                     var gi = blockIndex(gx)(gy)(gz);
                     var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
                     if(chunkWithMesh){
                         var block = chunkWithMesh.blocks.blocks[globalIndexToLocalIndex(gi)];
-                        return block !== airBlock;
+                        return block !== airBlock && block !== waterBlock;
                     }else{
-                        // nerver com here
+                        // nerver come here
                         debugger;
                         return true;
                     }
@@ -131,148 +133,155 @@ exports.createTerrainGeometryJS = function(references){
 
                         var block = blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz];
 
-                        if(block !== airBlock){
+                        // global coordinates of the block
+                        var px = ox + lx
+                        var py = oy + ly
+                        var pz = oz + lz
 
-                            // global coordinates of the block
-                            var px = ox + lx
-                            var py = oy + ly
-                            var pz = oz + lz
+                        //var store = block == blockTypes.grassBlock ? standardMaterialBlockStore : water;
+                        var store = standardMaterialBlockStore;
 
-                            //var store = block == blockTypes.grassBlock ? meshData : water;
-                            var store = meshData;
+                        // nx, ny, nz: normal vector
+                        function square(nx, ny, nz, u){
+                            if( ! exists(px + nx, py + ny, pz + nz)){
 
-                            // nx, ny, nz: normal vector
-                            function square(nx, ny, nz, u){
-                                if( ! exists(px + nx, py + ny, pz + nz)){
+                                // horizontal extent vector of the plane
+                                var ax = ny
+                                var ay = nz
+                                var az = nx
 
-                                    // horizontal extent vector of the plane
-                                    var ax = ny
-                                    var ay = nz
-                                    var az = nx
+                                // vertical extent vector of the plane
+                                var bx = ay * nz - ay * nx
+                                var by = az * nx - ax * nz
+                                var bz = ax * ny - ay * nx
 
-                                    // vertical extent vector of the plane
-                                    var bx = ay * nz - ay * nx
-                                    var by = az * nx - ax * nz
-                                    var bz = ax * ny - ay * nx
+                                // half-sized normal vector
+                                var dx = nx * 0.5
+                                var dy = ny * 0.5
+                                var dz = nz * 0.5
 
-                                    // half-sized normal vector
-                                    var dx = nx * 0.5
-                                    var dy = ny * 0.5
-                                    var dz = nz * 0.5
+                                // half-sized horizontal vector
+                                var sx = ax * 0.5
+                                var sy = ay * 0.5
+                                var sz = az * 0.5
 
-                                    // half-sized horizontal vector
-                                    var sx = ax * 0.5
-                                    var sy = ay * 0.5
-                                    var sz = az * 0.5
+                                // half-sized vertical vector
+                                var tx = bx * 0.5
+                                var ty = by * 0.5
+                                var tz = bz * 0.5
 
-                                    // half-sized vertical vector
-                                    var tx = bx * 0.5
-                                    var ty = by * 0.5
-                                    var tz = bz * 0.5
+                                // center of the plane
+                                var vx = px + 0.5 + dx
+                                var vy = py + 0.5 + dy
+                                var vz = pz + 0.5 + dz
 
-                                    // center of the plane
-                                    var vx = px + 0.5 + dx
-                                    var vy = py + 0.5 + dy
-                                    var vz = pz + 0.5 + dz
+                                // vertex index offset
+                                var offset = store.offset
 
-                                    // vertex index offset
-                                    var offset = store.offset
+                                store.indices.push(offset + 0);
+                                store.indices.push(offset + 1);
+                                store.indices.push(offset + 2);
+                                store.indices.push(offset + 0);
+                                store.indices.push(offset + 2);
+                                store.indices.push(offset + 3);
 
-                                    store.indices.push(offset + 0);
-                                    store.indices.push(offset + 1);
-                                    store.indices.push(offset + 2);
-                                    store.indices.push(offset + 0);
-                                    store.indices.push(offset + 2);
-                                    store.indices.push(offset + 3);
+                                store.positions.push(vx - sx - tx)
+                                store.positions.push(vy - sy - ty)
+                                store.positions.push(vz - sz - tz)
+                                store.positions.push(vx + sx - tx)
+                                store.positions.push(vy + sy - ty)
+                                store.positions.push(vz + sz - tz)
+                                store.positions.push(vx + sx + tx)
+                                store.positions.push(vy + sy + ty)
+                                store.positions.push(vz + sz + tz)
+                                store.positions.push(vx - sx + tx)
+                                store.positions.push(vy - sy + ty)
+                                store.positions.push(vz - sz + tz)
 
-                                    store.positions.push(vx - sx - tx)
-                                    store.positions.push(vy - sy - ty)
-                                    store.positions.push(vz - sz - tz)
-                                    store.positions.push(vx + sx - tx)
-                                    store.positions.push(vy + sy - ty)
-                                    store.positions.push(vz + sz - tz)
-                                    store.positions.push(vx + sx + tx)
-                                    store.positions.push(vy + sy + ty)
-                                    store.positions.push(vz + sz + tz)
-                                    store.positions.push(vx - sx + tx)
-                                    store.positions.push(vy - sy + ty)
-                                    store.positions.push(vz - sz + tz)
-
-                                    store.normals.push(nx);
-                                    store.normals.push(ny);
-                                    store.normals.push(nz);
-                                    store.normals.push(nx);
-                                    store.normals.push(ny);
-                                    store.normals.push(nz);
-                                    store.normals.push(nx);
-                                    store.normals.push(ny);
-                                    store.normals.push(nz);
-                                    store.normals.push(nx);
-                                    store.normals.push(ny);
-                                    store.normals.push(nz);
+                                store.normals.push(nx);
+                                store.normals.push(ny);
+                                store.normals.push(nz);
+                                store.normals.push(nx);
+                                store.normals.push(ny);
+                                store.normals.push(nz);
+                                store.normals.push(nx);
+                                store.normals.push(ny);
+                                store.normals.push(nz);
+                                store.normals.push(nx);
+                                store.normals.push(ny);
+                                store.normals.push(nz);
 
 
-                                    var add = 0.2
-                                    var base = 0.4
+                                var add = 0.2
+                                var base = 0.4
 
-                                    var brightness =
-                                        (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
-                                        (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
-                                        (exists(px + nx - ax - bx, py + ny - ay - by, pz + nz - az - bz) ? 0 : add) + base;
+                                var brightness =
+                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
+                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
+                                    (exists(px + nx - ax - bx, py + ny - ay - by, pz + nz - az - bz) ? 0 : add) + base;
 
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(1.0);
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(1.0);
 
 
-                                    var brightness =
-                                        (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
-                                        (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
-                                        (exists(px + nx + ax - bx, py + ny + ay - by, pz + nz + az - bz) ? 0 : add) + base;
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(1.0);
+                                var brightness =
+                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
+                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
+                                    (exists(px + nx + ax - bx, py + ny + ay - by, pz + nz + az - bz) ? 0 : add) + base;
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(1.0);
 
-                                    var brightness =
-                                        (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
-                                        (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
-                                        (exists(px + nx + ax + bx, py + ny + ay + by, pz + nz + az + bz) ? 0 : add) + base;
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(1.0);
+                                var brightness =
+                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
+                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
+                                    (exists(px + nx + ax + bx, py + ny + ay + by, pz + nz + az + bz) ? 0 : add) + base;
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(1.0);
 
-                                    var brightness =
-                                        (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
-                                        (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
-                                        (exists(px + nx - ax + bx, py + ny - ay + by, pz + nz - az + bz) ? 0 : add) + base;
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(brightness);
-                                    store.colors.push(1.0);
+                                var brightness =
+                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
+                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
+                                    (exists(px + nx - ax + bx, py + ny - ay + by, pz + nz - az + bz) ? 0 : add) + base;
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(brightness);
+                                store.colors.push(1.0);
 
-                                    //u(store.uvs, CHIP_RATIO_1 * block);
-                                    u(store.uvs, CHIP_RATIO_1 * block);
+                                //u(store.uvs, CHIP_RATIO_1 * block);
+                                u(store.uvs, CHIP_RATIO_1 * block);
 
-                                    store.offset += 4
-                                }
+                                store.offset += 4
                             }
+                        }
 
-                            square(-1,  0,  0, nxUV)
-                            square( 1,  0,  0, pxUV)
-                            square( 0, -1,  0, nyUV)
-                            square( 0,  1,  0, pyUV)
-                            square( 0,  0, -1, nzUV)
-                            square( 0,  0,  1, pzUV)
+                        switch (block){
+                            case airBlock:
+                                break;
+                            case waterBlock:
+                                square( 0,  1,  0, pyUV);
+                                break;
+                            default:
+                                square(-1,  0,  0, nxUV);
+                                square( 1,  0,  0, pxUV);
+                                square( 0, -1,  0, nyUV);
+                                square( 0,  1,  0, pyUV);
+                                square( 0,  0, -1, nzUV);
+                                square( 0,  0,  1, pzUV);
+                                break;
                         }
                     }
                 }
             }
 
             return {
-                standardMaterialBlocks: meshData
+                standardMaterialBlocks: standardMaterialBlockStore,
+                waterMaterialBlocks: waterBlockStore
             }
         }
     }

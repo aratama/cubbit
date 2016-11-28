@@ -52,24 +52,24 @@ exports._createBlockMapJS = function(references){
                 }
 
 
+                function getHeight(gx, gz){
+                    var r = (simplex2(gx * terrainScale)(gz * terrainScale)(noise) + 1.0) * 0.5;
+                    return Math.floor(r * maxHeight)
+                }
+
                 // terrain
                 for(var lz = 0; lz <= chunkSize - 1; lz++){
                     for(var lx = 0; lx <= chunkSize - 1; lx++){
                         var gx = chunkSize * cx + lx
                         var gz = chunkSize * cz + lz
-                        var x = gx
-                        var z = gz
-                        var r = (simplex2(x * terrainScale)(z * terrainScale)(noise) + 1.0) * 0.5
-                        var h = Math.max(waterBlockHeight, Math.floor(r * maxHeight))
-                        var top = Math.min(h, chunkSize * (cy + 1) - 1)
-                        var bottom = chunkSize * cy
-                        if(top < bottom){
-
-                        }else{
-                            for(var gy = bottom; gy <= top; gy++){
-                                var ly = gy - chunkSize * cy;
-                                var blockType = gy <= waterBlockHeight ? waterBlock : grassBlock;
-                                put(lx, ly, lz, blockType);
+                        var h = getHeight(gx, gz)
+                        for(var ly = 0; ly < chunkSize; ly++){
+                            var gy = chunkSize * cy + ly;
+                            var ly = gy - chunkSize * cy;
+                            if(gy <= h){
+                                put(lx, ly, lz, grassBlock);
+                            }else if(gy <= waterBlockHeight){
+                                put(lx, ly, lz, waterBlock);
                             }
                         }
                     }
@@ -80,24 +80,27 @@ exports._createBlockMapJS = function(references){
                     for(var lx = 0; lx <= chunkSize - 1; lx++){
                         var gx = chunkSize * cx + lx
                         var gz = chunkSize * cz + lz
-                        var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
-                        if((r % 100) === 29){
-                            // get height
-                            var top = null;
-                            for(var ly = chunkSize - 1; 0 <= ly; ly--){
-                                if(lookup(lx, ly, lz) === grassBlock){
-                                    top = ly;
-                                    break;
+                        var h = getHeight(gx, gz)
+                        if(waterBlockHeight < h){
+                            var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
+                            if((r % 100) === 29){
+                                // get height
+                                var top = null;
+                                for(var ly = chunkSize - 1; 0 <= ly; ly--){
+                                    if(lookup(lx, ly, lz) === grassBlock){
+                                        top = ly;
+                                        break;
+                                    }
                                 }
-                            }
-                            if(top !== null){
-                                for(var i = 0; i < 3 && top + 1 + i < chunkSize; i++){
-                                    put(lx, top + 1 + i, lz, woodBlock);
-                                }
-                                for(var i = 3; i < 6 && top + 1 + i < chunkSize; i++){
-                                    for(var dx = -1; dx <= 1; dx++){
-                                        for(var dz = -1; dz <= 1; dz++){
-                                            put(lx + dx, top + 1 + i, lz + dz, leavesBlock);
+                                if(top !== null){
+                                    for(var i = 0; i < 3 && top + 1 + i < chunkSize; i++){
+                                        put(lx, top + 1 + i, lz, woodBlock);
+                                    }
+                                    for(var i = 3; i < 6 && top + 1 + i < chunkSize; i++){
+                                        for(var dx = -1; dx <= 1; dx++){
+                                            for(var dz = -1; dz <= 1; dz++){
+                                                put(lx + dx, top + 1 + i, lz + dz, leavesBlock);
+                                            }
                                         }
                                     }
                                 }

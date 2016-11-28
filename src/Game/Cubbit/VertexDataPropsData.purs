@@ -3,7 +3,8 @@ module Game.Cubbit.VertexDataPropsData (VertexDataPropsData(VertexDataPropsData)
 import Graphics.Babylon.VertexData (VertexDataProps)
 
 newtype VertexDataPropsData = VertexDataPropsData {
-    standardMaterialBlocks :: VertexDataProps
+    standardMaterialBlocks :: VertexDataProps,
+    waterMaterialBlocks :: VertexDataProps
 }
 
 

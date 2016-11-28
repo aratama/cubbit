@@ -6,15 +6,6 @@ import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import PerlinNoise (Noise, simplex2)
 
-maxHeight :: Int
-maxHeight = 25
-
-terrainScale :: Number
-terrainScale = 0.01
-
-waterBlockHeight :: Int
-waterBlockHeight = 3
-
 type GenerateReferences = {
     chunkSize :: Int,
     terrainScale :: Number,
@@ -30,7 +21,7 @@ generateReferences = {
     chunkSize: chunkSize,
     terrainScale: 0.01,
     waterBlockHeight: 3,
-    maxHeight: 25,
+    maxHeight: 15,
     blockTypes: blockTypes,
     simplex2: simplex2,
     runChunkIndex: runChunkIndex
