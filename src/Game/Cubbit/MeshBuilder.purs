@@ -1,9 +1,9 @@
-module Game.Cubbit.MeshBuilder (createTerrainGeometry, createChunkMesh, updateChunkMesh) where
+module Game.Cubbit.MeshBuilder (createTerrainGeometry, createChunkMesh, updateChunkMesh, loadDefaultChunk) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
 import Data.Array (length)
@@ -12,7 +12,7 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
-import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex)
@@ -26,7 +26,7 @@ import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
-import Prelude (($), (=<<), (<))
+import Prelude (($), (=<<), (<), (-), (+))
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -52,9 +52,39 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
+
+
+loadDefaultChunk :: forall eff. Ref State -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
+loadDefaultChunk ref index = do
+    State state@{ terrain: Terrain terrain } <- readRef ref
+    let ci = runChunkIndex index
+    boxMapMaybe <- lookupChunk index state.terrain
+    case boxMapMaybe of
+        Just _ -> pure false
+        Nothing -> do
+            insertChunk {
+                x: ci.x,
+                y: ci.y,
+                z: ci.z,
+                blocks: createBlockMap terrain.noise index,
+                standardMaterialMesh: MeshNotLoaded
+            } state.terrain
+            pure true
+
+
 createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
 createChunkMesh ref materials scene index = do
     State state@{ terrain: Terrain terrain } <- readRef ref
+
+    let i = runChunkIndex index
+    forE (i.x - 1) (i.x + 2) \x -> do
+        forE (i.y - 1) (i.y + 2) \y -> do
+            forE (i.z - 1) (i.z + 2) \z -> void do
+                loadDefaultChunk ref (chunkIndex x y z)
+
+
+
+
 
     boxMapMaybe <- lookupChunk index state.terrain
     let boxMap = case boxMapMaybe of

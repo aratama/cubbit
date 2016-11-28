@@ -27,7 +27,7 @@ import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
-import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.MeshBuilder (createChunkMesh, loadDefaultChunk)
 import Game.Cubbit.Terrain (Terrain(..), chunkCount, disposeChunk, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
@@ -172,64 +172,30 @@ update ref scene materials shadowMap cursor camera = do
             let costLimit = 100
             costRef <- newRef 0
 
-            unit # tailRecM \_ -> do
-                cost <- readRef costRef
-                if costLimit < cost
-                    then pure (Done unit)
-                    else do
-                        State st <- readRef ref
-                        case st.updateList of
-                            Nil -> pure (Done unit)
-                            Cons index tail -> do
-                                chunkMaybe <- lookupChunk index st.terrain
-                                case chunkMaybe of
-                                    Nothing -> void do
-                                        modifyRef costRef ((+) 1)
-                                    Just _ -> void do
-                                        createChunkMesh ref materials scene index
-                                        modifyRef costRef ((+) 10)
-                                modifyRef ref (\(State st) -> State st {
-                                    updateList = tail
-                                })
-                                pure (Loop unit)
-
-            let loop s e f =    tailRecM (\i -> do
-                                    cost <- readRef costRef
-                                    if i <= e && cost < costLimit
-                                        then do
-                                            f i
-                                            pure (Loop (i + 1))
-                                        else pure (Done unit)
-                                ) s
-
-
-
             let ci = runChunkIndex cameraPositionChunkIndex
 
+            let loadAndGenerateChunk index = do
+
+                    createChunkMesh ref materials scene index
+
+                    State st <- readRef ref
+                    size <- chunkCount st.terrain
+                    log $ "total chunks:" <> show (size + 1)
+                    -- log $ "load chunk: " <> show index
+
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
+
                 let index = chunkIndex x y z
-                State st <- readRef ref
                 chunkMaybe <- lookupChunk index state.terrain
                 case chunkMaybe of
-                    Just _ -> do
-                        --modifyRef costRef ((+) 0)
-                        pure 1
+                    Just chunkWithMaybe -> do
+                        case chunkWithMaybe.standardMaterialMesh of
+                            MeshNotLoaded -> do
+                                loadAndGenerateChunk index
+                                pure 100
+                            _ -> pure 1
                     Nothing -> do
-                        result <- createChunkMesh ref materials scene index
-                        -- log $ "load chunk: " <> show index
-                        size <- chunkCount st.terrain
-                        log $ "total chunks:" <> show (size + 1)
-
-                        let i = runChunkIndex index
-                        let news = do
-                                x <- (-1) .. 1
-                                y <- (-1) .. 1
-                                z <- (-1) .. 1
-                                pure (chunkIndex (i.x + x) (i.y + y) (i.z + z))
-                        modifyRef ref (\(State st) -> State st {
-                            updateList = nub (st.updateList <> news)
-                        })
-
+                        loadAndGenerateChunk index
                         pure 100
 
 

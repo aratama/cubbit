@@ -35,7 +35,6 @@ newtype State = State {
     totalFrames :: Int,
     minimap :: Boolean,
 
-    updateList :: List ChunkIndex,
     playerMeshes :: Array AbstractMesh,
 
 

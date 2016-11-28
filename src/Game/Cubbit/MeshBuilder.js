@@ -118,6 +118,8 @@ exports.createTerrainGeometryJS = function(references){
                         var block = chunkWithMesh.blocks.blocks[globalIndexToLocalIndex(gi)];
                         return block !== airBlock;
                     }else{
+                        var i = globalIndexToLocalIndex(gi);
+                        debugger;
                         return true;
                     }
                 }

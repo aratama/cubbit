@@ -3,7 +3,7 @@ module Game.Cubbit.Main (main) where
 import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind, when)
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
 import Data.Foldable (for_)
@@ -45,7 +45,7 @@ import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Prelude (negate, (#), ($), (+), (/), (<$>), (==))
+import Prelude (negate, (#), ($), (+), (/), (<$>), (==), (-))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -222,7 +222,6 @@ runApp canvasGL canvas2d = do
         velocity: { x: 0.0, y: 0.2, z: 0.0 },
         minimap: false,
         totalFrames: 0,
-        updateList: Nil,
         playerMeshes: [],
         updateIndex: toNullable Nothing,
         unloadingChunkIndex: 0
@@ -270,26 +269,13 @@ runApp canvasGL canvas2d = do
 
     -- load initial chunks
     do
-        let indices = do
-                x <- (- 2) .. 2
-                y <- (- 2) .. 2
-                z <- (- 2) .. 2
-                pure (chunkIndex x y z)
-        for_ indices \index -> do
-            State state@{ terrain: Terrain terrain } <- readRef ref
-            let boxMap = createBlockMap terrain.noise index
-            let ci = runChunkIndex index
-            let result = {
-                        x: ci.x,
-                        y: ci.y,
-                        z: ci.z,
-                        blocks: boxMap,
-                        standardMaterialMesh: MeshNotLoaded
-                    }
-            insertChunk result state.terrain
+        let initialWorldSize = 2
 
-        for_ indices \index -> do
-            createChunkMesh ref materials scene index
+        forE (-initialWorldSize) initialWorldSize \x -> do
+            forE (-initialWorldSize) initialWorldSize \y -> do
+                forE (-initialWorldSize) initialWorldSize \z -> void do
+                    let index = chunkIndex x y z
+                    createChunkMesh ref materials scene index
 
 
     -- start game loop
