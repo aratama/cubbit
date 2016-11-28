@@ -271,7 +271,9 @@ exports.createTerrainGeometryJS = function(references){
                 }
             }
 
-            return {  terrain: chunk, standardMaterialBlocks: meshData }
+            return {
+                standardMaterialBlocks: meshData
+            }
         }
     }
 }

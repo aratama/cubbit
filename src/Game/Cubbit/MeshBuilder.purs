@@ -82,9 +82,6 @@ createChunkMesh ref materials scene index = do
                 loadDefaultChunk ref (chunkIndex x y z)
 
 
-
-
-
     boxMapMaybe <- lookupChunk index state.terrain
     let boxMap = case boxMapMaybe of
                     Nothing -> createBlockMap terrain.noise index
@@ -108,7 +105,7 @@ createChunkMesh ref materials scene index = do
                 x: ci.x,
                 y: ci.y,
                 z: ci.z,
-                blocks: verts.terrain,
+                blocks: boxMap,
                 standardMaterialMesh: result
             } state.terrain
 
@@ -131,11 +128,11 @@ generateMesh index verts mat scene = do
 
 
 updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-updateChunkMesh ref materials scene chunkWithMesh = void do
+updateChunkMesh ref materials scene chunkWithMesh@{ blocks: Chunk chunk } = void do
 
     State state <- readRef ref
 
-    VertexDataPropsData verts@{ terrain: Chunk chunk } <- pure (createTerrainGeometry state.terrain chunkWithMesh.blocks)
+    VertexDataPropsData verts <- pure (createTerrainGeometry state.terrain chunkWithMesh.blocks)
 
     let index = chunk.index
 
@@ -150,7 +147,7 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         x: ci.x,
         y: ci.y,
         z: ci.z,
-        blocks: verts.terrain,
+        blocks: Chunk chunk,
         standardMaterialMesh: MeshLoaded standardMaterialMesh
     }
     insertChunk mesh state.terrain

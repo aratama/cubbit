@@ -24,6 +24,7 @@ type GenerateReferences = {
     simplex2 :: Number -> Number -> Noise -> Number,
     runChunkIndex :: ChunkIndex -> { x :: Int, y :: Int, z :: Int }
 }
+
 generateReferences :: GenerateReferences
 generateReferences = {
     chunkSize: chunkSize,
