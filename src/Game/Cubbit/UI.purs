@@ -102,15 +102,13 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
                 chunkMaybe <- lookupChunk chunkIndex state.terrain
                 case chunkMaybe of
                     Nothing -> pure unit
-                    Just chunkData@{ blocks: Chunk chunk } -> void do
+                    Just chunkData -> void do
                         let localIndex = globalIndexToLocalIndex blockIndex
                         updateChunkMesh ref materials scene chunkData {
-                            blocks = Chunk chunk {
-                                blocks = case state.mode of
-                                    Put -> insert localIndex grassBlock chunk.blocks
-                                    Remove -> delete localIndex chunk.blocks
-                                    Move -> chunk.blocks
-                            }
+                            blocks = case state.mode of
+                                    Put -> insert localIndex grassBlock chunkData.blocks
+                                    Remove -> delete localIndex chunkData.blocks
+                                    Move -> chunkData.blocks
                         }
 
 

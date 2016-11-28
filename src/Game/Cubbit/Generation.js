@@ -109,11 +109,7 @@ exports._createBlockMapJS = function(references){
                     }
                 }
 
-
-                return {
-                    index: index,
-                    blocks: stmap
-                }
+                return stmap
             }
         }
     }

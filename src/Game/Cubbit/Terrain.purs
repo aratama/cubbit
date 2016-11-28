@@ -1,7 +1,7 @@
 module Game.Cubbit.Terrain (
  Terrain(..), emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
- lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, disposeChunk, chunkCount, getChunkMap
+ lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, chunkCount, getChunkMap
 ) where
 
 import Control.Bind (bind, pure)
@@ -77,7 +77,7 @@ lookupBlock globalIndex (Terrain terrain) = do
         let localIndex = globalIndexToLocalIndex globalIndex
         chunkMaybe <- lookup chunkIndex terrain.map
         case chunkMaybe of
-            Just { blocks: Chunk chunk@{ blocks } } -> case  Boxel.lookup localIndex blocks of
+            Just { blocks } -> case  Boxel.lookup localIndex blocks of
                 Just blockType -> pure if blockType == airBlock then Nothing else Just blockType
                 _ -> pure Nothing
             _ -> pure Nothing
@@ -92,10 +92,6 @@ globalIndexToLocalIndex index = localIndex cx cy cz
     cz = globalIndex.z - chunkSize * chunkIndex.z
 
 insertChunk :: forall eff. ChunkWithMesh -> Terrain -> Eff eff Unit
-insertChunk cmesh@{ blocks: Chunk chunk@{ index } } (Terrain chunks) = insert index cmesh chunks.map
+insertChunk cmesh (Terrain terrain) = insert cmesh.index cmesh terrain.map
 
-disposeChunk :: forall eff. ChunkWithMesh -> Eff (babylon :: BABYLON | eff) Unit
-disposeChunk chunk = case chunk.standardMaterialMesh of
-    MeshNotLoaded -> pure unit
-    MeshLoaded mesh -> dispose true $ meshToAbstractMesh mesh
-    EmptyMeshLoaded -> pure unit
+

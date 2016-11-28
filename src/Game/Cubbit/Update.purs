@@ -17,12 +17,12 @@ import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(MeshNotLoaded, MeshLoaded))
+import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, disposeChunk, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
@@ -207,13 +207,13 @@ update ref scene materials shadowMap cursor camera = do
                 chunkWithMeshMaybe <- peekAt (s - 1) terrain.map
                 case chunkWithMeshMaybe of
                     Nothing -> pure (Loop (i + 1))
-                    Just chunkWithMesh@{ blocks: Chunk chunk } -> do
-                        let distance = chunkIndexDistance cameraPositionChunkIndex chunk.index
+                    Just chunkWithMesh -> do
+                        let distance = chunkIndexDistance cameraPositionChunkIndex chunkWithMesh.index
                         if unloadDistance <= distance
                             then do
                                 disposeChunk chunkWithMesh
-                                delete chunk.index terrain.map
-                                let ci = runChunkIndex chunk.index
+                                delete chunkWithMesh.index terrain.map
+                                let ci = runChunkIndex chunkWithMesh.index
                                 log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
                                 pure (Loop (i + 20))
                             else pure (Loop (i + 1))

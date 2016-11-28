@@ -10,15 +10,14 @@ import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockTypes, blockTypes)
-import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
+import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
-import Game.Cubbit.Terrain (Terrain(Terrain), disposeChunk, globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Materials, State(State))
-import Game.Cubbit.VertexDataPropsData (VertexDataPropsData(..))
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (Material)
@@ -61,12 +60,15 @@ loadDefaultChunk ref index = do
     case boxMapMaybe of
         Just _ -> pure false
         Nothing -> do
+            blocks <- pure (createBlockMap terrain.noise index)
             insertChunk {
                 x: ci.x,
                 y: ci.y,
                 z: ci.z,
-                blocks: createBlockMap terrain.noise index,
-                standardMaterialMesh: MeshNotLoaded
+                index,
+                blocks,
+                standardMaterialMesh: MeshNotLoaded,
+                waterMaterialMesh: EmptyMeshLoaded
             } state.terrain
             pure true
 
@@ -83,33 +85,44 @@ createChunkMesh ref materials scene index = do
 
 
     boxMapMaybe <- lookupChunk index state.terrain
-    let boxMap = case boxMapMaybe of
+    blocks <- pure case boxMapMaybe of
                     Nothing -> createBlockMap terrain.noise index
                     Just m -> m.blocks
 
-    case createTerrainGeometry (Terrain terrain) boxMap of
-        VertexDataPropsData verts@{ standardMaterialBlocks: VertexDataProps vertices } -> do
+    case createTerrainGeometry (Terrain terrain) (Chunk { index, blocks }) of
+        VertexDataPropsData verts@{
+            standardMaterialBlocks: VertexDataProps standardMaterialBlocks,
+            waterMaterialBlocks: VertexDataProps waterMaterialBlocks
+        } -> do
             chunkMaybe <- lookupChunk index state.terrain
             case chunkMaybe of
                 Nothing -> pure unit
                 Just chunkData -> disposeChunk chunkData
 
             let ci = runChunkIndex index
-            result <- if 0 < length vertices.indices
-                then do
-                    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-                    pure (MeshLoaded standardMaterialMesh)
-                else do
-                    pure EmptyMeshLoaded
+
+
+            let gen vertices = if 0 < length vertices.indices
+                    then do
+                        standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
+                        pure (MeshLoaded standardMaterialMesh)
+                    else do
+                        pure EmptyMeshLoaded
+
+            standardMaterialMesh <- gen standardMaterialBlocks
+            waterMaterialMesh <- gen waterMaterialBlocks
+
             insertChunk {
                 x: ci.x,
                 y: ci.y,
                 z: ci.z,
-                blocks: boxMap,
-                standardMaterialMesh: result
+                index,
+                blocks,
+                standardMaterialMesh,
+                waterMaterialMesh
             } state.terrain
 
-            pure (0 < length vertices.indices)
+            pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
 
 generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Eff (babylon :: BABYLON | eff) Mesh
 generateMesh index verts mat scene = do
@@ -128,15 +141,15 @@ generateMesh index verts mat scene = do
 
 
 updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-updateChunkMesh ref materials scene chunkWithMesh@{ blocks: Chunk chunk } = void do
+updateChunkMesh ref materials scene chunkWithMesh = void do
 
     State state <- readRef ref
 
-    VertexDataPropsData verts <- pure (createTerrainGeometry state.terrain chunkWithMesh.blocks)
+    let index = chunkWithMesh.index
 
-    let index = chunk.index
+    VertexDataPropsData verts <- pure (createTerrainGeometry state.terrain (Chunk { index, blocks: chunkWithMesh.blocks }))
 
-    chunkDataMaybe <- lookupChunk chunk.index state.terrain
+    chunkDataMaybe <- lookupChunk index state.terrain
     case chunkDataMaybe of
         Nothing -> pure unit
         Just chunkData -> disposeChunk chunkData
@@ -147,8 +160,10 @@ updateChunkMesh ref materials scene chunkWithMesh@{ blocks: Chunk chunk } = void
         x: ci.x,
         y: ci.y,
         z: ci.z,
-        blocks: Chunk chunk,
-        standardMaterialMesh: MeshLoaded standardMaterialMesh
+        index,
+        blocks: chunkWithMesh.blocks,
+        standardMaterialMesh: MeshLoaded standardMaterialMesh,
+        waterMaterialMesh: EmptyMeshLoaded
     }
     insertChunk mesh state.terrain
 
