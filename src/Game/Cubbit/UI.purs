@@ -9,7 +9,7 @@ import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
 import Graphics.Babylon (Canvas)
-import Graphics.Babylon.AbstractMesh (setIsVisible, setPosition) as AbstractMesh
+import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Game.Cubbit.BlockType (grassBlock)
 import Game.Cubbit.BoxelMap (delete, insert)
@@ -24,7 +24,6 @@ import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Scene (getDebugLayer, setActiveCameras)
 import Graphics.Babylon.TargetCamera (TargetCamera, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
-import Graphics.Babylon.Vector3 (toVector3)
 import Graphics.Canvas (CanvasElement)
 import Prelude (($))
 
@@ -63,7 +62,7 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
 
     let prepareModeButton id value = onButtonClick id do
             modifyRef ref (\(State state) -> State state { mode = value })
-            AbstractMesh.setIsVisible (case value of
+            setIsVisible (case value of
                 Put -> true
                 Remove -> true
                 Move -> false) (meshToAbstractMesh cursor)

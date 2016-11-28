@@ -3,8 +3,8 @@ module Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex, chunkIndex
 import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
 import Data.Generic (class Generic, gCompare, gEq)
 import Data.Ord (class Ord, abs, max)
-import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Prelude (class Eq, class Show, show, (-), (<$>))
+import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex, eqBlockIndex, showBlockIndex)
+import Prelude (class Eq, class Show, show, (-), (<$>), eq, (==))
 
 newtype ChunkIndex = ChunkIndex BlockIndex
 
@@ -23,21 +23,14 @@ chunkIndexDistance (ChunkIndex a) (ChunkIndex b) =  max dx (max dy dz)
     i = runBlockIndex a
     k = runBlockIndex b
 
-derive instance generic_ChunkIndex :: Generic ChunkIndex
-
-instance eq_ChunkIndex :: Eq ChunkIndex where
-    eq = gEq
-
-instance ord_ChunkIndex :: Ord ChunkIndex where
-    compare = gCompare
-
-instance show_Show :: Show ChunkIndex where
-    show (ChunkIndex i) = show i
-
 instance isForeign_ChunkIndex :: IsForeign ChunkIndex where
     read value = ChunkIndex <$> read value
 
 instance asForeign_ChunkIndex :: AsForeign ChunkIndex where
     write (ChunkIndex i) = write i
 
+instance eqChunkIndex :: Eq ChunkIndex where
+    eq (ChunkIndex a) (ChunkIndex b) = eqBlockIndex a b
 
+instance showChunkIndex :: Show ChunkIndex where
+    show (ChunkIndex a) = showBlockIndex a

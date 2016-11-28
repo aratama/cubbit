@@ -5,25 +5,21 @@ import Control.Alternative (pure)
 import Control.Bind (bind, when)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Console (error)
-import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
+import Control.Monad.Eff.Ref (modifyRef, newRef)
 import Data.Foldable (for_)
-import Data.List (List(..), (..))
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Unit (Unit, unit)
-import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded))
-import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (fogDensity)
 import Game.Cubbit.Event (onKeyDown)
-import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(Terrain), emptyTerrain, insertChunk)
+import Game.Cubbit.Terrain (emptyTerrain)
 import Game.Cubbit.Types (Effects, Mode(..), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
-import Graphics.Babylon.AbstractMesh (getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
-import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible) as AbstractMesh
+import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
@@ -45,7 +41,7 @@ import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Prelude (negate, (#), ($), (+), (/), (<$>), (==), (-))
+import Prelude (negate, (#), ($), (+), (/), (<$>), (==))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -72,8 +68,6 @@ runApp canvasGL canvas2d = do
         sce <- createScene engine
         setFogMode fOGMODE_EXP sce
         setFogDensity fogDensity sce
-        --setFogStart fogStart sce
-        --setFogEnd fogEnd sce
         fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
         setFogColor fogColor sce
         setCollisionsEnabled true sce
@@ -94,7 +88,7 @@ runApp canvasGL canvas2d = do
         setViewport viewport (targetCameraToCamera cam)
         pure cam
 
-    camera <- do
+    freeCamera <- do
         cameraPosition <- createVector3 3.0 17.0 3.0
 
         cam <- createFreeCamera "free-camera" cameraPosition scene
@@ -110,8 +104,8 @@ runApp canvasGL canvas2d = do
 
         pure cam
 
-    setActiveCameras [freeCameraToCamera camera] scene
-    setActiveCamera (freeCameraToCamera camera) scene
+    setActiveCameras [freeCameraToCamera freeCamera] scene
+    setActiveCamera (freeCameraToCamera freeCamera) scene
 
     do
         hemiPosition <- createVector3 0.0 1.0 0.0
@@ -135,8 +129,8 @@ runApp canvasGL canvas2d = do
     cursor <- do
         cursorbox <- createBox "cursor" 1.0 scene
         setRenderingGroupId 1 (meshToAbstractMesh cursorbox)
-        AbstractMesh.setIsPickable false (meshToAbstractMesh cursorbox)
-        AbstractMesh.setIsVisible false (meshToAbstractMesh cursorbox)
+        setIsPickable false (meshToAbstractMesh cursorbox)
+        setIsVisible false (meshToAbstractMesh cursorbox)
 
         mat <- createStandardMaterial "cursormat" scene
         setWireframe true (standardMaterialToMaterial mat)
@@ -227,7 +221,7 @@ runApp canvasGL canvas2d = do
         unloadingChunkIndex: 0
     }
 
-    initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials
+    initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
 
 {-
     do
@@ -280,7 +274,7 @@ runApp canvasGL canvas2d = do
 
     -- start game loop
     engine # runRenderLoop do
-        update ref scene materials shadowMap cursor camera
+        update ref scene materials shadowMap cursor freeCamera
         render scene
 
 main :: forall eff. Eff (Effects eff) Unit

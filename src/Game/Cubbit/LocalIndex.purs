@@ -3,13 +3,12 @@ module Game.Cubbit.LocalIndex (LocalIndex, localIndex, runLocalIndex) where
 import Control.Alternative (pure)
 import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Class (class AsForeign, class IsForeign)
-import Data.Generic (class Generic, gCompare, gEq, gShow)
+import Data.Generic (class Generic, gCompare, gEq)
 import Data.Ord (class Ord)
 import Data.Show (show)
 import Game.Cubbit.Constants (chunkSize)
 import Prelude (class Eq, class Show, (+), (-), (*), (/), mod)
 import Data.Newtype (class Newtype)
-
 
 newtype LocalIndex = LocalIndex Int
 

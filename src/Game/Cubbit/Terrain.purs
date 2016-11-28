@@ -22,7 +22,6 @@ import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (dispose)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
-import Graphics.Babylon.Types (Mesh)
 import PerlinNoise (Noise, createNoise)
 import Prelude ((*), (/), (+), (-), ($), (==))
 

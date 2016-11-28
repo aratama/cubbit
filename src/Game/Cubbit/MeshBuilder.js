@@ -118,7 +118,7 @@ exports.createTerrainGeometryJS = function(references){
                         var block = chunkWithMesh.blocks.blocks[globalIndexToLocalIndex(gi)];
                         return block !== airBlock;
                     }else{
-                        var i = globalIndexToLocalIndex(gi);
+                        // nerver com here
                         debugger;
                         return true;
                     }

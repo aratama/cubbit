@@ -18,3 +18,4 @@ wait = makeAff \reject resolve -> _wait reject resolve
 foreign import _wait :: forall eff. (Error -> Eff (dom :: DOM | eff) Unit) -> (Unit -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
 foreign import onKeyDown :: forall eff. ({ keyCode :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
+

@@ -4,8 +4,7 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void)
 import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef)
 import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
@@ -26,7 +25,7 @@ import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
-import Prelude (($), (=<<), (<), (-), (+))
+import Prelude ((+), (-), (<), (=<<))
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,

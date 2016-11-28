@@ -4,7 +4,7 @@ import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.Chunk (Chunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
-import PerlinNoise (Noise, createNoise, simplex2)
+import PerlinNoise (Noise, simplex2)
 
 maxHeight :: Int
 maxHeight = 25

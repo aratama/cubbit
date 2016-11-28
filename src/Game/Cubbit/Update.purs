@@ -2,49 +2,41 @@ module Game.Cubbit.Update (update, pickBlock) where
 
 import Control.Alt (void)
 import Control.Alternative (pure)
-import Control.Bind (bind, when, (>>=))
-import Control.Comonad.Store (store)
-import Control.Comonad.Store.Class (seeks)
-import Control.Monad.Eff (Eff, forE)
+import Control.Bind (bind, (>>=))
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
-import Control.Monad.List.Trans (zipWith)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
-import Control.MonadPlus (guard)
 import DOM (DOM)
-import Data.Array (catMaybes, head)
-import Data.Array.ST (emptySTArray, pushSTArray, runSTArray)
+import Data.Array (catMaybes)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
-import Data.List (List(..), elem, fromFoldable, notElem, nub, (:), (..))
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
+import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(MeshNotLoaded, MeshLoaded))
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
-import Game.Cubbit.MeshBuilder (createChunkMesh, loadDefaultChunk)
-import Game.Cubbit.Terrain (Terrain(..), chunkCount, disposeChunk, getChunkMap, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, disposeChunk, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (moveWithCollisions, setIsPickable)
-import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setCheckCollisions, getPosition, setPosition) as AbstractMesh
+import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
-import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
+import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getHit, getPickedPoint)
 import Graphics.Babylon.Scene (pick)
 import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
-import Graphics.Babylon.TargetCamera (getRotation)
-import Graphics.Babylon.Types (AbstractMesh, Mesh, Scene)
-import Graphics.Babylon.Vector3 (createVector3, runVector3, toVector3)
+import Graphics.Babylon.Types (Mesh, Scene)
+import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
-import Prelude (mod, ($), (+), (-), (/=), (<=), (<>), (==), (#), (<), (<=), negate, (&&), (<$>))
+import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -258,11 +250,6 @@ update ref scene materials shadowMap cursor camera = do
             for_ st.playerMeshes \mesh -> void do
                 position <- createVector3 st'.position.x (st'.position.y + 0.501) st'.position.z
                 AbstractMesh.setPosition position mesh
-
-
-
-
-
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

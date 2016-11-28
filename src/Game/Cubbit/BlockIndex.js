@@ -1,6 +1,3 @@
-exports.showBlockIndex = function(i){
-    return "" + i;
-}
 
 var _2_15 = 32768;       // 2^15
 var _2_16 = 65536;       // 2^16
@@ -25,4 +22,12 @@ exports.runBlockIndex = function(bits){
     return { x: x, y: y, z: z }
 }
 
+exports.eqBlockIndex = function(a){
+    return function(b){
+        return a === b;
+    }
+}
 
+exports.showBlockIndex = function(a){
+    return a.toString();
+}
