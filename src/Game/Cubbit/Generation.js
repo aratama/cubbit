@@ -24,15 +24,9 @@ exports._createBlockMapJS = function(references){
             var chunkBlockCount = chunkSize * chunkSize * chunkSize;
 
             if(cy < 0){
-                return {
-                    index: index,
-                    blocks: Uint8Array.from({ length: chunkBlockCount }, function(v, k){ return grassBlock })
-                }
+                return Uint8Array.from({ length: chunkBlockCount }, function(v, k){ return grassBlock })
             }else if(0 < cy){
-                return {
-                    index: index,
-                    blocks: new Uint8Array(chunkBlockCount)
-                }
+                return new Uint8Array(chunkBlockCount)
             }else{
 
                 // var stmap = Object.create({});

@@ -11,7 +11,7 @@ exports.foreachBlocks = function(size){
                             //console.log(JSON.stringify(index));
 
                             if( ! index){
-                                index = { size: size, cx: cx, cy: cy, cz: cz, i: 0, n: -size, m: -size };
+                                index = { size: size, cx: cx, cy: cy, cz: cz, i: 0, n: 0, m: 0 };
                             }else if(index.size != size || index.cx != cx || index.cy != cy || index.cz != cz){
                                 index.size = size;
                                 index.cx = cx;

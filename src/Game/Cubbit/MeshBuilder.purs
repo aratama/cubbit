@@ -111,7 +111,7 @@ createChunkMesh ref materials scene index = do
 
             standardMaterialMesh <- gen standardMaterialBlocks
             waterMaterialMesh <- gen waterMaterialBlocks
-
+            
             insertChunk {
                 x: ci.x,
                 y: ci.y,
@@ -155,6 +155,8 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Just chunkData -> disposeChunk chunkData
 
     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
+    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.boxMat scene
+
     let ci = runChunkIndex index
     mesh <- pure {
         x: ci.x,
@@ -163,7 +165,7 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         index,
         blocks: chunkWithMesh.blocks,
         standardMaterialMesh: MeshLoaded standardMaterialMesh,
-        waterMaterialMesh: EmptyMeshLoaded
+        waterMaterialMesh: MeshLoaded waterMaterialMesh
     }
     insertChunk mesh state.terrain
 

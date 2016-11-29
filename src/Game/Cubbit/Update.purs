@@ -168,12 +168,15 @@ update ref scene materials shadowMap cursor camera = do
 
             let loadAndGenerateChunk index = do
 
+                    let ci = runChunkIndex index
+
                     createChunkMesh ref materials scene index
 
                     State st <- readRef ref
                     size <- chunkCount st.terrain
+                    log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
                     log $ "total chunks:" <> show (size + 1)
-                    -- log $ "load chunk: " <> show index
+
 
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
 

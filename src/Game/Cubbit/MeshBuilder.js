@@ -118,6 +118,10 @@ exports.createTerrainGeometryJS = function(references){
                     var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
                     if(chunkWithMesh){
                         var block = chunkWithMesh.blocks[globalIndexToLocalIndex(gi)];
+                        if(typeof block == "undefined"){
+                            // nerver come here
+                            debugger;
+                        }
                         return block !== airBlock && block !== waterBlock;
                     }else{
                         // nerver come here
@@ -138,7 +142,6 @@ exports.createTerrainGeometryJS = function(references){
                         var py = oy + ly
                         var pz = oz + lz
 
-                        //var store = block == blockTypes.grassBlock ? standardMaterialBlockStore : water;
                         var store = block == waterBlock ? waterBlockStore : standardMaterialBlockStore;
 
                         // nx, ny, nz: normal vector
