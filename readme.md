@@ -1,5 +1,5 @@
 
-# Cubbit
+# Cubbit x Cubbit
 
 ![screenshot](https://rawgit.com/aratama/purescript-babylon/master/docs/screenshot3.png)
 

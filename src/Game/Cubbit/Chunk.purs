@@ -55,3 +55,4 @@ disposeChunk :: forall eff. ChunkWithMesh -> Eff (babylon :: BABYLON | eff) Unit
 disposeChunk chunk = do
     disposeLoadedMesh chunk.standardMaterialMesh
     disposeLoadedMesh chunk.waterMaterialMesh
+    disposeLoadedMesh chunk.transparentMaterialMesh
