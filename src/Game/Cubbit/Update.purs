@@ -176,10 +176,10 @@ update ref scene materials shadowMap cursor camera = do
 
                     createChunkMesh ref materials scene index
 
-                    State st <- readRef ref
-                    size <- chunkCount st.terrain
-                    log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
-                    log $ "total chunks:" <> show (size + 1)
+                    --State st <- readRef ref
+                    --size <- chunkCount st.terrain
+                    --log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
+                    --log $ "total chunks:" <> show (size + 1)
 
 
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
@@ -216,8 +216,8 @@ update ref scene materials shadowMap cursor camera = do
                 for_ (take 10 sliced) \chunkWithMesh -> do
                     disposeChunk chunkWithMesh
                     delete chunkWithMesh.index terrain.map
-                    let ci = runChunkIndex chunkWithMesh.index
-                    log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
+                    --let ci = runChunkIndex chunkWithMesh.index
+                    --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
 
         do
             State st@{ terrain } <- readRef ref

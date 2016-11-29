@@ -102,7 +102,16 @@ exports.createTerrainGeometryJS = function(references){
             var oy = chunkSize * chunkIndex.y;
             var oz = chunkSize * chunkIndex.z;
 
-            function exists(gx, gy, gz){
+
+            function solidBounds(block){
+                return block !== airBlock && block !== waterBlock;
+            }
+
+            function waterBounds(block){
+                return block !== airBlock;
+            }
+
+            function exists(gx, gy, gz, bounds){
                 var lx = gx - ox;
                 var ly = gy - oy;
                 var lz = gz - oz;
@@ -112,7 +121,7 @@ exports.createTerrainGeometryJS = function(references){
                     0 <= lz && lz < chunkSize
                 ){
                     var t = blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz];
-                    return t !== airBlock && t !== waterBlock;
+                    return bounds(t);
                 }else{
                     var gi = blockIndex(gx)(gy)(gz);
                     var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
@@ -122,7 +131,7 @@ exports.createTerrainGeometryJS = function(references){
                             // nerver come here
                             debugger;
                         }
-                        return block !== airBlock && block !== waterBlock;
+                        return bounds(block);
                     }else{
                         // nerver come here
                         debugger;
@@ -145,8 +154,8 @@ exports.createTerrainGeometryJS = function(references){
                         var store = block == waterBlock ? waterBlockStore : standardMaterialBlockStore;
 
                         // nx, ny, nz: normal vector
-                        function square(nx, ny, nz, u){
-                            if( ! exists(px + nx, py + ny, pz + nz)){
+                        function square(nx, ny, nz, u, bounds){
+                            if( ! exists(px + nx, py + ny, pz + nz, bounds)){
 
                                 // horizontal extent vector of the plane
                                 var ax = ny
@@ -219,9 +228,9 @@ exports.createTerrainGeometryJS = function(references){
                                 var base = 0.4
 
                                 var brightness =
-                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
-                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
-                                    (exists(px + nx - ax - bx, py + ny - ay - by, pz + nz - az - bz) ? 0 : add) + base;
+                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     , bounds) ? 0 : add) +
+                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz, bounds) ? 0 : add) +
+                                    (exists(px + nx - ax - bx, py + ny - ay - by, pz + nz - az - bz, bounds) ? 0 : add) + base;
 
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
@@ -230,27 +239,27 @@ exports.createTerrainGeometryJS = function(references){
 
 
                                 var brightness =
-                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
-                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz) ? 0 : add) +
-                                    (exists(px + nx + ax - bx, py + ny + ay - by, pz + nz + az - bz) ? 0 : add) + base;
+                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     , bounds) ? 0 : add) +
+                                    (exists(px + nx      - bx, py + ny      - by, pz + nz      - bz, bounds) ? 0 : add) +
+                                    (exists(px + nx + ax - bx, py + ny + ay - by, pz + nz + az - bz, bounds) ? 0 : add) + base;
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
                                 store.colors.push(1.0);
 
                                 var brightness =
-                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     ) ? 0 : add) +
-                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
-                                    (exists(px + nx + ax + bx, py + ny + ay + by, pz + nz + az + bz) ? 0 : add) + base;
+                                    (exists(px + nx + ax,      py + ny + ay,      pz + nz + az     , bounds) ? 0 : add) +
+                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz, bounds) ? 0 : add) +
+                                    (exists(px + nx + ax + bx, py + ny + ay + by, pz + nz + az + bz, bounds) ? 0 : add) + base;
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
                                 store.colors.push(1.0);
 
                                 var brightness =
-                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     ) ? 0 : add) +
-                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz) ? 0 : add) +
-                                    (exists(px + nx - ax + bx, py + ny - ay + by, pz + nz - az + bz) ? 0 : add) + base;
+                                    (exists(px + nx - ax,      py + ny - ay,      pz + nz - az     , bounds) ? 0 : add) +
+                                    (exists(px + nx      + bx, py + ny      + by, pz + nz      + bz, bounds) ? 0 : add) +
+                                    (exists(px + nx - ax + bx, py + ny - ay + by, pz + nz - az + bz, bounds) ? 0 : add) + base;
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
                                 store.colors.push(brightness);
@@ -267,15 +276,15 @@ exports.createTerrainGeometryJS = function(references){
                             case airBlock:
                                 break;
                             case waterBlock:
-                                square( 0,  1,  0, pyUV);
+                                square( 0,  1,  0, pyUV, waterBounds);
                                 break;
                             default:
-                                square(-1,  0,  0, nxUV);
-                                square( 1,  0,  0, pxUV);
-                                square( 0, -1,  0, nyUV);
-                                square( 0,  1,  0, pyUV);
-                                square( 0,  0, -1, nzUV);
-                                square( 0,  0,  1, pzUV);
+                                square(-1,  0,  0, nxUV, solidBounds);
+                                square( 1,  0,  0, pxUV, solidBounds);
+                                square( 0, -1,  0, nyUV, solidBounds);
+                                square( 0,  1,  0, pyUV, solidBounds);
+                                square( 0,  0, -1, nzUV, solidBounds);
+                                square( 0,  0,  1, pzUV, solidBounds);
                                 break;
                         }
                     }
