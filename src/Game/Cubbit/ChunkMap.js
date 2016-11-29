@@ -57,7 +57,7 @@ exports.delete = function(index){
         return function(){
             if(obj.map[index]){
                 var i = obj.list.findIndex(function(chunkWithMesh){
-                    return chunkWithMesh.blocks.index === index;
+                    return chunkWithMesh.index === index;
                 });
                 obj.list.splice(i, 1);
                 delete obj.map[index];
@@ -93,6 +93,25 @@ exports.filterNeighbors = function(range){
                             return Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy), Math.abs(a.z - cz)) <= range
                         });
                     }
+                }
+            }
+        }
+    }
+}
+
+
+exports.getSortedChunks = function(cx){
+    return function(cy){
+        return function(cz){
+            return function(obj){
+                return function(){
+                    var sorted = obj.list.slice();
+                    sorted.sort(function(a, b){
+                        var r = Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy), Math.abs(a.z - cz));
+                        var t = Math.max(Math.abs(b.x - cx), Math.abs(b.y - cy), Math.abs(b.z - cz));
+                        return r - t;
+                    });
+                    return sorted;
                 }
             }
         }

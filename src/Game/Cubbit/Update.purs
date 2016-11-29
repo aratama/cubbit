@@ -1,14 +1,15 @@
 module Game.Cubbit.Update (update, pickBlock) where
 
 import Control.Alt (void)
-import Control.Alternative (pure)
+import Control.Alternative (pure, when)
 import Control.Bind (bind, (>>=))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import DOM (DOM)
-import Data.Array (catMaybes)
+import Data.Array (catMaybes, drop, last, length, take)
+import Data.Array (slice) as Array
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
@@ -19,8 +20,8 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors)
-import Game.Cubbit.Constants (loadDistance, unloadDistance)
+import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors, getSortedChunks)
+import Game.Cubbit.Constants (loadDistance, unloadDistance, maximumLoadedChunks)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
@@ -153,7 +154,7 @@ update ref scene materials shadowMap cursor camera = do
 
         -- update shadow rendering list
         do
-            let ci = runChunkIndex cameraPositionChunkIndex    
+            let ci = runChunkIndex cameraPositionChunkIndex
             neighbors <- filterNeighbors 5 ci.x ci.y ci.z ter.map
             setRenderList (catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                 MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
@@ -208,24 +209,15 @@ update ref scene materials shadowMap cursor camera = do
             State st@{ terrain: Terrain terrain }<- readRef ref
             --sort ci.x ci.y ci.z terrain.map
 
-            tailRecM (\i -> if 100 < i then pure (Done unit) else do
-                s <- size terrain.map
-                chunkWithMeshMaybe <- peekAt (s - 1) terrain.map
-                case chunkWithMeshMaybe of
-                    Nothing -> pure (Loop (i + 1))
-                    Just chunkWithMesh -> do
-                        let distance = chunkIndexDistance cameraPositionChunkIndex chunkWithMesh.index
-                        if unloadDistance <= distance
-                            then do
-                                disposeChunk chunkWithMesh
-                                delete chunkWithMesh.index terrain.map
-                                let ci = runChunkIndex chunkWithMesh.index
-                                log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
-                                pure (Loop (i + 20))
-                            else pure (Loop (i + 1))
-            ) 0
-
-
+            loadedChunkCount <- size terrain.map
+            when (maximumLoadedChunks < loadedChunkCount) do
+                sorted <- getSortedChunks ci.x ci.y ci.z terrain.map
+                let sliced = drop maximumLoadedChunks sorted
+                for_ (take 10 sliced) \chunkWithMesh -> do
+                    disposeChunk chunkWithMesh
+                    delete chunkWithMesh.index terrain.map
+                    let ci = runChunkIndex chunkWithMesh.index
+                    log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
 
         do
             State st@{ terrain } <- readRef ref

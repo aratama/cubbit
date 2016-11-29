@@ -33,8 +33,7 @@ newtype State = State {
 
     playerMeshes :: Array AbstractMesh,
 
-    updateIndex :: Nullable ForeachIndex,
-    unloadingChunkIndex :: Int
+    updateIndex :: Nullable ForeachIndex
 }
 
 type Materials = {

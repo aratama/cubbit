@@ -224,8 +224,7 @@ runApp canvasGL canvas2d = do
         minimap: false,
         totalFrames: 0,
         playerMeshes: [],
-        updateIndex: toNullable Nothing,
-        unloadingChunkIndex: 0
+        updateIndex: toNullable Nothing
     }
 
     initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
