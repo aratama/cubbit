@@ -1,7 +1,7 @@
 
 # Cubbit x Cubbit
 
-![screenshot](https://rawgit.com/aratama/purescript-babylon/master/docs/screenshot3.png)
+![screenshot](https://rawgit.com/aratama/cubbit/master/res/screenshot/screenshot0001.png)
 
 My private game project.
 
