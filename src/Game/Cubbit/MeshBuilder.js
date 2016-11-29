@@ -98,6 +98,7 @@ exports.createTerrainGeometryJS = function(references){
 
             var standardMaterialBlockStore = prepareArray();
             var waterBlockStore = prepareArray();
+            var transparentMaterialVertexData = prepareArray();
 
             var chunkIndex = runChunkIndex(chunk.index);
             var ox = chunkSize * chunkIndex.x;
@@ -153,7 +154,9 @@ exports.createTerrainGeometryJS = function(references){
                         var py = oy + ly
                         var pz = oz + lz
 
-                        var store = block == waterBlock ? waterBlockStore : standardMaterialBlockStore;
+                        var store = block == waterBlock ? waterBlockStore :
+                                    block == bushBlock ? transparentMaterialVertexData :
+                                    standardMaterialBlockStore;
 
                         // nx, ny, nz: normal vector
                         function square(nx, ny, nz, u, bounds){
@@ -275,6 +278,8 @@ exports.createTerrainGeometryJS = function(references){
                         }
 
                         function bush(){
+                            var bushHeight = 0.4
+
                             var offset = store.offset
 
                             store.indices.push(offset + 0);
@@ -291,6 +296,20 @@ exports.createTerrainGeometryJS = function(references){
                             store.indices.push(offset + 2);
                             store.indices.push(offset + 0);
 
+                            store.indices.push(offset + 4 + 0);
+                            store.indices.push(offset + 4 + 1);
+                            store.indices.push(offset + 4 + 2);
+                            store.indices.push(offset + 4 + 0);
+                            store.indices.push(offset + 4 + 2);
+                            store.indices.push(offset + 4 + 3);
+
+                            store.indices.push(offset + 4 + 2);
+                            store.indices.push(offset + 4 + 1);
+                            store.indices.push(offset + 4 + 0);
+                            store.indices.push(offset + 4 + 3);
+                            store.indices.push(offset + 4 + 2);
+                            store.indices.push(offset + 4 + 0);
+
                             store.positions.push(px)
                             store.positions.push(py)
                             store.positions.push(pz)
@@ -298,10 +317,23 @@ exports.createTerrainGeometryJS = function(references){
                             store.positions.push(py)
                             store.positions.push(pz + 1)
                             store.positions.push(px + 1)
-                            store.positions.push(py + 1)
+                            store.positions.push(py + bushHeight)
                             store.positions.push(pz + 1)
                             store.positions.push(px)
-                            store.positions.push(py + 1)
+                            store.positions.push(py + bushHeight)
+                            store.positions.push(pz)
+
+                            store.positions.push(px + 1)
+                            store.positions.push(py)
+                            store.positions.push(pz)
+                            store.positions.push(px)
+                            store.positions.push(py)
+                            store.positions.push(pz + 1)
+                            store.positions.push(px)
+                            store.positions.push(py + bushHeight)
+                            store.positions.push(pz + 1)
+                            store.positions.push(px + 1)
+                            store.positions.push(py + bushHeight)
                             store.positions.push(pz)
 
                             var nx = 0, ny = 0, nz = 1;
@@ -318,7 +350,37 @@ exports.createTerrainGeometryJS = function(references){
                             store.normals.push(ny);
                             store.normals.push(nz);
 
-                            var r = 1, g = 0, b = 0;
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+
+                            var r = 1, g = 1, b = 1;
+
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
 
                             store.colors.push(r);
                             store.colors.push(g);
@@ -346,7 +408,16 @@ exports.createTerrainGeometryJS = function(references){
                             store.uvs.push(1);
                             store.uvs.push(0);
 
-                            store.offset += 4
+                            store.uvs.push(0);
+                            store.uvs.push(0);
+                            store.uvs.push(0);
+                            store.uvs.push(1)
+                            store.uvs.push(1);
+                            store.uvs.push(1);
+                            store.uvs.push(1);
+                            store.uvs.push(0);
+
+                            store.offset += 8
                         }
 
                         switch (block){
@@ -380,7 +451,8 @@ exports.createTerrainGeometryJS = function(references){
 
             return {
                 standardMaterialBlocks: standardMaterialBlockStore,
-                waterMaterialBlocks: waterBlockStore
+                waterMaterialBlocks: waterBlockStore,
+                transparentMaterialVertexData: transparentMaterialVertexData
             }
         }
     }

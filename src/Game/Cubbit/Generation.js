@@ -88,7 +88,7 @@ exports._createBlockMapJS = function(references){
 
                             var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
 
-                            if((r % 100) === 29){
+                            if((r % 97) === 29){
                                 // get height
                                 var top = null;
                                 for(var ly = chunkSize - 1; 0 <= ly; ly--){
@@ -109,7 +109,7 @@ exports._createBlockMapJS = function(references){
                                         }
                                     }
                                 }
-                            }else if((r % 100) == 97){
+                            }else if((r % 97) < 10){
                                 put(lx, lh + 1, lz, bushBlock);
                             }
                         }

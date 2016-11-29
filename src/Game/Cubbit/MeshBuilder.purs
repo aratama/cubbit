@@ -70,7 +70,8 @@ loadDefaultChunk ref index = do
                 index,
                 blocks,
                 standardMaterialMesh: MeshNotLoaded,
-                waterMaterialMesh: EmptyMeshLoaded
+                waterMaterialMesh: MeshNotLoaded,
+                transparentMaterialMesh: MeshNotLoaded
             } state.terrain
             pure true
 
@@ -94,7 +95,8 @@ createChunkMesh ref materials scene index = do
     case createTerrainGeometry (Terrain terrain) (Chunk { index, blocks }) of
         VertexDataPropsData verts@{
             standardMaterialBlocks: VertexDataProps standardMaterialBlocks,
-            waterMaterialBlocks: VertexDataProps waterMaterialBlocks
+            waterMaterialBlocks: VertexDataProps waterMaterialBlocks,
+            transparentMaterialVertexData: VertexDataProps transparentMaterialVertexData
         } -> do
             chunkMaybe <- lookupChunk index state.terrain
             case chunkMaybe of
@@ -113,6 +115,7 @@ createChunkMesh ref materials scene index = do
 
             standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat
             waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat
+            transparentMaterialMesh <- gen transparentMaterialVertexData materials.bushMaterial
 
             insertChunk {
                 x: ci.x,
@@ -121,7 +124,8 @@ createChunkMesh ref materials scene index = do
                 index,
                 blocks,
                 standardMaterialMesh,
-                waterMaterialMesh
+                waterMaterialMesh,
+                transparentMaterialMesh
             } state.terrain
 
             pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
@@ -189,6 +193,7 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
 
     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
     waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterBoxMat scene
+    transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene
 
     let ci = runChunkIndex index
     mesh <- pure {
@@ -198,7 +203,8 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         index,
         blocks: chunkWithMesh.blocks,
         standardMaterialMesh: MeshLoaded standardMaterialMesh,
-        waterMaterialMesh: MeshLoaded waterMaterialMesh
+        waterMaterialMesh: MeshLoaded waterMaterialMesh,
+        transparentMaterialMesh: MeshLoaded transparentMaterialMesh
     }
     insertChunk mesh state.terrain
 

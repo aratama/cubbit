@@ -35,12 +35,14 @@ type ChunkWithMesh = {
     index :: ChunkIndex,
     blocks :: Boxel.BoxelMap BlockType,
     standardMaterialMesh :: MeshLoadingState,
-    waterMaterialMesh :: MeshLoadingState
+    waterMaterialMesh :: MeshLoadingState,
+    transparentMaterialMesh :: MeshLoadingState
 }
 
 newtype VertexDataPropsData = VertexDataPropsData {
     standardMaterialBlocks :: VertexDataProps,
-    waterMaterialBlocks :: VertexDataProps
+    waterMaterialBlocks :: VertexDataProps,
+    transparentMaterialVertexData :: VertexDataProps
 }
 
 disposeLoadedMesh :: forall eff. MeshLoadingState -> Eff (babylon :: BABYLON | eff) Unit

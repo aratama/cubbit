@@ -205,10 +205,20 @@ runApp canvasGL canvas2d = do
                 setAlpha 0.7 (standardMaterialToMaterial mat)
                 pure (standardMaterialToMaterial mat)
 
+
+
+        bushMaterial <- do
+            mat <- createStandardMaterial "bush-material" scene
+            setAlpha 0.8 (standardMaterialToMaterial mat)
+            color <- createColor3 0.2 0.5 0.2
+            setDiffuseColor color mat
+            pure mat
+
         pure {
             boxMat: standardMaterialToMaterial boxMat,
             waterBoxMat: waterMaterial,
-            cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial
+            cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial,
+            bushMaterial: standardMaterialToMaterial bushMaterial
         }
 
     initialTerrain <- emptyTerrain 0

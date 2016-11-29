@@ -39,7 +39,8 @@ newtype State = State {
 type Materials = {
     boxMat :: Material,
     waterBoxMat :: Material,
-    cellShadingMaterial :: Material
+    cellShadingMaterial :: Material,
+    bushMaterial :: Material
 }
 
 foreign import data ForeachIndex :: *
