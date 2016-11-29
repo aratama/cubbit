@@ -164,8 +164,12 @@ runApp canvasGL canvas2d = do
 
 
         cellShadingMaterial <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
-            uniforms: ["world", "viewProjection"],
-            samplers: ["textureSampler"]
+            needAlphaBlending: false,
+            needAlphaTesting: false,
+            attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
+            uniforms: ["world", "viewProjection", "mBones"],
+            samplers: ["textureSampler"],
+            defines: []
         }
         lightPosition <- createVector3 0.0 20.0 (-10.0)
         lightColor <- createColor3 1.0 1.0 1.0
@@ -247,6 +251,7 @@ runApp canvasGL canvas2d = do
                 beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
 
                 setMaterial materials.cellShadingMaterial mesh
+
             modifyRef ref \(State state) -> State state {
                 playerMeshes = result
             }
