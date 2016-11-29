@@ -1,21 +1,16 @@
 {
-  "name": "electron-quick-start",
-  "version": "1.0.0",
-  "description": "A minimal Electron application",
+  "name": "cubbit",
+  "version": "0.0.1",
+  "description": "Sandbox Game",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/aratama/cubbit",
   "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo"
+    "Electron"
   ],
-  "author": "GitHub",
-  "license": "CC0-1.0",
+  "author": "aratama",
+  "license": "UNLICENSED",
   "devDependencies": {
     "electron": "^1.4.1"
   }

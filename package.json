@@ -10,7 +10,7 @@
         "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
         "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
 
-        "package": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite",
+        "package": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
 
         "server": "start http-server public",
         "clean": ""

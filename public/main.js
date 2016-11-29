@@ -14,11 +14,14 @@ let mainWindow
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
+      title: "Cubbit x Cubbit",
       width: 1280,
       height: 720,
       useContentSize: true,
       center: true,
-      resizable: false
+      resizable: false,
+      fullscreenable: true,
+      icon: __dirname + "/icon.png"
   })
 
   // and load the index.html of the app.
