@@ -155,7 +155,7 @@ update ref scene materials shadowMap cursor camera = do
         -- update shadow rendering list
         do
             let ci = runChunkIndex cameraPositionChunkIndex
-            neighbors <- filterNeighbors 5 ci.x ci.y ci.z ter.map
+            neighbors <- filterNeighbors 3 ci.x ci.y ci.z ter.map
             setRenderList (catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                 MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                 _ -> Nothing

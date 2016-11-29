@@ -1,3 +1,5 @@
+"use strict";
+
 exports.foreachBlocks = function(size){
     return function(cx){
         return function(cy){

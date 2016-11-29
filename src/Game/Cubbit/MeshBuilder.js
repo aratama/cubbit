@@ -1,3 +1,5 @@
+"use strict";
+
 exports.createTerrainGeometryJS = function(references){
     return function(terrain){
         return function(chunk){
@@ -85,7 +87,6 @@ exports.createTerrainGeometryJS = function(references){
             }
 
             var airBlock = blockTypes.airBlock;
-            var grassBlock = blockTypes.grassBlock;
             var waterBlock = blockTypes.waterBlock;
 
             var blocks = chunk.blocks;

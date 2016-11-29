@@ -12,6 +12,7 @@ import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkMap (sort)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex)
@@ -112,8 +113,6 @@ createChunkMesh ref materials scene index = do
             standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat
             waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat
 
-
-
             insertChunk {
                 x: ci.x,
                 y: ci.y,
@@ -142,8 +141,27 @@ generateMesh index verts mat scene = do
     pure terrainMesh
 
 
+
+
 updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
 updateChunkMesh ref materials scene chunkWithMesh = void do
+
+    _updateChunkMesh ref materials scene chunkWithMesh
+
+    -- TODO: reduce updating chunks for performance
+    let i = runChunkIndex chunkWithMesh.index
+    forE (i.x - 1) (i.x + 2) \x -> do
+        forE (i.y - 1) (i.y + 2) \y -> do
+            forE (i.z - 1) (i.z + 2) \z -> void do
+                State state@{ terrain: Terrain terrain } <- readRef ref
+                chunkMaybe <- lookupChunk (chunkIndex x y z) state.terrain
+                case chunkMaybe of
+                    Nothing -> pure unit
+                    Just chunk -> _updateChunkMesh ref materials scene chunk
+
+
+_updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+_updateChunkMesh ref materials scene chunkWithMesh = void do
 
     State state <- readRef ref
 
@@ -157,7 +175,7 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Just chunkData -> disposeChunk chunkData
 
     standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.boxMat scene
+    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterBoxMat scene
 
     let ci = runChunkIndex index
     mesh <- pure {
@@ -170,4 +188,5 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         waterMaterialMesh: MeshLoaded waterMaterialMesh
     }
     insertChunk mesh state.terrain
+
 

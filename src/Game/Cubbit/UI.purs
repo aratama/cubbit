@@ -8,10 +8,7 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
-import Graphics.Babylon (Canvas)
-import Graphics.Babylon.AbstractMesh (setIsVisible)
-import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
-import Game.Cubbit.BlockType (grassBlock)
+import Game.Cubbit.BlockType (dirtBlock, grassBlock)
 import Game.Cubbit.BoxelMap (delete, insert)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove)
@@ -19,6 +16,9 @@ import Game.Cubbit.MeshBuilder (updateChunkMesh)
 import Game.Cubbit.Terrain (globalIndexToChunkIndex, globalIndexToLocalIndex, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
 import Game.Cubbit.Update (pickBlock)
+import Graphics.Babylon (Canvas)
+import Graphics.Babylon.AbstractMesh (setIsVisible)
+import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Scene (getDebugLayer, setActiveCameras)
@@ -106,7 +106,7 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
                         let localIndex = globalIndexToLocalIndex blockIndex
                         updateChunkMesh ref materials scene chunkData {
                             blocks = case state.mode of
-                                    Put -> insert localIndex grassBlock chunkData.blocks
+                                    Put -> insert localIndex dirtBlock chunkData.blocks
                                     Remove -> delete localIndex chunkData.blocks
                                     Move -> chunkData.blocks
                         }

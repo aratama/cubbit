@@ -24,8 +24,12 @@ exports.insert = function(index){
             return function(){
                 if(obj.map[index]){
                     var i = obj.list.findIndex(function(chunkWithMesh){
-                        return chunkWithMesh.blocks.index === index;
+                        return chunkWithMesh.index === index;
                     });
+                    if(i === -1){
+                        // never come here
+                        debugger;
+                    }
                     obj.list.splice(i, 1, value);
                 }else{
                     obj.list.push(value);

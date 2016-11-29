@@ -1,3 +1,5 @@
+"use strict";
+
 exports._createBlockMapJS = function(references){
     return function(noise){
         return function(index){
@@ -15,6 +17,7 @@ exports._createBlockMapJS = function(references){
             var waterBlock = blockTypes.waterBlock;
             var woodBlock = blockTypes.woodBlock;
             var leavesBlock = blockTypes.leavesBlock;
+            var dirtBlock = blockTypes.dirtBlock;
 
             var rci = runChunkIndex(index);
             var cx = rci.x
@@ -24,7 +27,7 @@ exports._createBlockMapJS = function(references){
             var chunkBlockCount = chunkSize * chunkSize * chunkSize;
 
             if(cy < 0){
-                return Uint8Array.from({ length: chunkBlockCount }, function(v, k){ return grassBlock })
+                return Uint8Array.from({ length: chunkBlockCount }, function(v, k){ return dirtBlock })
             }else if(0 < cy){
                 return new Uint8Array(chunkBlockCount)
             }else{
@@ -60,8 +63,10 @@ exports._createBlockMapJS = function(references){
                         for(var ly = 0; ly < chunkSize; ly++){
                             var gy = chunkSize * cy + ly;
                             var ly = gy - chunkSize * cy;
-                            if(gy <= h){
+                            if(gy == h){
                                 put(lx, ly, lz, grassBlock);
+                            }else if(gy < h){
+                                put(lx, ly, lz, dirtBlock);
                             }else if(gy <= waterBlockHeight){
                                 put(lx, ly, lz, waterBlock);
                             }
@@ -70,6 +75,9 @@ exports._createBlockMapJS = function(references){
                 }
 
                 // woods
+
+
+
                 for(var lz = 0; lz <= chunkSize - 1; lz++){
                     for(var lx = 0; lx <= chunkSize - 1; lx++){
                         var gx = chunkSize * cx + lx
@@ -102,6 +110,8 @@ exports._createBlockMapJS = function(references){
                         }
                     }
                 }
+
+
 
                 return stmap
             }
