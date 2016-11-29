@@ -11,7 +11,7 @@ import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
-import Game.Cubbit.Constants (fogDensity)
+import Game.Cubbit.Constants (fogDensity, skyBoxRenderingGruop, terrainRenderingGroup)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (emptyTerrain)
@@ -20,6 +20,7 @@ import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
+import Graphics.Babylon.BaseTexture (setHasAlpha)
 import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
@@ -34,9 +35,9 @@ import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render,
 import Graphics.Babylon.SceneLoader (importMesh)
 import Graphics.Babylon.ShaderMaterial (createShaderMaterial, setColor3, setFloats, setTexture, setVector3, shaderMaterialToMaterial)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
-import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDiffuseTexture, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
+import Graphics.Babylon.StandardMaterial (setUseAlphaFromDiffuseTexture, createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDiffuseTexture, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
-import Graphics.Babylon.Texture (createTexture, sKYBOX_MODE, setCoordinatesMode)
+import Graphics.Babylon.Texture (createTexture, sKYBOX_MODE, setCoordinatesMode, textureToBaseTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
@@ -46,11 +47,7 @@ import Prelude (negate, (#), ($), (+), (/), (<$>), (==))
 shadowMapSize :: Int
 shadowMapSize = 4096
 
-skyBoxRenderingGruop :: Int
-skyBoxRenderingGruop = 0
 
-terrainRenderingGroup :: Int
-terrainRenderingGroup = 1
 
 collesionEnabledRange :: Int
 collesionEnabledRange = 1
@@ -162,6 +159,7 @@ runApp canvasGL canvas2d = do
     -- prepare materials
     materials <- do
 
+        --solidBlockMaterial <- do
 
         cellShadingMaterial <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
             needAlphaBlending: false,
@@ -206,12 +204,16 @@ runApp canvasGL canvas2d = do
                 pure (standardMaterialToMaterial mat)
 
 
+        alphaTexture <- createTexture "./alpha.png" scene
+        setHasAlpha true (textureToBaseTexture alphaTexture)
 
         bushMaterial <- do
             mat <- createStandardMaterial "bush-material" scene
+            setDiffuseTexture alphaTexture mat
             setAlpha 0.8 (standardMaterialToMaterial mat)
-            color <- createColor3 0.2 0.5 0.2
+            color <- createColor3 0.35 0.5 0.30
             setDiffuseColor color mat
+            setUseAlphaFromDiffuseTexture true mat
             pure mat
 
         pure {

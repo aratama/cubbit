@@ -278,7 +278,7 @@ exports.createTerrainGeometryJS = function(references){
                         }
 
                         function bush(){
-                            var bushHeight = 0.4
+                            var bushHeight = 1.0
 
                             var offset = store.offset
 
@@ -399,22 +399,24 @@ exports.createTerrainGeometryJS = function(references){
                             store.colors.push(b);
                             store.colors.push(1.0);
 
-                            store.uvs.push(0);
-                            store.uvs.push(0);
-                            store.uvs.push(0);
-                            store.uvs.push(1)
-                            store.uvs.push(1);
-                            store.uvs.push(1);
-                            store.uvs.push(1);
-                            store.uvs.push(0);
 
                             store.uvs.push(0);
+                            store.uvs.push(500 / 4096)
+                            store.uvs.push(1000 / 4096);
+                            store.uvs.push(500 / 4096);
+                            store.uvs.push(1000 / 4096);
                             store.uvs.push(0);
                             store.uvs.push(0);
-                            store.uvs.push(1)
-                            store.uvs.push(1);
-                            store.uvs.push(1);
-                            store.uvs.push(1);
+                            store.uvs.push(0);
+
+
+                            store.uvs.push(0);
+                            store.uvs.push(500 / 4096)
+                            store.uvs.push(1000 / 4096);
+                            store.uvs.push(500 / 4096);
+                            store.uvs.push(1000 / 4096);
+                            store.uvs.push(0);
+                            store.uvs.push(0);
                             store.uvs.push(0);
 
                             store.offset += 8

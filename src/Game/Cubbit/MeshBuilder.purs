@@ -14,7 +14,7 @@ import Game.Cubbit.BoxelMap (delete, insert)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (sort)
-import Game.Cubbit.Constants (chunkSize)
+import Game.Cubbit.Constants (chunkSize, alphaRenderingGroup, terrainRenderingGroup)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex, runLocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
@@ -106,16 +106,17 @@ createChunkMesh ref materials scene index = do
             let ci = runChunkIndex index
 
 
-            let gen vertices mat = if 0 < length vertices.indices
+            let gen vertices mat gruop = if 0 < length vertices.indices
                     then do
                         mesh <- generateMesh index (VertexDataProps vertices) mat scene
+                        setRenderingGroupId gruop (meshToAbstractMesh mesh)
                         pure (MeshLoaded mesh)
                     else do
                         pure EmptyMeshLoaded
 
-            standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat
-            waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat
-            transparentMaterialMesh <- gen transparentMaterialVertexData materials.bushMaterial
+            standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat terrainRenderingGroup
+            waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat terrainRenderingGroup
+            transparentMaterialMesh <- gen transparentMaterialVertexData materials.bushMaterial terrainRenderingGroup
 
             insertChunk {
                 x: ci.x,
@@ -138,7 +139,7 @@ generateMesh index verts mat scene = do
     let cz = rci.z
     terrainMesh <- createMesh "terrain" scene
     applyToMesh terrainMesh false =<< createVertexData (verts)
-    setRenderingGroupId 1 (meshToAbstractMesh terrainMesh)
+    setRenderingGroupId terrainRenderingGroup (meshToAbstractMesh terrainMesh)
     setReceiveShadows true (meshToAbstractMesh terrainMesh)
     setUseVertexColors true (meshToAbstractMesh terrainMesh)
     setMaterial mat (meshToAbstractMesh terrainMesh)

@@ -22,5 +22,17 @@ maximumLoadedChunks = pow (1 + loadDistance * 2) 3 + 1000
 
 
 
-shadowDisplayRange :: Int 
+shadowDisplayRange :: Int
 shadowDisplayRange = 7
+
+
+-- rendering groups
+
+skyBoxRenderingGruop :: Int
+skyBoxRenderingGruop = 0
+
+terrainRenderingGroup :: Int
+terrainRenderingGroup = 1
+
+alphaRenderingGroup :: Int
+alphaRenderingGroup = 2
