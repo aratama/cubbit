@@ -26,6 +26,7 @@ import Graphics.Babylon.Material (Material, setAlpha)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
+import PerlinNoise (Noise, simplex2)
 import Prelude ((+), (-), (<), (=<<), (==), negate)
 
 type CreateTerrainGeometryReferences = {
@@ -34,7 +35,8 @@ type CreateTerrainGeometryReferences = {
     runChunkIndex :: ChunkIndex -> { x :: Int, y :: Int, z :: Int },
     blockIndex :: Int -> Int -> Int -> BlockIndex,
     globalIndexToChunkIndex :: BlockIndex -> ChunkIndex,
-    globalIndexToLocalIndex :: BlockIndex -> LocalIndex
+    globalIndexToLocalIndex :: BlockIndex -> LocalIndex,
+    simplex2 :: Number -> Number -> Noise -> Number
 }
 
 createTerrainGeometryReferences :: CreateTerrainGeometryReferences
@@ -44,7 +46,8 @@ createTerrainGeometryReferences = {
     runChunkIndex: runChunkIndex,
     blockIndex: blockIndex,
     globalIndexToChunkIndex: globalIndexToChunkIndex,
-    globalIndexToLocalIndex: globalIndexToLocalIndex
+    globalIndexToLocalIndex: globalIndexToLocalIndex,
+    simplex2: simplex2
 }
 
 foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Terrain -> Chunk -> VertexDataPropsData
@@ -114,8 +117,8 @@ createChunkMesh ref materials scene index = do
                     else do
                         pure EmptyMeshLoaded
 
-            standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat terrainRenderingGroup
-            waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat terrainRenderingGroup
+            standardMaterialMesh <- gen standardMaterialBlocks materials.blockMaterial terrainRenderingGroup
+            waterMaterialMesh <- gen waterMaterialBlocks materials.waterMaterial terrainRenderingGroup
             transparentMaterialMesh <- gen transparentMaterialVertexData materials.bushMaterial terrainRenderingGroup
 
             insertChunk {
@@ -192,8 +195,8 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Nothing -> pure unit
         Just chunkData -> disposeChunk chunkData
 
-    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterBoxMat scene
+    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.blockMaterial scene
+    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterMaterial scene
     transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene
 
     let ci = runChunkIndex index

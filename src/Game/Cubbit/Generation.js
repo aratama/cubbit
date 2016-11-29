@@ -81,12 +81,12 @@ exports._createBlockMapJS = function(references){
                         var gx = chunkSize * cx + lx
                         var gz = chunkSize * cz + lz
                         var h = getHeight(gx, gz)
-                        if(waterBlockHeight < h){
+                        if(waterBlockHeight <= h){
 
                             var lh = h - chunkSize * cy
 
 
-                            var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
+                            var r = ((simplex2(1234 + gx)(5678 + gz)(noise) + 1) * 10000) | 0;
 
                             if((r % 97) === 29){
                                 // get height

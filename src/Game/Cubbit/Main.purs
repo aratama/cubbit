@@ -159,32 +159,38 @@ runApp canvasGL canvas2d = do
     -- prepare materials
     materials <- do
 
-        --solidBlockMaterial <- do
+        texture <- createTexture "./texture.png" scene
 
-        cellShadingMaterial <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
-            needAlphaBlending: false,
-            needAlphaTesting: false,
-            attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
-            uniforms: ["world", "viewProjection", "mBones"],
-            samplers: ["textureSampler"],
-            defines: []
-        }
-        lightPosition <- createVector3 0.0 20.0 (-10.0)
-        lightColor <- createColor3 1.0 1.0 1.0
-        cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene
-        setTexture "textureSampler" cellShadingMaterialTexture cellShadingMaterial
-        setVector3 "vLightPosition" lightPosition cellShadingMaterial
-        setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] cellShadingMaterial
-        setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] cellShadingMaterial
-        setColor3 "vLightColor" lightColor cellShadingMaterial
+        alphaTexture <- createTexture "./alpha.png" scene
+        setHasAlpha true (textureToBaseTexture alphaTexture)
 
+        cellShadingMaterial <- do
 
-        texture <- createTexture "texture.png" scene
-        boxMat <- createStandardMaterial "grass-block" scene
-        grassSpecular <- createColor3 0.0 0.0 0.0
-        setSpecularColor grassSpecular boxMat
-        -- setSpecularPower 0.0 boxMat
-        setDiffuseTexture texture boxMat
+            mat <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
+                needAlphaBlending: false,
+                needAlphaTesting: false,
+                attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
+                uniforms: ["world", "viewProjection", "mBones"],
+                samplers: ["textureSampler"],
+                defines: []
+            }
+            lightPosition <- createVector3 0.0 20.0 (-10.0)
+            lightColor <- createColor3 1.0 1.0 1.0
+            cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene
+            setTexture "textureSampler" cellShadingMaterialTexture mat
+            setVector3 "vLightPosition" lightPosition mat
+            setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] mat
+            setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] mat
+            setColor3 "vLightColor" lightColor mat
+            pure mat
+
+        solidBlockMaterial <- do
+            mat <- createStandardMaterial "grass-block" scene
+            grassSpecular <- createColor3 0.0 0.0 0.0
+            setSpecularColor grassSpecular mat
+            -- setSpecularPower 0.0 mat
+            setDiffuseTexture texture mat
+            pure mat
 
         waterMaterial <- if enableWaterMaterial
             then do
@@ -203,10 +209,6 @@ runApp canvasGL canvas2d = do
                 setAlpha 0.7 (standardMaterialToMaterial mat)
                 pure (standardMaterialToMaterial mat)
 
-
-        alphaTexture <- createTexture "./alpha.png" scene
-        setHasAlpha true (textureToBaseTexture alphaTexture)
-
         bushMaterial <- do
             mat <- createStandardMaterial "bush-material" scene
             setDiffuseTexture alphaTexture mat
@@ -217,8 +219,8 @@ runApp canvasGL canvas2d = do
             pure mat
 
         pure {
-            boxMat: standardMaterialToMaterial boxMat,
-            waterBoxMat: waterMaterial,
+            blockMaterial: standardMaterialToMaterial solidBlockMaterial,
+            waterMaterial: waterMaterial,
             cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial,
             bushMaterial: standardMaterialToMaterial bushMaterial
         }

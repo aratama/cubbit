@@ -10,6 +10,9 @@ exports.createTerrainGeometryJS = function(references){
             var blockIndex = references.blockIndex;
             var globalIndexToChunkIndex = references.globalIndexToChunkIndex;
             var globalIndexToLocalIndex = references.globalIndexToLocalIndex;
+            var simplex2 = references.simplex2;
+
+            var noise = terrain.noise;
 
             var chunkMap = terrain.map.map;
 
@@ -144,8 +147,13 @@ exports.createTerrainGeometryJS = function(references){
             }
 
             for(var lx = 0; lx < chunkSize; lx++){
-                for(var ly = 0; ly < chunkSize; ly++){
-                    for(var lz = 0; lz < chunkSize; lz++){
+                for(var lz = 0; lz < chunkSize; lz++){
+
+                    var gx = chunkSize * chunkIndex.x + lx;
+                    var gz = chunkSize * chunkIndex.z + lz;
+                    var random = (simplex2(gx)(gz)(noise) + 1.0) * 0.5;
+
+                    for(var ly = 0; ly < chunkSize; ly++){
 
                         var block = blocks[chunkSize * chunkSize * lx + chunkSize * ly + lz];
 
@@ -310,31 +318,58 @@ exports.createTerrainGeometryJS = function(references){
                             store.indices.push(offset + 4 + 2);
                             store.indices.push(offset + 4 + 0);
 
-                            store.positions.push(px)
-                            store.positions.push(py)
-                            store.positions.push(pz)
-                            store.positions.push(px + 1)
-                            store.positions.push(py)
-                            store.positions.push(pz + 1)
-                            store.positions.push(px + 1)
-                            store.positions.push(py + bushHeight)
-                            store.positions.push(pz + 1)
-                            store.positions.push(px)
-                            store.positions.push(py + bushHeight)
-                            store.positions.push(pz)
 
-                            store.positions.push(px + 1)
+                            var rot = Math.PI * 2 * random;
+                            //var rot = Math.PI * 0.20;
+                            var rec = Math.PI * 0.5;
+                            var w = 0.6;
+
+                            var cx = px + 0.5;
+                            var cz = pz + 0.5;
+
+                            var x0 = cx + Math.cos(rot + rec * 0) * w;
+                            var z0 = cz + Math.sin(rot + rec * 0) * w;
+
+                            var x1 = cx + Math.cos(-rot + rec * 1) * w;
+                            var z1 = cz + Math.sin(-rot + rec * 1) * w;
+
+                            var x2 = cx + Math.cos(rot + rec * 2) * w;
+                            var z2 = cz + Math.sin(rot + rec * 2) * w;
+
+                            var x3 = cx + Math.cos(-rot + rec * 3) * w;
+                            var z3 = cz + Math.sin(-rot + rec * 3) * w;
+
+                            store.positions.push(x0)
                             store.positions.push(py)
-                            store.positions.push(pz)
-                            store.positions.push(px)
+                            store.positions.push(z0)
+
+                            store.positions.push(x2)
                             store.positions.push(py)
-                            store.positions.push(pz + 1)
-                            store.positions.push(px)
+                            store.positions.push(z2)
+
+                            store.positions.push(x2)
                             store.positions.push(py + bushHeight)
-                            store.positions.push(pz + 1)
-                            store.positions.push(px + 1)
+                            store.positions.push(z2)
+
+                            store.positions.push(x0)
                             store.positions.push(py + bushHeight)
-                            store.positions.push(pz)
+                            store.positions.push(z0)
+
+                            store.positions.push(x3)
+                            store.positions.push(py)
+                            store.positions.push(z1)
+
+                            store.positions.push(x1)
+                            store.positions.push(py)
+                            store.positions.push(z3)
+
+                            store.positions.push(x1)
+                            store.positions.push(py + bushHeight)
+                            store.positions.push(z3)
+
+                            store.positions.push(x3)
+                            store.positions.push(py + bushHeight)
+                            store.positions.push(z1)
 
                             var nx = 0, ny = 0, nz = 1;
                             store.normals.push(nx);

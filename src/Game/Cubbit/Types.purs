@@ -37,8 +37,8 @@ newtype State = State {
 }
 
 type Materials = {
-    boxMat :: Material,
-    waterBoxMat :: Material,
+    blockMaterial :: Material,
+    waterMaterial :: Material,
     cellShadingMaterial :: Material,
     bushMaterial :: Material
 }
