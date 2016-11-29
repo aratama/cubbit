@@ -195,7 +195,9 @@ runApp canvasGL canvas2d = do
                 pure (waterMaterialToMaterial mat)
             else do
                 mat <- createStandardMaterial "water-block" scene
-                setDiffuseTexture texture mat
+                color <- createColor3 (50.0 / 255.0) (50.0 / 255.0) (60.0 / 255.0)
+                setDiffuseColor color mat
+                -- setDiffuseTexture texture mat
                 setAlpha 0.7 (standardMaterialToMaterial mat)
                 pure (standardMaterialToMaterial mat)
 
