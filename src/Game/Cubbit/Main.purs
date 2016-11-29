@@ -257,7 +257,7 @@ runApp canvasGL canvas2d = do
             }
             pure unit
 
-    importMesh "" "/alice/" "alice.babylon" scene (toNullable (Just onSucc)) (toNullable Nothing) (toNullable Nothing)
+    importMesh "" "./alice/" "alice.babylon" scene (toNullable (Just onSucc)) (toNullable Nothing) (toNullable Nothing)
 
     onKeyDown \e -> do
         when (e.keyCode == 32) do

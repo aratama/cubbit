@@ -7,6 +7,7 @@ example/sandbox/public/worker.js
 **/*.blend1
 **/*.log
 public/index.js
+cubbit-win32-x64
 
 # Windows image file caches
 Thumbs.db
