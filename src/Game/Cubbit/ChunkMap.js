@@ -81,3 +81,20 @@ exports.slice = function(begin){
         }
     }
 }
+
+
+exports.filterNeighbors = function(range){
+    return function(cx){
+        return function(cy){
+            return function(cz){
+                return function(obj){
+                    return function(){
+                        return obj.list.filter(function(a){
+                            return Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy), Math.abs(a.z - cz)) <= range
+                        });
+                    }
+                }
+            }
+        }
+    }
+}

@@ -28,7 +28,7 @@ void main(void) {
 	if (ndl > ToonThresholds[0])
 	{
 		color *= ToonBrightnessLevels[0];
-	} 
+	}
 	else if (ndl > ToonThresholds[1])
 	{
 		color *= ToonBrightnessLevels[1];
@@ -45,6 +45,6 @@ void main(void) {
 	{
 		color *= ToonBrightnessLevels[4];
 	}
-	
+
 	gl_FragColor = vec4(color, 1.);
 }

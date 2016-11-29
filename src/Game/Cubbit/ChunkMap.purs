@@ -31,3 +31,5 @@ foreign import size ::  forall eff. ChunkMap -> Eff eff Int
 foreign import sort :: forall eff. Int -> Int -> Int -> ChunkMap -> Eff eff Unit
 
 foreign import slice :: forall eff. Int -> Int -> ChunkMap -> Eff eff (Array ChunkWithMesh)
+
+foreign import filterNeighbors :: forall eff. Int -> Int -> Int -> Int -> ChunkMap -> Eff eff (Array ChunkWithMesh)

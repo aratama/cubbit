@@ -17,9 +17,9 @@ import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
+import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort)
+import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors)
 import Game.Cubbit.Constants (loadDistance, unloadDistance)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
@@ -137,6 +137,7 @@ update ref scene materials shadowMap cursor camera = do
         cameraPosition <- Camera.getPosition (freeCameraToCamera camera) >>= runVector3
         let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
 
+
         -- picking
         do
             case state.mode of
@@ -151,12 +152,14 @@ update ref scene materials shadowMap cursor camera = do
                             setPosition r cursor
 
         -- update shadow rendering list
-        let shdowRenderingMeshes = (catMaybes ( (\chunk -> case chunk.standardMaterialMesh of
-                    MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
-                    _ -> Nothing
-                ) <$> activeChunks))
-        setRenderList shdowRenderingMeshes shadowMap
-
+        do
+            let ci = runChunkIndex cameraPositionChunkIndex    
+            neighbors <- filterNeighbors 5 ci.x ci.y ci.z ter.map
+            setRenderList (catMaybes ((\chunk -> case chunk.standardMaterialMesh of
+                MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                _ -> Nothing
+            ) <$> neighbors)) shadowMap
+            --setRenderList (state.playerMeshes <> shdowRenderingMeshes) shadowMap
 
 
         -- load chunk
@@ -203,7 +206,7 @@ update ref scene materials shadowMap cursor camera = do
 
             let ci = runChunkIndex cameraPositionChunkIndex
             State st@{ terrain: Terrain terrain }<- readRef ref
-            sort ci.x ci.y ci.z terrain.map
+            --sort ci.x ci.y ci.z terrain.map
 
             tailRecM (\i -> if 100 < i then pure (Done unit) else do
                 s <- size terrain.map
