@@ -8,7 +8,7 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
-import Game.Cubbit.BlockType (dirtBlock)
+import Game.Cubbit.BlockType (dirtBlock, airBlock)
 import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
@@ -92,10 +92,20 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
     onMouseClick \e -> do
 
         State state <- readRef ref
-        picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
-        case picked of
-            Nothing -> pure unit
-            Just blockIndex -> editBlock ref materials scene  blockIndex dirtBlock
+
+        let put block = do
+                picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
+                case picked of
+                    Nothing -> pure unit
+                    Just blockIndex -> editBlock ref materials scene blockIndex block
+
+        case state.mode of
+            Put -> put dirtBlock
+            Remove -> put airBlock
+            Move -> pure unit
+
+
+
 
 
 

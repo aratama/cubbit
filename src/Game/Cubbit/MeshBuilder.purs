@@ -9,14 +9,14 @@ import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
-import Game.Cubbit.BlockType (BlockType(..), BlockTypes, blockTypes)
+import Game.Cubbit.BlockType (BlockType(..), BlockTypes, airBlock, blockTypes)
 import Game.Cubbit.BoxelMap (delete, insert)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (sort)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
-import Game.Cubbit.LocalIndex (LocalIndex, runLocalIndex)
+import Game.Cubbit.LocalIndex (LocalIndex, localIndex, runLocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Materials, Mode(..), State(State))
@@ -155,10 +155,7 @@ editBlock ref materials scene globalBlockIndex block = do
             let localIndex = globalIndexToLocalIndex globalBlockIndex
             let li = runLocalIndex localIndex
             updateChunkMesh ref materials scene chunkData {
-                blocks = case state.mode of
-                        Put -> insert localIndex block chunkData.blocks
-                        Remove -> delete localIndex chunkData.blocks
-                        Move -> chunkData.blocks
+                blocks = insert localIndex block chunkData.blocks
             }
 
             let eci = runChunkIndex editChunkIndex

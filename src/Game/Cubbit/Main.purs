@@ -263,7 +263,7 @@ runApp canvasGL canvas2d = do
             modifyRef ref \(State state) -> State state {
                 velocity = {
                     x: state.velocity.x,
-                    y: state.velocity.y + 0.1,
+                    y: state.velocity.y + 0.15,
                     z: state.velocity.z
                 }
             }
