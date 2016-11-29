@@ -27,6 +27,10 @@ dirtBlock = BlockType 5
 graniteBlock :: BlockType
 graniteBlock = BlockType 6
 
+bushBlock :: BlockType
+bushBlock = BlockType 100
+
+
 type BlockTypes = {
     airBlock :: BlockType,
     grassBlock :: BlockType,
@@ -34,7 +38,8 @@ type BlockTypes = {
     woodBlock :: BlockType,
     leavesBlock :: BlockType,
     dirtBlock :: BlockType,
-    graniteBlock :: BlockType
+    graniteBlock :: BlockType,
+    bushBlock :: BlockType
 }
 
 blockTypes :: BlockTypes
@@ -45,7 +50,8 @@ blockTypes = {
     woodBlock: woodBlock,
     leavesBlock: leavesBlock,
     dirtBlock: dirtBlock,
-    graniteBlock: graniteBlock
+    graniteBlock: graniteBlock,
+    bushBlock: bushBlock
 }
 
 derive instance generic_BlockType :: Generic BlockType

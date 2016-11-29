@@ -18,6 +18,7 @@ exports._createBlockMapJS = function(references){
             var woodBlock = blockTypes.woodBlock;
             var leavesBlock = blockTypes.leavesBlock;
             var dirtBlock = blockTypes.dirtBlock;
+            var bushBlock = blockTypes.bushBlock;
 
             var rci = runChunkIndex(index);
             var cx = rci.x
@@ -74,17 +75,19 @@ exports._createBlockMapJS = function(references){
                     }
                 }
 
-                // woods
-
-
-
+                // woods and bushes
                 for(var lz = 0; lz <= chunkSize - 1; lz++){
                     for(var lx = 0; lx <= chunkSize - 1; lx++){
                         var gx = chunkSize * cx + lx
                         var gz = chunkSize * cz + lz
                         var h = getHeight(gx, gz)
                         if(waterBlockHeight < h){
+
+                            var lh = h - chunkSize * cy
+
+
                             var r = ((simplex2(gx)(gz)(noise) + 1) * 10000) | 0;
+
                             if((r % 100) === 29){
                                 // get height
                                 var top = null;
@@ -106,6 +109,8 @@ exports._createBlockMapJS = function(references){
                                         }
                                     }
                                 }
+                            }else if((r % 100) == 97){
+                                put(lx, lh + 1, lz, bushBlock);
                             }
                         }
                     }

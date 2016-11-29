@@ -88,6 +88,7 @@ exports.createTerrainGeometryJS = function(references){
 
             var airBlock = blockTypes.airBlock;
             var waterBlock = blockTypes.waterBlock;
+            var bushBlock = blockTypes.bushBlock;
 
             var blocks = chunk.blocks;
 
@@ -105,7 +106,7 @@ exports.createTerrainGeometryJS = function(references){
 
 
             function solidBounds(block){
-                return block !== airBlock && block !== waterBlock;
+                return block !== airBlock && block !== waterBlock && block !== bushBlock;
             }
 
             function waterBounds(block){
@@ -273,6 +274,81 @@ exports.createTerrainGeometryJS = function(references){
                             }
                         }
 
+                        function bush(){
+                            var offset = store.offset
+
+                            store.indices.push(offset + 0);
+                            store.indices.push(offset + 1);
+                            store.indices.push(offset + 2);
+                            store.indices.push(offset + 0);
+                            store.indices.push(offset + 2);
+                            store.indices.push(offset + 3);
+
+                            store.indices.push(offset + 2);
+                            store.indices.push(offset + 1);
+                            store.indices.push(offset + 0);
+                            store.indices.push(offset + 3);
+                            store.indices.push(offset + 2);
+                            store.indices.push(offset + 0);
+
+                            store.positions.push(px)
+                            store.positions.push(py)
+                            store.positions.push(pz)
+                            store.positions.push(px + 1)
+                            store.positions.push(py)
+                            store.positions.push(pz + 1)
+                            store.positions.push(px + 1)
+                            store.positions.push(py + 1)
+                            store.positions.push(pz + 1)
+                            store.positions.push(px)
+                            store.positions.push(py + 1)
+                            store.positions.push(pz)
+
+                            var nx = 0, ny = 0, nz = 1;
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+                            store.normals.push(nx);
+                            store.normals.push(ny);
+                            store.normals.push(nz);
+
+                            var r = 1, g = 0, b = 0;
+
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+                            store.colors.push(r);
+                            store.colors.push(g);
+                            store.colors.push(b);
+                            store.colors.push(1.0);
+
+                            store.uvs.push(0);
+                            store.uvs.push(0);
+                            store.uvs.push(0);
+                            store.uvs.push(1)
+                            store.uvs.push(1);
+                            store.uvs.push(1);
+                            store.uvs.push(1);
+                            store.uvs.push(0);
+
+                            store.offset += 4
+                        }
+
                         switch (block){
                             case airBlock:
                                 break;
@@ -284,6 +360,11 @@ exports.createTerrainGeometryJS = function(references){
                                 square( 0,  0, -1, nzUV, waterBounds);
                                 square( 0,  0,  1, pzUV, waterBounds);
                                 break;
+
+                            case bushBlock:
+                                bush();
+                                break;
+
                             default:
                                 square(-1,  0,  0, nxUV, solidBounds);
                                 square( 1,  0,  0, pxUV, solidBounds);
