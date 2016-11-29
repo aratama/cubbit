@@ -1,31 +1,32 @@
-module Game.Cubbit.MeshBuilder (createTerrainGeometry, createChunkMesh, updateChunkMesh, loadDefaultChunk) where
+module Game.Cubbit.MeshBuilder (createTerrainGeometry, createChunkMesh, loadDefaultChunk, editBlock) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
-import Control.Monad (void)
+import Control.Monad (void, when)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Ref (REF, Ref, readRef)
 import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
-import Game.Cubbit.BlockType (BlockTypes, blockTypes)
+import Game.Cubbit.BlockType (BlockType(..), BlockTypes, blockTypes)
+import Game.Cubbit.BoxelMap (delete, insert)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (sort)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.Generation (createBlockMap)
-import Game.Cubbit.LocalIndex (LocalIndex)
+import Game.Cubbit.LocalIndex (LocalIndex, runLocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
-import Game.Cubbit.Types (Materials, State(State))
+import Game.Cubbit.Types (Materials, Mode(..), State(State))
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (Material, setAlpha)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
-import Prelude ((+), (-), (<), (=<<))
+import Prelude ((+), (-), (<), (=<<), (==), negate)
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -143,25 +144,40 @@ generateMesh index verts mat scene = do
 
 
 
+editBlock :: forall eff. Ref State -> Materials -> Scene -> BlockIndex -> BlockType -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+editBlock ref materials scene globalBlockIndex block = do
+    State state <- readRef ref
+    let editChunkIndex = globalIndexToChunkIndex globalBlockIndex
+    chunkMaybe <- lookupChunk editChunkIndex state.terrain
+    case chunkMaybe of
+        Nothing -> pure unit
+        Just chunkData -> void do
+            let localIndex = globalIndexToLocalIndex globalBlockIndex
+            let li = runLocalIndex localIndex
+            updateChunkMesh ref materials scene chunkData {
+                blocks = case state.mode of
+                        Put -> insert localIndex block chunkData.blocks
+                        Remove -> delete localIndex chunkData.blocks
+                        Move -> chunkData.blocks
+            }
+
+            let eci = runChunkIndex editChunkIndex
+
+            let refreash dx dy dz = do
+                    chunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
+                    case chunkMaybe of
+                        Nothing -> pure unit
+                        Just chunkData -> updateChunkMesh ref materials scene chunkData
+
+            when (li.x == 0) (refreash (-1) 0 0)
+            when (li.x == chunkSize - 1) (refreash 1 0 0)
+            when (li.y == 0) (refreash 0 (-1) 0)
+            when (li.y == chunkSize - 1) (refreash 0 1 0)
+            when (li.z == 0) (refreash 0 0 (-1))
+            when (li.z == chunkSize - 1) (refreash 0 0 1)
+
 updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
 updateChunkMesh ref materials scene chunkWithMesh = void do
-
-    _updateChunkMesh ref materials scene chunkWithMesh
-
-    -- TODO: reduce updating chunks for performance
-    let i = runChunkIndex chunkWithMesh.index
-    forE (i.x - 1) (i.x + 2) \x -> do
-        forE (i.y - 1) (i.y + 2) \y -> do
-            forE (i.z - 1) (i.z + 2) \z -> void do
-                State state@{ terrain: Terrain terrain } <- readRef ref
-                chunkMaybe <- lookupChunk (chunkIndex x y z) state.terrain
-                case chunkMaybe of
-                    Nothing -> pure unit
-                    Just chunk -> _updateChunkMesh ref materials scene chunk
-
-
-_updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-_updateChunkMesh ref materials scene chunkWithMesh = void do
 
     State state <- readRef ref
 

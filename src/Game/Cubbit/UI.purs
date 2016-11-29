@@ -8,12 +8,9 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
-import Game.Cubbit.BlockType (dirtBlock, grassBlock)
-import Game.Cubbit.BoxelMap (delete, insert)
-import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.BlockType (dirtBlock)
 import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove)
-import Game.Cubbit.MeshBuilder (updateChunkMesh)
-import Game.Cubbit.Terrain (globalIndexToChunkIndex, globalIndexToLocalIndex, lookupChunk)
+import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials)
 import Game.Cubbit.Update (pickBlock)
 import Graphics.Babylon (Canvas)
@@ -26,6 +23,7 @@ import Graphics.Babylon.TargetCamera (TargetCamera, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Canvas (CanvasElement)
 import Prelude (($))
+
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -97,19 +95,7 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
         picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
         case picked of
             Nothing -> pure unit
-            Just blockIndex -> do
-                let chunkIndex = globalIndexToChunkIndex blockIndex
-                chunkMaybe <- lookupChunk chunkIndex state.terrain
-                case chunkMaybe of
-                    Nothing -> pure unit
-                    Just chunkData -> void do
-                        let localIndex = globalIndexToLocalIndex blockIndex
-                        updateChunkMesh ref materials scene chunkData {
-                            blocks = case state.mode of
-                                    Put -> insert localIndex dirtBlock chunkData.blocks
-                                    Remove -> delete localIndex chunkData.blocks
-                                    Move -> chunkData.blocks
-                        }
+            Just blockIndex -> editBlock ref materials scene  blockIndex dirtBlock
 
 
 

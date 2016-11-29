@@ -277,7 +277,12 @@ exports.createTerrainGeometryJS = function(references){
                             case airBlock:
                                 break;
                             case waterBlock:
+                                square(-1,  0,  0, nxUV, waterBounds);
+                                square( 1,  0,  0, pxUV, waterBounds);
+                                square( 0, -1,  0, nyUV, waterBounds);
                                 square( 0,  1,  0, pyUV, waterBounds);
+                                square( 0,  0, -1, nzUV, waterBounds);
+                                square( 0,  0,  1, pzUV, waterBounds);
                                 break;
                             default:
                                 square(-1,  0,  0, nxUV, solidBounds);

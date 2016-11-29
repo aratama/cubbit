@@ -21,7 +21,7 @@ import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors, getSortedChunks)
-import Game.Cubbit.Constants (loadDistance, unloadDistance, maximumLoadedChunks)
+import Game.Cubbit.Constants (loadDistance, unloadDistance, maximumLoadedChunks, shadowDisplayRange)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
@@ -155,7 +155,7 @@ update ref scene materials shadowMap cursor camera = do
         -- update shadow rendering list
         do
             let ci = runChunkIndex cameraPositionChunkIndex
-            neighbors <- filterNeighbors 3 ci.x ci.y ci.z ter.map
+            neighbors <- filterNeighbors shadowDisplayRange ci.x ci.y ci.z ter.map
             setRenderList (catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                 MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                 _ -> Nothing

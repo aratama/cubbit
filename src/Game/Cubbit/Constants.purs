@@ -19,3 +19,8 @@ fogDensity = 0.005
 
 maximumLoadedChunks :: Int
 maximumLoadedChunks = pow (1 + loadDistance * 2) 3 + 1000
+
+
+
+shadowDisplayRange :: Int 
+shadowDisplayRange = 7
