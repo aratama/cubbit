@@ -28,7 +28,7 @@ import Graphics.Babylon.Engine (createEngine, runRenderLoop)
 import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
-import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
+import Graphics.Babylon.Material (setAlpha, setFogEnabled, setWireframe, setZOffset)
 import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
 import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
 import Graphics.Babylon.SceneLoader (importMesh)
@@ -196,6 +196,7 @@ runApp canvasGL canvas2d = do
             else do
                 mat <- createStandardMaterial "water-block" scene
                 setDiffuseTexture texture mat
+                setAlpha 0.7 (standardMaterialToMaterial mat)
                 pure (standardMaterialToMaterial mat)
 
         pure {
@@ -263,13 +264,12 @@ runApp canvasGL canvas2d = do
 
     -- load initial chunks
     do
-        let initialWorldSize = 2
+        let initialWorldSize = 5
 
         forE (-initialWorldSize) initialWorldSize \x -> do
-            forE (-initialWorldSize) initialWorldSize \y -> do
-                forE (-initialWorldSize) initialWorldSize \z -> void do
-                    let index = chunkIndex x y z
-                    createChunkMesh ref materials scene index
+            forE (-initialWorldSize) initialWorldSize \z -> void do
+                let index = chunkIndex x 0 z
+                createChunkMesh ref materials scene index
 
 
     -- start game loop

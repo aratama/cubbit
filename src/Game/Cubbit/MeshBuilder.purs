@@ -20,7 +20,7 @@ import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalInd
 import Game.Cubbit.Types (Materials, State(State))
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
-import Graphics.Babylon.Material (Material)
+import Graphics.Babylon.Material (Material, setAlpha)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.VertexData (VertexDataProps(VertexDataProps), applyToMesh, createVertexData)
@@ -102,16 +102,18 @@ createChunkMesh ref materials scene index = do
             let ci = runChunkIndex index
 
 
-            let gen vertices = if 0 < length vertices.indices
+            let gen vertices mat = if 0 < length vertices.indices
                     then do
-                        standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.boxMat scene
-                        pure (MeshLoaded standardMaterialMesh)
+                        mesh <- generateMesh index (VertexDataProps vertices) mat scene
+                        pure (MeshLoaded mesh)
                     else do
                         pure EmptyMeshLoaded
 
-            standardMaterialMesh <- gen standardMaterialBlocks
-            waterMaterialMesh <- gen waterMaterialBlocks
-            
+            standardMaterialMesh <- gen standardMaterialBlocks materials.boxMat
+            waterMaterialMesh <- gen waterMaterialBlocks materials.waterBoxMat
+
+
+
             insertChunk {
                 x: ci.x,
                 y: ci.y,
