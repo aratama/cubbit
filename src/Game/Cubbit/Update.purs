@@ -4,7 +4,7 @@ import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind, (>>=))
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (log)
+import Control.Monad.Eff.Console (log, logShow)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM)
 import DOM (DOM)
@@ -25,18 +25,20 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
+import Graphics.Babylon.AbstractMesh (setRotation)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
-import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera)
+import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getHit, getPickedPoint)
 import Graphics.Babylon.Scene (pick)
 import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
+import Graphics.Babylon.TargetCamera (getRotation, setTarget)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3)
-import Math (round)
-import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate)
+import Math (atan2, cos, round, sin, sqrt)
+import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate, (>>=), (*), (/))
 
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do
@@ -208,17 +210,42 @@ update ref scene materials shadowMap cursor camera options = do
         do
             State st@{ terrain } <- readRef ref
 
+            let speed = options.moveSpeed
+            cameraRotationVector <- getRotation (freeCameraToTargetCamera camera)
+            cameraRot <- runVector3 cameraRotationVector
+            let vt = if st.wKey then 1.0 else 0.0 - if st.sKey then 1.0 else 0.0
+            let ht = if st.dKey then 1.0 else 0.0 - if st.aKey then 1.0 else 0.0
+            let vdx = sin cameraRot.y * vt
+            let vdz = cos cameraRot.y * vt
+            let hdx = sin (cameraRot.y + 3.141592 * 0.5) * ht
+            let hdz = cos (cameraRot.y + 3.141592 * 0.5) * ht
+            let dx = vdx + hdx
+            let dz = vdz + hdz
+            let moveAngle = atan2 dx dz
+            let velocity = if dx == 0.0 && dz == 0.0
+                        then state.velocity {
+                            x = state.velocity.x * 0.5,
+                            z = state.velocity.z * 0.5
+                        }
+                        else let len = sqrt (dx * dx + dz * dz) in state.velocity {
+                            x = dx / len * speed,
+                            z = dz / len * speed
+                        }
+
+            logShow velocity.x
+
             let next = {
-                        x: state.position.x + state.velocity.x,
-                        y: state.position.y + state.velocity.y,
-                        z: state.position.z + state.velocity.z
+                        x: state.position.x + velocity.x,
+                        y: state.position.y + velocity.y,
+                        z: state.position.z + velocity.z
                     }
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex next.x next.y next.z)
             blockMaybe <- lookupBlockByVec next terrain
             let st' = case blockMaybe of
                             Nothing -> st {
                                 position = next,
-                                velocity = st.velocity { y = state.velocity.y - 0.01 }
+                                velocity = velocity { y = velocity.y - 0.01 },
+                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415
                             }
                             Just _ -> st {
                                 position = {
@@ -226,14 +253,19 @@ update ref scene materials shadowMap cursor camera options = do
                                     y: Int.toNumber (globalIndex.y) + 1.001,
                                     z: st.position.z
                                 },
-                                velocity = { x: 0.0, y: 0.0, z: 0.0 }
+                                velocity = velocity { y = 0.0 },
+                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415
                             }
 
             writeRef ref (State st')
 
+            rotVector <- createVector3 0.0 st'.yaw 0.0
+            position <- createVector3 st'.position.x st'.position.y st'.position.z
             for_ st.playerMeshes \mesh -> void do
-                position <- createVector3 st'.position.x st'.position.y st'.position.z
                 AbstractMesh.setPosition position mesh
+                setRotation rotVector mesh
+
+            -- setTarget position (freeCameraToTargetCamera camera)
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

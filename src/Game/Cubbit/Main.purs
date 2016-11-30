@@ -21,7 +21,7 @@ import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
-import Game.Cubbit.Event (onKeyDown)
+import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (emptyTerrain)
@@ -67,6 +67,7 @@ readOptions value = do
     chunkUnloadSpeed <- readProp "chunkUnloadSpeed" value
     jumpVelocity <- readProp "jumpVelocity" value
     initialWorldSize <- readProp "initialWorldSize" value
+    moveSpeed <- readProp "moveSpeed" value
     pure {
         loadDistance,
         fogDensity,
@@ -76,7 +77,8 @@ readOptions value = do
         enableWaterMaterial,
         chunkUnloadSpeed,
         jumpVelocity,
-        initialWorldSize
+        initialWorldSize,
+        moveSpeed
     }
 
 runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
@@ -219,7 +221,12 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             minimap: false,
             totalFrames: 0,
             playerMeshes: playerMeshes,
-            updateIndex: toNullable Nothing
+            updateIndex: toNullable Nothing,
+
+            wKey: false,
+            sKey: false,
+            aKey: false,
+            dKey: false
         }
 
         initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
@@ -233,19 +240,37 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             setReceiveShadows true mesh
             skeleton <- getSkeleton mesh
             --setMaterial materials.cellShadingMaterial mesh
-            beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
+            --beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
             setMaterial materials.cellShadingMaterial mesh
 
         -- TODO: handle key events
         onKeyDown \e -> do
             when (e.keyCode == 32) do
                 modifyRef ref \(State state) -> State state {
-                    velocity = {
-                        x: state.velocity.x,
-                        y: state.velocity.y + options.jumpVelocity,
-                        z: state.velocity.z
-                    }
+                    velocity = state.velocity { y = state.velocity.y + options.jumpVelocity }
                 }
+
+            when (e.keyCode == 87) do -- w
+                modifyRef ref \(State state) -> State state { wKey = true }
+            when (e.keyCode == 83) do -- s
+                modifyRef ref \(State state) -> State state { sKey = true }
+            when (e.keyCode == 65) do -- a
+                modifyRef ref \(State state) -> State state { aKey = true }
+            when (e.keyCode == 68) do -- d
+                modifyRef ref \(State state) -> State state { dKey = true }
+
+        onKeyUp \e -> do
+            when (e.keyCode == 87) do -- w
+                modifyRef ref \(State state) -> State state { wKey = false }
+            when (e.keyCode == 83) do -- s
+                modifyRef ref \(State state) -> State state { sKey = false }
+            when (e.keyCode == 65) do -- a
+                modifyRef ref \(State state) -> State state { aKey = false }
+            when (e.keyCode == 68) do -- d
+                modifyRef ref \(State state) -> State state { dKey = false }
+
+        -- focus
+        focus "renderCanvas"
 
         -- load initial chunks
         do

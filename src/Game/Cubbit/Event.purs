@@ -19,3 +19,6 @@ foreign import _wait :: forall eff. (Error -> Eff (dom :: DOM | eff) Unit) -> (U
 
 foreign import onKeyDown :: forall eff. ({ keyCode :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
+foreign import onKeyUp :: forall eff. ({ keyCode :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
+
+foreign import focus :: forall eff. String -> Eff (dom :: DOM | eff) Unit

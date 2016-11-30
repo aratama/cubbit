@@ -41,3 +41,18 @@ exports.onKeyDown = function(callback){
         });
     }
 }
+
+exports.onKeyUp = function(callback){
+    return function(){
+        window.addEventListener("keyup", function(e){
+            callback(e)();
+        });
+    }
+}
+
+
+exports.focus = function(id){
+    return function(){
+        document.getElementById(id).focus();
+    }
+}

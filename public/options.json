@@ -8,5 +8,6 @@
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
     "jumpVelocity": 0.15,
-    "initialWorldSize": 3
+    "initialWorldSize": 3,
+    "moveSpeed": 0.2
 }

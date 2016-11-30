@@ -34,7 +34,12 @@ newtype State = State {
 
     playerMeshes :: Array AbstractMesh,
 
-    updateIndex :: Nullable ForeachIndex
+    updateIndex :: Nullable ForeachIndex,
+
+    wKey :: Boolean,
+    sKey :: Boolean,
+    aKey :: Boolean,
+    dKey :: Boolean
 }
 
 type Materials = {
@@ -53,7 +58,8 @@ type Options = {
     enableWaterMaterial :: Boolean,
     chunkUnloadSpeed :: Int,
     jumpVelocity :: Number,
-    initialWorldSize :: Int
+    initialWorldSize :: Int,
+    moveSpeed :: Number
 }
 
 foreign import data ForeachIndex :: *
