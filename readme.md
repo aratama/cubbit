@@ -17,5 +17,5 @@ $ npm run build
 
 ## Demo
 
-You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable.
+You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but also available in Firefox and Edge.
 
