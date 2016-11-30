@@ -7,18 +7,25 @@ import Control.Monad.Aff (runAff)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (errorShow, error)
+import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (modifyRef, newRef)
+import Control.Monad.Error.Class (throwError)
+import Control.Monad.Except (runExcept, runExceptT)
+import Data.Either (Either(..))
 import Data.Foldable (for_)
+import Data.Foreign (F, Foreign)
+import Data.Foreign.Class (readProp)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
+import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
-import Game.Cubbit.Constants (fogDensity, shadowMapSize, skyBoxRenderingGruop)
+import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (onKeyDown)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(..), State(State))
+import Game.Cubbit.Types (Effects, Mode(..), State(State), Options)
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
@@ -44,18 +51,43 @@ import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
+import Network.HTTP.Affjax (affjax, defaultRequest, get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
 
 
+
+readOptions :: Foreign -> F Options
+readOptions value = do
+    loadDistance <- readProp "loadDistance" value
+    fogDensity <- readProp "fogDensity" value
+    maximumLoadedChunks <- readProp "maximumLoadedChunks" value
+    shadowDisplayRange <- readProp "shadowDisplayRange" value
+    shadowMapSize <- readProp "shadowMapSize" value
+    enableWaterMaterial <- readProp "enableWaterMaterial" value
+    pure {
+        loadDistance,
+        fogDensity,
+        maximumLoadedChunks,
+        shadowDisplayRange,
+        shadowMapSize,
+        enableWaterMaterial
+    }
+
 runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
 runApp canvasGL canvas2d = void $ runAff errorShow pure do
+
+    -- load options
+    response <- get "options.json"
+    options <- case runExcept (readOptions response.response) of
+        Left err -> throwError (EXP.error (show err))
+        Right opt -> pure opt
 
     engine <- liftEff $ createEngine canvasGL true
 
     scene <- liftEff do
         sce <- createScene engine
         setFogMode fOGMODE_EXP sce
-        setFogDensity fogDensity sce
+        setFogDensity options.fogDensity sce
         fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
         setFogColor fogColor sce
         setCollisionsEnabled true sce
@@ -67,8 +99,17 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
     loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
     playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
 
+
+
     -- initialize scene
     liftEff do
+
+
+
+
+
+
+
         miniMapCamera <- do
             let minimapScale = 200.0
             position <- createVector3 0.0 30.0 0.0
@@ -111,13 +152,13 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
         shadowMap <- do
             -- create a basic light, aiming 0,1,0 - meaning, to the sky
-            lightDirection <- createVector3 0.0 (negate 1.0) 0.0
+            lightDirection <- createVector3 0.3 (negate 1.0) 0.5
             light <- createDirectionalLight "light1" lightDirection scene
             dirColor <- createColor3 0.8 0.8 0.8
             setDiffuse dirColor (directionalLightToLight light)
 
             -- shadow
-            shadowGenerator <- createShadowGenerator shadowMapSize light
+            shadowGenerator <- createShadowGenerator options.shadowMapSize light  -- over 8192 pixel-size texture causes performance regressions
             setBias 0.000005 shadowGenerator
             setUsePoissonSampling true shadowGenerator
             getShadowMap shadowGenerator
@@ -156,7 +197,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             pure skyboxMesh
 
         -- prepare materials
-        materials <- initializeMaterials scene skybox texture alphaTexture
+        materials <- initializeMaterials scene skybox texture alphaTexture options
 
         -- initialize game state
         initialTerrain <- emptyTerrain 0
@@ -202,7 +243,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
         -- load initial chunks
         do
-            let initialWorldSize = 5
+            let initialWorldSize = 1
             forE (-initialWorldSize) initialWorldSize \x -> do
                 forE (-initialWorldSize) initialWorldSize \z -> void do
                     let index = chunkIndex x 0 z
@@ -211,7 +252,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
         -- start game loop
         engine # runRenderLoop do
-            update ref scene materials shadowMap cursor freeCamera
+            update ref scene materials shadowMap cursor freeCamera options
             render scene
 
 main :: forall eff. Eff (Effects eff) Unit

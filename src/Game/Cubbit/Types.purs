@@ -11,8 +11,9 @@ import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Types (AbstractMesh)
 import Graphics.Canvas (CANVAS)
+import Network.HTTP.Affjax (AJAX)
 
-type Effects eff = (canvas :: CANVAS, now :: NOW, console :: CONSOLE, dom :: DOM, babylon :: BABYLON, ref :: REF | eff)
+type Effects eff = (canvas :: CANVAS, now :: NOW, console :: CONSOLE, dom :: DOM, babylon :: BABYLON, ref :: REF, ajax :: AJAX | eff)
 
 data Mode = Move | Put | Remove
 
@@ -41,6 +42,15 @@ type Materials = {
     waterMaterial :: Material,
     cellShadingMaterial :: Material,
     bushMaterial :: Material
+}
+
+type Options = {
+    loadDistance :: Int,
+    fogDensity :: Number,
+    maximumLoadedChunks :: Int,
+    shadowDisplayRange :: Int,
+    shadowMapSize :: Int,
+    enableWaterMaterial :: Boolean
 }
 
 foreign import data ForeachIndex :: *

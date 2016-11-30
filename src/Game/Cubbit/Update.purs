@@ -21,10 +21,9 @@ import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors, getSortedChunks)
-import Game.Cubbit.Constants (loadDistance, unloadDistance, maximumLoadedChunks, shadowDisplayRange)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex)
+import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
@@ -37,7 +36,7 @@ import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
-import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==))
+import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate)
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -125,8 +124,8 @@ pickBlock scene cursor (State state) screenX screenY = do
 
     if getHit pickingInfo then pickup else pure Nothing
 
-update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> FreeCamera -> Eff (Effects eff) Unit
-update ref scene materials shadowMap cursor camera = do
+update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> FreeCamera -> Options -> Eff (Effects eff) Unit
+update ref scene materials shadowMap cursor camera options = do
 
         modifyRef ref \(State state) -> State state { totalFrames = state.totalFrames + 1 }
 
@@ -157,7 +156,7 @@ update ref scene materials shadowMap cursor camera = do
         -- update shadow rendering list
         do
             let ci = runChunkIndex cameraPositionChunkIndex
-            neighbors <- filterNeighbors shadowDisplayRange ci.x ci.y ci.z ter.map
+            neighbors <- filterNeighbors options.shadowDisplayRange ci.x ci.y ci.z ter.map
             let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                         MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                         _ -> Nothing
@@ -184,7 +183,7 @@ update ref scene materials shadowMap cursor camera = do
                     --log $ "total chunks:" <> show (size + 1)
 
 
-            nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
+            nextIndex <- foreachBlocks options.loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
 
                 let index = chunkIndex x y z
                 chunkMaybe <- lookupChunk index state.terrain
@@ -212,9 +211,9 @@ update ref scene materials shadowMap cursor camera = do
             --sort ci.x ci.y ci.z terrain.map
 
             loadedChunkCount <- size terrain.map
-            when (maximumLoadedChunks < loadedChunkCount) do
+            when (options.maximumLoadedChunks < loadedChunkCount) do
                 sorted <- getSortedChunks ci.x ci.y ci.z terrain.map
-                let sliced = drop maximumLoadedChunks sorted
+                let sliced = drop options.maximumLoadedChunks sorted
                 for_ (take 10 sliced) \chunkWithMesh -> do
                     disposeChunk chunkWithMesh
                     delete chunkWithMesh.index terrain.map

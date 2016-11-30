@@ -3,8 +3,7 @@ module Game.Cubbit.Materials (initializeMaterials) where
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
-import Game.Cubbit.Constants (enableWaterMaterial)
-import Game.Cubbit.Types (Effects, Materials)
+import Game.Cubbit.Types (Effects, Materials, Options)
 import Graphics.Babylon.BaseTexture (setHasAlpha)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.Material (setAlpha)
@@ -17,8 +16,8 @@ import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Prelude (negate, (/))
 
-initializeMaterials :: forall eff. Scene -> Mesh -> Texture -> Texture -> Eff (Effects eff) Materials
-initializeMaterials scene skybox texture alphaTexture = do
+initializeMaterials :: forall eff. Scene -> Mesh -> Texture -> Texture -> Options -> Eff (Effects eff) Materials
+initializeMaterials scene skybox texture alphaTexture options = do
 
     setHasAlpha true (textureToBaseTexture alphaTexture)
 
@@ -50,7 +49,7 @@ initializeMaterials scene skybox texture alphaTexture = do
         setDiffuseTexture texture mat
         pure mat
 
-    waterMaterial <- if enableWaterMaterial
+    waterMaterial <- if options.enableWaterMaterial
         then do
             mat <- createWaterMaterial "water-block" scene
             tex <- createTexture "waterbump.png" scene defaultCreateTextureOptions
