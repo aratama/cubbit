@@ -39,7 +39,8 @@ newtype State = State {
     wKey :: Boolean,
     sKey :: Boolean,
     aKey :: Boolean,
-    dKey :: Boolean
+    dKey :: Boolean,
+    animation :: String
 }
 
 type Materials = {
@@ -59,7 +60,8 @@ type Options = {
     chunkUnloadSpeed :: Int,
     jumpVelocity :: Number,
     initialWorldSize :: Int,
-    moveSpeed :: Number
+    moveSpeed :: Number,
+    cameraTargetSpeed :: Number
 }
 
 foreign import data ForeachIndex :: *

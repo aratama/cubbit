@@ -8,7 +8,7 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (errorShow, error)
 import Control.Monad.Eff.Exception (error) as EXP
-import Control.Monad.Eff.Ref (modifyRef, newRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept, runExceptT)
 import Data.Either (Either(..))
@@ -44,6 +44,7 @@ import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render,
 import Graphics.Babylon.SceneLoader (importMesh)
 import Graphics.Babylon.SceneLoader.Aff (loadMesh)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
+import Graphics.Babylon.Skeleton (beginAnimation) as Skeleton
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
@@ -68,6 +69,7 @@ readOptions value = do
     jumpVelocity <- readProp "jumpVelocity" value
     initialWorldSize <- readProp "initialWorldSize" value
     moveSpeed <- readProp "moveSpeed" value
+    cameraTargetSpeed <- readProp "cameraTargetSpeed" value
     pure {
         loadDistance,
         fogDensity,
@@ -78,8 +80,11 @@ readOptions value = do
         chunkUnloadSpeed,
         jumpVelocity,
         initialWorldSize,
-        moveSpeed
+        moveSpeed,
+        cameraTargetSpeed
     }
+
+
 
 runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
 runApp canvasGL canvas2d = void $ runAff errorShow pure do
@@ -226,7 +231,8 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             wKey: false,
             sKey: false,
             aKey: false,
-            dKey: false
+            dKey: false,
+            animation: ""
         }
 
         initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
@@ -239,9 +245,10 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             setRenderingGroupId 1 mesh
             setReceiveShadows true mesh
             skeleton <- getSkeleton mesh
-            --setMaterial materials.cellShadingMaterial mesh
-            --beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
             setMaterial materials.cellShadingMaterial mesh
+            --playAnimation "Stand" ref
+            -- beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
+
 
         -- TODO: handle key events
         onKeyDown \e -> do

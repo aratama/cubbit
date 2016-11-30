@@ -25,7 +25,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (setRotation)
+import Graphics.Babylon.AbstractMesh (getSkeleton, setRotation)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition) as Camera
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
@@ -34,11 +34,19 @@ import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getHit, getPickedPoint)
 import Graphics.Babylon.Scene (pick)
 import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
-import Graphics.Babylon.TargetCamera (getRotation, setTarget)
+import Graphics.Babylon.Skeleton (beginAnimation)
+import Graphics.Babylon.TargetCamera (getRotation, setTarget, getTarget)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (atan2, cos, round, sin, sqrt)
-import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate, (>>=), (*), (/))
+import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate, (>>=), (*), (/), (||))
+
+playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
+playAnimation name ref = do
+    State state <- readRef ref
+    for_ state.playerMeshes \mesh -> void do
+        skeleton <- getSkeleton mesh
+        beginAnimation name true 1.0 pure skeleton
 
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do
@@ -241,11 +249,18 @@ update ref scene materials shadowMap cursor camera options = do
                     }
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex next.x next.y next.z)
             blockMaybe <- lookupBlockByVec next terrain
+
+            let nextAnimation = if st.wKey || st.sKey || st.aKey || st.dKey then "Action" else "Stand"
+
+
+
+
             let st' = case blockMaybe of
                             Nothing -> st {
                                 position = next,
                                 velocity = velocity { y = velocity.y - 0.01 },
-                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415
+                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
+                                animation = nextAnimation
                             }
                             Just _ -> st {
                                 position = {
@@ -254,18 +269,32 @@ update ref scene materials shadowMap cursor camera options = do
                                     z: st.position.z
                                 },
                                 velocity = velocity { y = 0.0 },
-                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415
+                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
+                                animation = nextAnimation
                             }
 
             writeRef ref (State st')
 
+            -- update state
+            when (nextAnimation /= st.animation) do
+                playAnimation nextAnimation ref
+
+
+
             rotVector <- createVector3 0.0 st'.yaw 0.0
+
             position <- createVector3 st'.position.x st'.position.y st'.position.z
             for_ st.playerMeshes \mesh -> void do
                 AbstractMesh.setPosition position mesh
                 setRotation rotVector mesh
 
-            -- setTarget position (freeCameraToTargetCamera camera)
+
+            currentCameraTarget <- getTarget (freeCameraToTargetCamera camera) >>= runVector3
+            let cx = currentCameraTarget.x + (st'.position.x - currentCameraTarget.x) * options.cameraTargetSpeed
+            let cy = currentCameraTarget.y + (st'.position.y - currentCameraTarget.y) * options.cameraTargetSpeed
+            let cz = currentCameraTarget.z + (st'.position.z - currentCameraTarget.z) * options.cameraTargetSpeed
+            nextCameraTarget <- createVector3 cx cy cz
+            setTarget nextCameraTarget (freeCameraToTargetCamera camera)
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

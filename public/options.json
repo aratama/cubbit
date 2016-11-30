@@ -9,5 +9,6 @@
     "chunkUnloadSpeed": 10,
     "jumpVelocity": 0.15,
     "initialWorldSize": 3,
-    "moveSpeed": 0.2
+    "moveSpeed": 0.2,
+    "cameraTargetSpeed": 0.01
 }
