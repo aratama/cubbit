@@ -1,0 +1,9 @@
+
+{
+    "loadDistance": 6,
+    "fogDensity": 0.005,
+    "maximumLoadedChunks": 2197,
+    "shadowDisplayRange": 4,
+    "shadowMapSize": 4096,
+    "enableWaterMaterial": false
+}
