@@ -10,16 +10,14 @@
     "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
     "package": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
     "server": "start http-server public",
-    "publish": "node script/publish.js",
-    "clean": ""
+    "publish": "cpx public/**/*.* docs",
+    "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs"
   },
   "author": "aratama",
   "license": "UNLICENSED",
   "directories": {
-    "public": "public"
   },
   "description": "",
   "dependencies": {
-    "copy": "^0.3.0"
   }
 }

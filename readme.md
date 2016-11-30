@@ -14,3 +14,8 @@ $ npm install
 $ bower update
 $ npm run build
 ```
+
+## Demo
+
+You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey.
+
