@@ -1,7 +1,7 @@
 module Game.Cubbit.Terrain (
  Terrain(..), emptyTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
- lookupBlockByVec, lookupBlock, insertChunk, lookupChunk, chunkCount, getChunkMap
+ lookupSolidBlockByVec, lookupSolidBlock, insertChunk, lookupChunk, chunkCount, getChunkMap, lookupBlockByVec, isSolidBlock
 ) where
 
 import Control.Bind (bind, pure)
@@ -9,21 +9,18 @@ import Control.Monad.Eff (Eff)
 import Data.EuclideanRing (mod)
 import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Unit (Unit, unit)
+import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Game.Cubbit.BlockType (BlockType, airBlock)
+import Game.Cubbit.BlockType (BlockType, BlockTypes, airBlock, bushBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
-import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..))
+import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (ChunkMap, createChunkMap, insert, lookup, size)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (dispose)
-import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import PerlinNoise (Noise, createNoise)
-import Prelude ((*), (/), (+), (-), ($), (==))
+import Prelude ((*), (+), (-), (/), (==), (/=), (&&))
 
 newtype Terrain = Terrain {
     map :: ChunkMap,
@@ -68,6 +65,24 @@ globalIndexToChunkIndex b = chunkIndex (f bi.x) (f bi.y) (f bi.z)
 lookupChunk :: forall eff. ChunkIndex -> Terrain -> Eff eff (Maybe ChunkWithMesh)
 lookupChunk index (Terrain terrain) = lookup index terrain.map
 
+lookupSolidBlockByVec :: forall eff. Vec -> Terrain -> Eff eff (Maybe BlockType)
+lookupSolidBlockByVec p (Terrain terrain) = lookupSolidBlock (globalPositionToGlobalIndex p.x p.y p.z) (Terrain terrain)
+
+lookupSolidBlock :: forall eff. BlockIndex -> Terrain -> Eff eff (Maybe BlockType)
+lookupSolidBlock globalIndex (Terrain terrain) = do
+        let chunkIndex = globalIndexToChunkIndex globalIndex
+        let localIndex = globalIndexToLocalIndex globalIndex
+        chunkMaybe <- lookup chunkIndex terrain.map
+        case chunkMaybe of
+            Just { blocks } -> case  Boxel.lookup localIndex blocks of
+                Just blockType -> pure if blockType == airBlock then Nothing else Just blockType
+                _ -> pure Nothing
+            _ -> pure Nothing
+
+
+isSolidBlock :: BlockType -> Boolean
+isSolidBlock block = block /= airBlock && block /= bushBlock
+
 lookupBlockByVec :: forall eff. Vec -> Terrain -> Eff eff (Maybe BlockType)
 lookupBlockByVec p (Terrain terrain) = lookupBlock (globalPositionToGlobalIndex p.x p.y p.z) (Terrain terrain)
 
@@ -77,9 +92,7 @@ lookupBlock globalIndex (Terrain terrain) = do
         let localIndex = globalIndexToLocalIndex globalIndex
         chunkMaybe <- lookup chunkIndex terrain.map
         case chunkMaybe of
-            Just { blocks } -> case  Boxel.lookup localIndex blocks of
-                Just blockType -> pure if blockType == airBlock then Nothing else Just blockType
-                _ -> pure Nothing
+            Just { blocks } -> pure (Boxel.lookup localIndex blocks)
             _ -> pure Nothing
 
 globalIndexToLocalIndex :: BlockIndex -> LocalIndex

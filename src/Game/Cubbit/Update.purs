@@ -18,11 +18,12 @@ import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
+import Game.Cubbit.BlockType (airBlock, bushBlock)
 import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors, getSortedChunks)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(Terrain), chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), isSolidBlock, chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupSolidBlockByVec, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (getSkeleton, setRotation)
@@ -63,7 +64,7 @@ pickBlock scene cursor (State state) screenX screenY = do
             let dy = abs (p.y - round p.y)
             let dz = abs (p.z - round p.z)
             let minDelta = min dx (min dy dz)
-            let lookupBlock' x y z = lookupBlockByVec { x, y, z } state.terrain
+            let lookupBlock' x y z = lookupSolidBlockByVec { x, y, z } state.terrain
 
             let putCursor bi = do
                     let rbi = runBlockIndex bi
@@ -240,7 +241,6 @@ update ref scene materials shadowMap cursor camera options = do
                             z = dz / len * speed
                         }
 
-            logShow velocity.x
 
             let next = {
                         x: state.position.x + velocity.x,
@@ -253,25 +253,26 @@ update ref scene materials shadowMap cursor camera options = do
             let nextAnimation = if st.wKey || st.sKey || st.aKey || st.dKey then "Action" else "Stand"
 
 
-
+            let onEmpty = st {
+                        position = next,
+                        velocity = velocity { y = velocity.y - 0.01 },
+                        yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
+                        animation = nextAnimation
+                    }
+            let onGround = st {
+                        position = {
+                            x: next.x,
+                            y: Int.toNumber (globalIndex.y) + 1.001,
+                            z: next.z
+                        },
+                        velocity = velocity { y = 0.0 },
+                        yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
+                        animation = nextAnimation
+                    }
 
             let st' = case blockMaybe of
-                            Nothing -> st {
-                                position = next,
-                                velocity = velocity { y = velocity.y - 0.01 },
-                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
-                                animation = nextAnimation
-                            }
-                            Just _ -> st {
-                                position = {
-                                    x: st.position.x,
-                                    y: Int.toNumber (globalIndex.y) + 1.001,
-                                    z: st.position.z
-                                },
-                                velocity = velocity { y = 0.0 },
-                                yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
-                                animation = nextAnimation
-                            }
+                            Just block | isSolidBlock block -> onGround
+                            _ -> onEmpty
 
             writeRef ref (State st')
 
@@ -282,6 +283,8 @@ update ref scene materials shadowMap cursor camera options = do
 
 
             rotVector <- createVector3 0.0 st'.yaw 0.0
+
+            logShow st'.position.x
 
             position <- createVector3 st'.position.x st'.position.y st'.position.z
             for_ st.playerMeshes \mesh -> void do
