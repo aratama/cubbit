@@ -158,11 +158,11 @@ update ref scene materials shadowMap cursor camera = do
         do
             let ci = runChunkIndex cameraPositionChunkIndex
             neighbors <- filterNeighbors shadowDisplayRange ci.x ci.y ci.z ter.map
-            setRenderList (catMaybes ((\chunk -> case chunk.standardMaterialMesh of
-                MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
-                _ -> Nothing
-            ) <$> neighbors)) shadowMap
-            --setRenderList (state.playerMeshes <> shdowRenderingMeshes) shadowMap
+            let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
+                        MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                        _ -> Nothing
+                    ) <$> neighbors)
+            setRenderList (meshes <> state.playerMeshes) shadowMap
 
 
         -- load chunk
@@ -239,7 +239,7 @@ update ref scene materials shadowMap cursor camera = do
                             Just _ -> st {
                                 position = {
                                     x: st.position.x,
-                                    y: Int.toNumber (globalIndex.y),
+                                    y: Int.toNumber (globalIndex.y) + 1.001,
                                     z: st.position.z
                                 },
                                 velocity = { x: 0.0, y: 0.0, z: 0.0 }
@@ -248,7 +248,7 @@ update ref scene materials shadowMap cursor camera = do
             writeRef ref (State st')
 
             for_ st.playerMeshes \mesh -> void do
-                position <- createVector3 st'.position.x (st'.position.y + 1.001) st'.position.z
+                position <- createVector3 st'.position.x st'.position.y st'.position.z
                 AbstractMesh.setPosition position mesh
 
 

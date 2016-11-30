@@ -23,8 +23,13 @@ maximumLoadedChunks = pow (1 + loadDistance * 2) 3 + 1000
 
 
 shadowDisplayRange :: Int
-shadowDisplayRange = 7
+shadowDisplayRange = 6
 
+shadowMapSize :: Int
+shadowMapSize = 4096    -- over 8192 pixel-size texture causes performance regressions
+
+enableWaterMaterial :: Boolean
+enableWaterMaterial = false
 
 -- rendering groups
 
