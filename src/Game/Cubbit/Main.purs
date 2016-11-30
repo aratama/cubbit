@@ -233,7 +233,7 @@ runApp canvasGL canvas2d = do
         debugLayer: false,
         yaw: 0.0,
         pitch: 0.0,
-        position: { x: 0.0, y: 20.0, z: 0.0 },
+        position: { x: 0.5, y: 20.0, z: 0.5 },
         velocity: { x: 0.0, y: 0.2, z: 0.0 },
         minimap: false,
         totalFrames: 0,
@@ -243,16 +243,7 @@ runApp canvasGL canvas2d = do
 
     initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
 
-{-
-    do
-        spriteSize <- toNullable <$> Just <$> createSize 1280 720
-        screenShade <- createTexture "screenshade.png" scene
-        sprite2D <- createSprite2D screenShade { spriteSize }
-        createScreenSpaceCanvas2D scene {
-            id: "ScreenSpaceCanvas2D",
-            children: [sprite2DToPrim2DBase sprite2D]
-        }
--}
+
     let onSucc result = do
             for_ result \mesh -> void do
                 p <- createVector3 0.5 13.0 0.5

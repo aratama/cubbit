@@ -1,0 +1,17 @@
+{
+  "name": "cubbit",
+  "version": "0.0.1",
+  "description": "Sandbox Game",
+  "main": "main.js",
+  "scripts": {
+  },
+  "repository": "https://github.com/aratama/cubbit",
+  "keywords": [
+    "Electron"
+  ],
+  "author": "aratama",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^1.4.1"
+  }
+}

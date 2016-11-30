@@ -1,24 +1,25 @@
 {
-    "name": "cubbit",
-    "version": "0.0.1",
-    "main": "",
-    "scripts": {
-        "pretest": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
-        "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
-        "posttest": "node public/index.js",
-
-        "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
-        "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
-
-        "package": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
-
-        "server": "start http-server public",
-        "clean": ""
-    },
-    "author": "aratama",
-    "license": "UNLICENSED",
-    "directories": {
-        "public": "public"
-    },
-    "description": ""
+  "name": "cubbit",
+  "version": "0.0.1",
+  "main": "",
+  "scripts": {
+    "pretest": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
+    "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
+    "posttest": "node public/index.js",
+    "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
+    "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
+    "package": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
+    "server": "start http-server public",
+    "publish": "node script/publish.js",
+    "clean": ""
+  },
+  "author": "aratama",
+  "license": "UNLICENSED",
+  "directories": {
+    "public": "public"
+  },
+  "description": "",
+  "dependencies": {
+    "copy": "^0.3.0"
+  }
 }

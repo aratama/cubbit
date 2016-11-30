@@ -152,6 +152,8 @@ update ref scene materials shadowMap cursor camera = do
                             r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                             setPosition r cursor
 
+                            setTextContent "cursor-position" (show rbi.x <> ", " <> show rbi.y <> ", " <> show rbi.z)
+
         -- update shadow rendering list
         do
             let ci = runChunkIndex cameraPositionChunkIndex
@@ -237,7 +239,7 @@ update ref scene materials shadowMap cursor camera = do
                             Just _ -> st {
                                 position = {
                                     x: st.position.x,
-                                    y: Int.toNumber (globalIndex.y + 1),
+                                    y: Int.toNumber (globalIndex.y),
                                     z: st.position.z
                                 },
                                 velocity = { x: 0.0, y: 0.0, z: 0.0 }
@@ -246,8 +248,11 @@ update ref scene materials shadowMap cursor camera = do
             writeRef ref (State st')
 
             for_ st.playerMeshes \mesh -> void do
-                position <- createVector3 st'.position.x (st'.position.y + 0.501) st'.position.z
+                position <- createVector3 st'.position.x (st'.position.y + 1.001) st'.position.z
                 AbstractMesh.setPosition position mesh
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex
+
+
+foreign import setTextContent :: forall eff. String -> String -> Eff (dom :: DOM | eff) Unit

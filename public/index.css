@@ -92,3 +92,21 @@ html, body {
     height: 32px;
     text-align: center;
 }
+
+
+
+
+
+
+
+
+#cursor-position {
+    color: white;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    font-size: 10px;
+}
+
+
+

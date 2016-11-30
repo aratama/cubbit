@@ -109,7 +109,7 @@ exports._createBlockMapJS = function(references){
                                         }
                                     }
                                 }
-                            }else if((r % 97) < 10){
+                            }else if((r % 93) < 10){
                                 put(lx, lh + 1, lz, bushBlock);
                             }
                         }

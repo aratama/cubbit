@@ -69,3 +69,12 @@ exports.foreachBlocks = function(size){
         }
     }
 }
+
+
+exports.setTextContent = function(id){
+    return function(text){
+        return function(){
+            document.getElementById(id).textContent = text;
+        }
+    }
+}
