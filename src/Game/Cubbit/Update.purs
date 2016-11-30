@@ -293,9 +293,9 @@ update ref scene materials shadowMap cursor camera options = do
 
 
             currentCameraTarget <- getTarget (freeCameraToTargetCamera camera) >>= runVector3
-            let cx = currentCameraTarget.x + (st'.position.x - currentCameraTarget.x) * options.cameraTargetSpeed
-            let cy = currentCameraTarget.y + (st'.position.y - currentCameraTarget.y) * options.cameraTargetSpeed
-            let cz = currentCameraTarget.z + (st'.position.z - currentCameraTarget.z) * options.cameraTargetSpeed
+            let cx = currentCameraTarget.x + (st'.position.x       - currentCameraTarget.x) * options.cameraTargetSpeed
+            let cy = currentCameraTarget.y + (st'.position.y + 1.0 - currentCameraTarget.y) * options.cameraTargetSpeed
+            let cz = currentCameraTarget.z + (st'.position.z       - currentCameraTarget.z) * options.cameraTargetSpeed
             nextCameraTarget <- createVector3 cx cy cz
             setTarget nextCameraTarget (freeCameraToTargetCamera camera)
 

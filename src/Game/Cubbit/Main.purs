@@ -222,7 +222,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             yaw: 0.0,
             pitch: 0.0,
             position: { x: 0.5, y: 10.0, z: 0.5 },
-            velocity: { x: 0.0, y: 0.2, z: 0.0 },
+            velocity: { x: 0.0, y: 0.0, z: 0.0 },
             minimap: false,
             totalFrames: 0,
             playerMeshes: playerMeshes,
