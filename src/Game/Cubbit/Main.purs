@@ -64,13 +64,19 @@ readOptions value = do
     shadowDisplayRange <- readProp "shadowDisplayRange" value
     shadowMapSize <- readProp "shadowMapSize" value
     enableWaterMaterial <- readProp "enableWaterMaterial" value
+    chunkUnloadSpeed <- readProp "chunkUnloadSpeed" value
+    jumpVelocity <- readProp "jumpVelocity" value
+    initialWorldSize <- readProp "initialWorldSize" value
     pure {
         loadDistance,
         fogDensity,
         maximumLoadedChunks,
         shadowDisplayRange,
         shadowMapSize,
-        enableWaterMaterial
+        enableWaterMaterial,
+        chunkUnloadSpeed,
+        jumpVelocity,
+        initialWorldSize
     }
 
 runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
@@ -236,14 +242,14 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
                 modifyRef ref \(State state) -> State state {
                     velocity = {
                         x: state.velocity.x,
-                        y: state.velocity.y + 0.15,
+                        y: state.velocity.y + options.jumpVelocity,
                         z: state.velocity.z
                     }
                 }
 
         -- load initial chunks
         do
-            let initialWorldSize = 1
+            let initialWorldSize = options.initialWorldSize
             forE (-initialWorldSize) initialWorldSize \x -> do
                 forE (-initialWorldSize) initialWorldSize \z -> void do
                     let index = chunkIndex x 0 z

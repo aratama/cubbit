@@ -24,7 +24,6 @@ import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Canvas (CanvasElement)
 import Prelude (($))
 
-
 shadowMapSize :: Int
 shadowMapSize = 4096
 

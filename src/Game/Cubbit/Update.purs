@@ -38,21 +38,6 @@ import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
 import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate)
 
-shadowMapSize :: Int
-shadowMapSize = 4096
-
-skyBoxRenderingGruop :: Int
-skyBoxRenderingGruop = 0
-
-terrainRenderingGroup :: Int
-terrainRenderingGroup = 1
-
-collesionEnabledRange :: Int
-collesionEnabledRange = 3
-
-enableWaterMaterial :: Boolean
-enableWaterMaterial = false
-
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do
     let predicate mesh = do
@@ -214,7 +199,7 @@ update ref scene materials shadowMap cursor camera options = do
             when (options.maximumLoadedChunks < loadedChunkCount) do
                 sorted <- getSortedChunks ci.x ci.y ci.z terrain.map
                 let sliced = drop options.maximumLoadedChunks sorted
-                for_ (take 10 sliced) \chunkWithMesh -> do
+                for_ (take options.chunkUnloadSpeed sliced) \chunkWithMesh -> do
                     disposeChunk chunkWithMesh
                     delete chunkWithMesh.index terrain.map
                     --let ci = runChunkIndex chunkWithMesh.index

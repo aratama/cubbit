@@ -50,7 +50,10 @@ type Options = {
     maximumLoadedChunks :: Int,
     shadowDisplayRange :: Int,
     shadowMapSize :: Int,
-    enableWaterMaterial :: Boolean
+    enableWaterMaterial :: Boolean,
+    chunkUnloadSpeed :: Int,
+    jumpVelocity :: Number,
+    initialWorldSize :: Int
 }
 
 foreign import data ForeachIndex :: *
