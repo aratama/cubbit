@@ -24,7 +24,15 @@ $ npm run build
 
 ## Licenses
 
-You can read the source files to study Functional Programming or PureScript, but it's **not** licensed. All rights are reserved.
+You can read the source files to study Functional Programming or PureScript, but it's **not** licensed.
+
+This project include following resource files:
+
+* Babylonjs (http://www.babylonjs.com/)
+* josephg/noisejs (https://github.com/josephg/noisejs)
+* しねきゃぷしょん (http://chiphead.jp/)
+* 刻明朝 (http://freefonts.jp/font-koku-min.html)
+* Skyboxes (http://www.custommapmakers.org/skyboxes.php)
 
 ----
 
