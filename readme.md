@@ -20,5 +20,7 @@ $ bower update
 $ npm run build
 ```
 
+## Licenses
 
+You can read the source files to study Functional Programming or PureScript, but it's **not** licensed. All rights are reserved.
 
