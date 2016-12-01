@@ -45,7 +45,7 @@ collesionEnabledRange = 1
 enableWaterMaterial :: Boolean
 enableWaterMaterial = false
 
-initializeUI :: forall eff. Canvas -> CanvasElement -> Ref State -> Mesh -> FreeCamera -> TargetCamera -> Scene -> Materials -> Eff (Effects eff) Unit
+initializeUI :: forall eff. Canvas -> CanvasElement -> Ref State -> Mesh -> TargetCamera -> TargetCamera -> Scene -> Materials -> Eff (Effects eff) Unit
 initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials = do
 
 
@@ -78,8 +78,8 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials =
         modifyRef ref (\(State state) -> State state { minimap = not state.minimap })
         State state <- readRef ref
         if state.minimap
-            then setActiveCameras [freeCameraToCamera camera, targetCameraToCamera miniMapCamera] scene
-            else setActiveCameras [freeCameraToCamera camera] scene
+            then setActiveCameras [targetCameraToCamera camera, targetCameraToCamera miniMapCamera] scene
+            else setActiveCameras [targetCameraToCamera camera] scene
 
     onButtonClick "debuglayer" do
         modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })

@@ -28,7 +28,7 @@ import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachInd
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (getSkeleton, setRotation)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
-import Graphics.Babylon.Camera (getPosition) as Camera
+import Graphics.Babylon.Camera (getPosition, setPosition) as Camera
 import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
@@ -36,10 +36,10 @@ import Graphics.Babylon.PickingInfo (getHit, getPickedPoint)
 import Graphics.Babylon.Scene (pick)
 import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
 import Graphics.Babylon.Skeleton (beginAnimation)
-import Graphics.Babylon.TargetCamera (getRotation, setTarget, getTarget)
+import Graphics.Babylon.TargetCamera (TargetCamera, getRotation, getTarget, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3)
-import Math (atan2, cos, round, sin, sqrt)
+import Math (atan2, cos, max, pi, round, sin, sqrt)
 import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate, (>>=), (*), (/), (||))
 
 playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
@@ -120,7 +120,7 @@ pickBlock scene cursor (State state) screenX screenY = do
 
     if getHit pickingInfo then pickup else pure Nothing
 
-update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> FreeCamera -> Options -> Eff (Effects eff) Unit
+update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> TargetCamera -> Options -> Eff (Effects eff) Unit
 update ref scene materials shadowMap cursor camera options = do
 
         modifyRef ref \(State state) -> State state { totalFrames = state.totalFrames + 1 }
@@ -130,7 +130,7 @@ update ref scene materials shadowMap cursor camera options = do
         activeChunks <- slice 0 125 ter.map
 
         -- update camera position
-        cameraPosition <- Camera.getPosition (freeCameraToCamera camera) >>= runVector3
+        cameraPosition <- Camera.getPosition (targetCameraToCamera camera) >>= runVector3
         let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
 
 
@@ -220,26 +220,33 @@ update ref scene materials shadowMap cursor camera options = do
             State st@{ terrain } <- readRef ref
 
             let speed = options.moveSpeed
-            cameraRotationVector <- getRotation (freeCameraToTargetCamera camera)
-            cameraRot <- runVector3 cameraRotationVector
-            let vt = if st.wKey then 1.0 else 0.0 - if st.sKey then 1.0 else 0.0
-            let ht = if st.dKey then 1.0 else 0.0 - if st.aKey then 1.0 else 0.0
-            let vdx = sin cameraRot.y * vt
-            let vdz = cos cameraRot.y * vt
-            let hdx = sin (cameraRot.y + 3.141592 * 0.5) * ht
-            let hdz = cos (cameraRot.y + 3.141592 * 0.5) * ht
-            let dx = vdx + hdx
-            let dz = vdz + hdz
-            let moveAngle = atan2 dx dz
-            let velocity = if dx == 0.0 && dz == 0.0
+
+            let rot = negate st.cameraYaw
+
+            let keyVector = {
+                    x: if st.dKey then 1.0 else 0.0 - if st.aKey then 1.0 else 0.0,
+                    z: if st.wKey then 1.0 else 0.0 - if st.sKey then 1.0 else 0.0
+                }
+
+            let rotatedKeyVector = {
+                    x: cos rot * keyVector.x - sin rot * keyVector.z,
+                    z: sin rot * keyVector.x + cos rot * keyVector.z
+                }
+
+            let stopped = rotatedKeyVector.x == 0.0 && rotatedKeyVector.z == 0.0
+
+            let velocity = if stopped
                         then state.velocity {
                             x = state.velocity.x * 0.5,
                             z = state.velocity.z * 0.5
                         }
-                        else let len = sqrt (dx * dx + dz * dz) in state.velocity {
-                            x = dx / len * speed,
-                            z = dz / len * speed
+                        else let len = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z) in state.velocity {
+                            x = rotatedKeyVector.x / len * speed,
+                            z = rotatedKeyVector.z / len * speed
                         }
+
+            -- playerYaw == 0   =>    -z direction
+            let playerYaw' = if stopped then st.playerYaw else (atan2 velocity.x velocity.z) - pi
 
 
             let next = {
@@ -247,60 +254,70 @@ update ref scene materials shadowMap cursor camera options = do
                         y: state.position.y + velocity.y,
                         z: state.position.z + velocity.z
                     }
+
+            let animation' = if st.wKey || st.sKey || st.aKey || st.dKey then "Action" else "Stand"
+
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex next.x next.y next.z)
             blockMaybe <- lookupBlockByVec next terrain
 
-            let nextAnimation = if st.wKey || st.sKey || st.aKey || st.dKey then "Action" else "Stand"
+            let position' = case blockMaybe of
+                                Just block | isSolidBlock block -> next {
+                                    y = Int.toNumber (globalIndex.y) + 1.001
+                                }
+                                _ -> next
+
+            let velocity' = case blockMaybe of
+                                Just block | isSolidBlock block -> velocity { y = 0.0 }
+                                _ -> velocity { y = velocity.y - 0.01 }
 
 
-            let onEmpty = st {
-                        position = next,
-                        velocity = velocity { y = velocity.y - 0.01 },
-                        yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
-                        animation = nextAnimation
+
+            let cx = st.viewReferencePoint.x + (position'.x       - st.viewReferencePoint.x) * options.cameraTargetSpeed
+            let cy = st.viewReferencePoint.y + (position'.y + 1.0 - st.viewReferencePoint.y) * options.cameraTargetSpeed
+            let cz = st.viewReferencePoint.z + (position'.z       - st.viewReferencePoint.z) * options.cameraTargetSpeed
+            let viewReferencePoint' = { x: cx, y: cy, z: cz }
+
+            let st' = st {
+                        position = position',
+                        velocity = velocity',
+                        cameraYaw = st.cameraYaw + ((if st.qKey then 1.0 else 0.0) - (if st.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
+                        cameraPitch = max 0.0 (min (pi * 0.48) (st.cameraPitch + ((if st.rKey then 1.0 else 0.0) - (if st.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
+                        cameraRange = max 3.0 (min 20.0 (st.cameraRange + ((if st.gKey then 1.0 else 0.0) - (if st.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
+                        animation = animation',
+                        viewReferencePoint = viewReferencePoint',
+                        playerYaw = playerYaw'
                     }
-            let onGround = st {
-                        position = {
-                            x: next.x,
-                            y: Int.toNumber (globalIndex.y) + 1.001,
-                            z: next.z
-                        },
-                        velocity = velocity { y = 0.0 },
-                        yaw = if dx == 0.0 && dz == 0.0 then st.yaw else moveAngle + 3.1415,
-                        animation = nextAnimation
-                    }
 
-            let st' = case blockMaybe of
-                            Just block | isSolidBlock block -> onGround
-                            _ -> onEmpty
-
+            -- update states
             writeRef ref (State st')
 
-            -- update state
-            when (nextAnimation /= st.animation) do
-                playAnimation nextAnimation ref
+            when (animation' /= st.animation) do
+                playAnimation animation' ref
 
-
-
-            rotVector <- createVector3 0.0 st'.yaw 0.0
-
-            logShow st'.position.x
-
+            rotVector <- createVector3 0.0 playerYaw' 0.0
             position <- createVector3 st'.position.x st'.position.y st'.position.z
             for_ st.playerMeshes \mesh -> void do
                 AbstractMesh.setPosition position mesh
                 setRotation rotVector mesh
 
+            -- update camera
+            let rot = negate st.cameraYaw - pi * 0.5
+            let cpx = position'.x + cos rot * cos st.cameraPitch * st.cameraRange
+            let cpy = position'.y + sin st.cameraPitch * st.cameraRange
+            let cpz = position'.z + sin rot * cos st.cameraPitch * st.cameraRange
 
-            currentCameraTarget <- getTarget (freeCameraToTargetCamera camera) >>= runVector3
-            let cx = currentCameraTarget.x + (st'.position.x       - currentCameraTarget.x) * options.cameraTargetSpeed
-            let cy = currentCameraTarget.y + (st'.position.y + 1.0 - currentCameraTarget.y) * options.cameraTargetSpeed
-            let cz = currentCameraTarget.z + (st'.position.z       - currentCameraTarget.z) * options.cameraTargetSpeed
+            currentCameraPosition <- Camera.getPosition (targetCameraToCamera camera) >>= runVector3
+            let ncpx = currentCameraPosition.x + (cpx - currentCameraPosition.x) * options.cameraTargetSpeed
+            let ncpy = currentCameraPosition.y + (cpy - currentCameraPosition.y) * options.cameraTargetSpeed
+            let ncpz = currentCameraPosition.z + (cpz - currentCameraPosition.z) * options.cameraTargetSpeed
+            nextCameraPosition <- createVector3 ncpx ncpy ncpz
+            Camera.setPosition nextCameraPosition (targetCameraToCamera camera)
+
             nextCameraTarget <- createVector3 cx cy cz
-            setTarget nextCameraTarget (freeCameraToTargetCamera camera)
+            setTarget nextCameraTarget camera
 
+            pure unit
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex
-
 
 foreign import setTextContent :: forall eff. String -> String -> Eff (dom :: DOM | eff) Unit

@@ -70,6 +70,8 @@ readOptions value = do
     initialWorldSize <- readProp "initialWorldSize" value
     moveSpeed <- readProp "moveSpeed" value
     cameraTargetSpeed <- readProp "cameraTargetSpeed" value
+    cameraRotationSpeed <- readProp "cameraRotationSpeed" value
+    cameraZoomSpeed <- readProp "cameraZoomSpeed" value
     pure {
         loadDistance,
         fogDensity,
@@ -81,7 +83,9 @@ readOptions value = do
         jumpVelocity,
         initialWorldSize,
         moveSpeed,
-        cameraTargetSpeed
+        cameraTargetSpeed,
+        cameraRotationSpeed,
+        cameraZoomSpeed
     }
 
 
@@ -137,7 +141,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             viewport <- createViewport 0.75 0.65 0.24 0.32
             setViewport viewport (targetCameraToCamera cam)
             pure cam
-
+{-}
         freeCamera <- do
             cameraPosition <- createVector3 10.0 20.0 10.0
 
@@ -153,9 +157,21 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             setSpeed 0.3 (freeCameraToTargetCamera cam)
 
             pure cam
+-}
+        targetCamera <- do
+            cameraPosition <- createVector3 10.0 20.0 10.0
 
-        setActiveCameras [freeCameraToCamera freeCamera] scene
-        setActiveCamera (freeCameraToCamera freeCamera) scene
+            cam <- createTargetCamera "target-camera" cameraPosition scene
+            -- setCheckCollisions true cam
+
+            -- target the camera to scene origin
+            cameraTarget <- createVector3 0.0 8.0 0.0
+            setTarget cameraTarget cam
+            pure cam
+
+
+        setActiveCameras [targetCameraToCamera targetCamera] scene
+        setActiveCamera (targetCameraToCamera targetCamera) scene
 
         do
             hemiPosition <- createVector3 0.0 1.0 0.0
@@ -219,10 +235,14 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             terrain: initialTerrain,
             mousePosition: { x: 0, y: 0 },
             debugLayer: false,
-            yaw: 0.0,
-            pitch: 0.0,
+
+            viewReferencePoint: { x: 0.5, y: 11.0, z: 0.5 },
+            cameraYaw: 0.0,
+            cameraPitch: 0.7,
+            cameraRange: 12.0,
             position: { x: 0.5, y: 10.0, z: 0.5 },
             velocity: { x: 0.0, y: 0.0, z: 0.0 },
+            playerYaw: 0.0,
             minimap: false,
             totalFrames: 0,
             playerMeshes: playerMeshes,
@@ -232,10 +252,17 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             sKey: false,
             aKey: false,
             dKey: false,
+            qKey: false,
+            eKey: false,
+            rKey: false,
+            fKey: false,
+            tKey: false,
+            gKey: false,
+
             animation: ""
         }
 
-        initializeUI canvasGL canvas2d ref cursor freeCamera miniMapCamera scene materials
+        initializeUI canvasGL canvas2d ref cursor targetCamera miniMapCamera scene materials
 
 
         -- initialize player charactor mesh
@@ -265,6 +292,18 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
                 modifyRef ref \(State state) -> State state { aKey = true }
             when (e.keyCode == 68) do -- d
                 modifyRef ref \(State state) -> State state { dKey = true }
+            when (e.keyCode == 82) do -- r
+                modifyRef ref \(State state) -> State state { rKey = true }
+            when (e.keyCode == 70) do -- f
+                modifyRef ref \(State state) -> State state { fKey = true }
+            when (e.keyCode == 81) do -- q
+                modifyRef ref \(State state) -> State state { qKey = true }
+            when (e.keyCode == 69) do -- e
+                modifyRef ref \(State state) -> State state { eKey = true }
+            when (e.keyCode == 84) do -- t
+                modifyRef ref \(State state) -> State state { tKey = true }
+            when (e.keyCode == 71) do -- g
+                modifyRef ref \(State state) -> State state { gKey = true }
 
         onKeyUp \e -> do
             when (e.keyCode == 87) do -- w
@@ -275,7 +314,18 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
                 modifyRef ref \(State state) -> State state { aKey = false }
             when (e.keyCode == 68) do -- d
                 modifyRef ref \(State state) -> State state { dKey = false }
-
+            when (e.keyCode == 82) do -- r
+                modifyRef ref \(State state) -> State state { rKey = false }
+            when (e.keyCode == 70) do -- f
+                modifyRef ref \(State state) -> State state { fKey = false }
+            when (e.keyCode == 81) do -- q
+                modifyRef ref \(State state) -> State state { qKey = false }
+            when (e.keyCode == 69) do -- e
+                modifyRef ref \(State state) -> State state { eKey = false }
+            when (e.keyCode == 84) do -- t
+                modifyRef ref \(State state) -> State state { tKey = false }
+            when (e.keyCode == 71) do -- g
+                modifyRef ref \(State state) -> State state { gKey = false }
         -- focus
         focus "renderCanvas"
 
@@ -290,7 +340,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
         -- start game loop
         engine # runRenderLoop do
-            update ref scene materials shadowMap cursor freeCamera options
+            update ref scene materials shadowMap cursor targetCamera options
             render scene
 
 main :: forall eff. Eff (Effects eff) Unit

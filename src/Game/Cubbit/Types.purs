@@ -10,6 +10,7 @@ import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Types (AbstractMesh)
+import Graphics.Babylon.Vector3 (Vector3)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -23,11 +24,16 @@ newtype State = State {
     mousePosition :: { x :: Int, y :: Int },
     debugLayer :: Boolean,
 
+    -- camera
+    viewReferencePoint :: Vec,
+    cameraYaw :: Number,
+    cameraPitch :: Number,
+    cameraRange :: Number,
+
     -- player physics
-    yaw :: Number,
-    pitch :: Number,
     position :: Vec,
     velocity :: Vec,
+    playerYaw :: Number,
 
     totalFrames :: Int,
     minimap :: Boolean,
@@ -40,6 +46,12 @@ newtype State = State {
     sKey :: Boolean,
     aKey :: Boolean,
     dKey :: Boolean,
+    qKey :: Boolean,
+    eKey :: Boolean,
+    rKey :: Boolean,
+    fKey :: Boolean,
+    tKey :: Boolean,
+    gKey :: Boolean,
     animation :: String
 }
 
@@ -61,7 +73,9 @@ type Options = {
     jumpVelocity :: Number,
     initialWorldSize :: Int,
     moveSpeed :: Number,
-    cameraTargetSpeed :: Number
+    cameraTargetSpeed :: Number,
+    cameraRotationSpeed :: Number,
+    cameraZoomSpeed :: Number
 }
 
 foreign import data ForeachIndex :: *
