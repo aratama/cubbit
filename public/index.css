@@ -132,4 +132,5 @@ html, body {
     transition-property: opacity;
     transition-duration: 1.0s;
     opacity: 1;
+    background-color: black;
 }
