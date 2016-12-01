@@ -11,6 +11,7 @@ import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept, runExceptT)
+import DOM.HTML.HTMLMediaElement (autoplay)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (F, Foreign)
@@ -45,6 +46,8 @@ import Graphics.Babylon.SceneLoader (importMesh)
 import Graphics.Babylon.SceneLoader.Aff (loadMesh)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
 import Graphics.Babylon.Skeleton (beginAnimation) as Skeleton
+import Graphics.Babylon.Sound (defaultCreateSoundOptions)
+import Graphics.Babylon.Sound.Aff (loadSound)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
@@ -115,7 +118,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
     alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
     loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
     playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
-
+    forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
 
 
     -- initialize scene

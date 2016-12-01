@@ -33,6 +33,7 @@ This project include following resource files:
 * しねきゃぷしょん (http://chiphead.jp/)
 * 刻明朝 (http://freefonts.jp/font-koku-min.html)
 * Skyboxes (http://www.custommapmakers.org/skyboxes.php)
+* "ForestBirds.wav" (https://www.freesound.org/people/HerbertBoland/sounds/28239/)
 
 ----
 
