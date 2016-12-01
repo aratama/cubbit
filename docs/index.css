@@ -123,4 +123,13 @@ html, body {
 }
 
 
-
+#loading {
+    display: block;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    pointer-events: none;
+    transition-property: opacity;
+    transition-duration: 1.0s;
+    opacity: 1;
+}

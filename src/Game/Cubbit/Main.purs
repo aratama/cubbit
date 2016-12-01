@@ -1,6 +1,5 @@
 module Game.Cubbit.Main (main) where
 
-import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind, when)
 import Control.Monad.Aff (runAff)
@@ -8,10 +7,9 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (errorShow, error)
 import Control.Monad.Eff.Exception (error) as EXP
-import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef)
+import Control.Monad.Eff.Ref (modifyRef, newRef)
 import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExcept, runExceptT)
-import DOM.HTML.HTMLMediaElement (autoplay)
+import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (F, Foreign)
@@ -19,7 +17,7 @@ import Data.Foreign.Class (readProp)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
-import Data.Unit (Unit, unit)
+import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
@@ -36,29 +34,24 @@ import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
 import Graphics.Babylon.Engine (createEngine, runRenderLoop)
-import Graphics.Babylon.FreeCamera (attachControl, createFreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
 import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
 import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
-import Graphics.Babylon.Scene (beginAnimation, createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
-import Graphics.Babylon.SceneLoader (importMesh)
+import Graphics.Babylon.Scene (createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
 import Graphics.Babylon.SceneLoader.Aff (loadMesh)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
-import Graphics.Babylon.Skeleton (beginAnimation) as Skeleton
 import Graphics.Babylon.Sound (defaultCreateSoundOptions)
 import Graphics.Babylon.Sound.Aff (loadSound)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
-import Graphics.Babylon.TargetCamera (createTargetCamera, setSpeed, setTarget, targetCameraToCamera)
+import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Network.HTTP.Affjax (affjax, defaultRequest, get)
+import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
-
-
 
 readOptions :: Foreign -> F Options
 readOptions value = do
@@ -144,25 +137,9 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             viewport <- createViewport 0.75 0.65 0.24 0.32
             setViewport viewport (targetCameraToCamera cam)
             pure cam
-{-}
-        freeCamera <- do
-            cameraPosition <- createVector3 10.0 20.0 10.0
 
-            cam <- createFreeCamera "free-camera" cameraPosition scene
-            -- setCheckCollisions true cam
-
-            -- target the camera to scene origin
-            cameraTarget <- createVector3 0.0 8.0 0.0
-            setTarget cameraTarget (freeCameraToTargetCamera cam)
-
-            -- attach the camera to the canvasGL
-            attachControl canvasGL false cam
-            setSpeed 0.3 (freeCameraToTargetCamera cam)
-
-            pure cam
--}
         targetCamera <- do
-            cameraPosition <- createVector3 10.0 20.0 10.0
+            cameraPosition <- createVector3 10.0 20.0 (negate 10.0)
 
             cam <- createTargetCamera "target-camera" cameraPosition scene
             -- setCheckCollisions true cam
@@ -346,6 +323,8 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             update ref scene materials shadowMap cursor targetCamera options
             render scene
 
+        hideLoading
+
 main :: forall eff. Eff (Effects eff) Unit
 main = onDOMContentLoaded do
     canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
@@ -353,3 +332,7 @@ main = onDOMContentLoaded do
     case canvasM, canvas2dM of
         Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d
         _, _ -> error "canvasGL not found"
+
+
+
+foreign import hideLoading :: forall eff. Eff eff Unit
