@@ -9,7 +9,7 @@ My private game project. See [the article](http://qiita.com/hiruberuto/items/532
 
 You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but also available in other modern browsers includes Firefox and Edge.
 
-Arrow key to move the camera. Mouse drag to turn around.   
+W/A/S/D key to move the charactor. Q/E/R/F/T/G key to turn around. Space key to jump.
 
 
 ## Build
