@@ -24,7 +24,7 @@ $ npm run build
 
 ## License Attribution
 
-This project is **not** licensed. You can read the source files to study Functional Programming or PureScript, but all rights are reserved. I might make this repository private later.
+This game is my private project and **not** licensed. You can read the source files to study Functional Programming or PureScript, but all rights are reserved. I might make this repository private later.
 
 This project includes following libraries, fonts, images and audio files:
 
