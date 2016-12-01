@@ -72,12 +72,14 @@ html, body {
     top: 0;
     pointer-events: none;
     margin: 0px;
-    background-color: rgba(0, 0, 0, 0.6);
     width: 100%;
     height: 72px;
 }
 
 #message-box {
+
+    display: none;
+
     font-size: 24px;
     color:white;
     position:absolute;
@@ -87,10 +89,13 @@ html, body {
     padding: 20px;
     pointer-events: none;
     margin: 0px;
-    background-color: rgba(0, 0, 0, 0.6);
     width: 100%;
     height: 32px;
     text-align: center;
+}
+
+.box-shadow {
+    background-color: rgba(0, 0, 0, 0.6);
 }
 
 
