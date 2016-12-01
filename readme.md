@@ -3,13 +3,13 @@
 
 ![screenshot](https://rawgit.com/aratama/cubbit/master/res/screenshot/torii.png)
 
-My private game project. See [the article](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Ja) for more information.
+Minecraft-like sandbox game project written in PureScript. See [the article](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Ja) for more information.
 
 ## Demo
 
-You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but also available in other modern browsers includes Firefox and Edge.
+You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge.
 
-W/A/S/D key to move the charactor. Q/E/R/F/T/G key to turn around. Space key to jump.
+W/A/S/D key to move the charactor. Q/E/R/F/T/G key to look  around. Space key to jump.
 
 
 ## Build
@@ -22,11 +22,11 @@ $ bower update
 $ npm run build
 ```
 
-## Licenses
+## License Attribution
 
-You can read the source files to study Functional Programming or PureScript, but it's **not** licensed.
+This project is **not** licensed. You can read the source files to study Functional Programming or PureScript, but all rights are reserved. I might make this repository private later.
 
-This project include following resource files:
+This project includes following libraries, fonts, images and audio files:
 
 * Babylonjs (http://www.babylonjs.com/)
 * josephg/noisejs (https://github.com/josephg/noisejs)
