@@ -25,15 +25,21 @@ newtype State = State {
     debugLayer :: Boolean,
 
     -- camera
+    cameraPosition :: Vec,
+
     viewReferencePoint :: Vec,
     cameraYaw :: Number,
     cameraPitch :: Number,
     cameraRange :: Number,
 
+    firstPersonViewPitch :: Number,
+    firstPersonView :: Boolean,
+
     -- player physics
     position :: Vec,
     velocity :: Vec,
-    playerYaw :: Number,
+    playerRotation :: Number,
+    playerPitch :: Number,
 
     totalFrames :: Int,
     minimap :: Boolean,
@@ -77,7 +83,9 @@ type Options = {
     cameraRotationSpeed :: Number,
     cameraZoomSpeed :: Number,
     cameraMaxZ :: Number,
-    cameraMinZ :: Number
+    cameraMinZ :: Number,
+    pointerHorizontalSensitivity :: Number,
+    pointerVerticalSensitivity :: Number
 }
 
 foreign import data ForeachIndex :: *

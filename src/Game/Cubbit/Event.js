@@ -38,6 +38,11 @@ exports.onKeyDown = function(callback){
     return function(){
         window.addEventListener("keydown", function(e){
             callback(e)();
+            e.preventDefault();
+            e.stopPropagation();
+            if(e.keyCode == 27){
+                document.exitPointerLock();
+            }
         });
     }
 }
@@ -46,6 +51,8 @@ exports.onKeyUp = function(callback){
     return function(){
         window.addEventListener("keyup", function(e){
             callback(e)();
+            e.preventDefault();
+            e.stopPropagation();
         });
     }
 }

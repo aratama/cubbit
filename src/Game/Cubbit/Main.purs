@@ -70,6 +70,8 @@ readOptions value = do
     cameraZoomSpeed <- readProp "cameraZoomSpeed" value
     cameraMinZ <- readProp "cameraMinZ" value
     cameraMaxZ <- readProp "cameraMaxZ" value
+    pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
+    pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
     pure {
         loadDistance,
         fogDensity,
@@ -85,7 +87,9 @@ readOptions value = do
         cameraRotationSpeed,
         cameraZoomSpeed,
         cameraMinZ,
-        cameraMaxZ
+        cameraMaxZ,
+        pointerHorizontalSensitivity,
+        pointerVerticalSensitivity
     }
 
 
@@ -222,13 +226,18 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             mousePosition: { x: 0, y: 0 },
             debugLayer: false,
 
+            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
             viewReferencePoint: { x: 0.5, y: 11.0, z: 0.5 },
             cameraYaw: 0.0,
             cameraPitch: 0.7,
             cameraRange: 12.0,
+            firstPersonView: false,
+            firstPersonViewPitch: 0.0,
+
             position: { x: 0.5, y: 10.0, z: 0.5 },
             velocity: { x: 0.0, y: 0.0, z: 0.0 },
-            playerYaw: 0.0,
+            playerRotation: 0.5,
+            playerPitch: 0.0,
             minimap: false,
             totalFrames: 0,
             playerMeshes: playerMeshes,
@@ -248,7 +257,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             animation: ""
         }
 
-        initializeUI canvasGL canvas2d ref cursor targetCamera miniMapCamera scene materials
+        initializeUI canvasGL canvas2d ref cursor targetCamera miniMapCamera scene materials options
 
 
         -- initialize player charactor mesh
@@ -326,7 +335,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
         -- start game loop
         engine # runRenderLoop do
-            update ref scene materials shadowMap cursor targetCamera options
+            update ref scene materials shadowMap cursor targetCamera options skybox
             render scene
 
         hideLoading

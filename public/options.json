@@ -13,6 +13,8 @@
     "cameraTargetSpeed": 0.1,
     "cameraRotationSpeed": 0.04,
     "cameraZoomSpeed": 0.2,
-    "cameraMaxZ": 1000.0,
-    "cameraMinZ": 0.1
+    "cameraMaxZ": 10000.0,
+    "cameraMinZ": 0.1,
+    "pointerHorizontalSensitivity": 0.002,
+    "pointerVerticalSensitivity": 0.002
 }
