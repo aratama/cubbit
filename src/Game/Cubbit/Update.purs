@@ -2,14 +2,11 @@ module Game.Cubbit.Update (update, pickBlock) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
-import Control.Bind (bind, (>>=))
+import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (log, logShow)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
-import Control.Monad.Rec.Class (Step(..), tailRecM)
 import DOM (DOM)
-import Data.Array (catMaybes, drop, last, length, take)
-import Data.Array (slice) as Array
+import Data.Array (catMaybes, drop, take)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
@@ -18,29 +15,28 @@ import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.BlockType (airBlock, bushBlock)
-import Game.Cubbit.Chunk (Chunk(Chunk), MeshLoadingState(..), disposeChunk)
-import Game.Cubbit.ChunkIndex (chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.ChunkMap (delete, peekAt, size, slice, sort, filterNeighbors, getSortedChunks)
+import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
+import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size, slice)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(Terrain), isSolidBlock, chunkCount, globalPositionToChunkIndex, globalPositionToGlobalIndex, lookupSolidBlockByVec, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
 import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (getSkeleton, setRotation)
-import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setPosition) as AbstractMesh
+import Graphics.Babylon.AbstractMesh (getSkeleton, setRotation, abstractMeshToNode)
+import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (getPosition, setPosition) as Camera
-import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera, freeCameraToTargetCamera)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getHit, getPickedPoint)
-import Graphics.Babylon.Scene (pick)
+import Graphics.Babylon.Ray (createRay, createRayWithLength)
+import Graphics.Babylon.Scene (pick, pickWithRay)
 import Graphics.Babylon.ShadowGenerator (ShadowMap, setRenderList)
 import Graphics.Babylon.Skeleton (beginAnimation)
-import Graphics.Babylon.TargetCamera (TargetCamera, getRotation, getTarget, setTarget, targetCameraToCamera)
+import Graphics.Babylon.TargetCamera (TargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
-import Graphics.Babylon.Vector3 (createVector3, runVector3)
+import Graphics.Babylon.Vector3 (createVector3, runVector3, subtract, length)
 import Math (atan2, cos, max, pi, round, sin, sqrt)
-import Prelude (($), (+), (-), (/=), (<), (<$>), (<=), (<>), (==), (&&), negate, (>>=), (*), (/), (||))
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (>>=), (||))
 
 playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
 playAnimation name ref = do
@@ -52,13 +48,14 @@ playAnimation name ref = do
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do
     let predicate mesh = do
-            let name = getName (AbstractMesh.abstractMeshToNode mesh)
+            let name = getName (abstractMeshToNode mesh)
             pure (name /= "cursor")
 
     pickingInfo <- pick screenX screenY predicate false scene
 
-    let pickup = do
-            let point = getPickedPoint pickingInfo
+    case getPickedPoint pickingInfo of
+        Nothing -> pure Nothing
+        Just point -> do
             p <- runVector3 point
             let dx = abs (p.x - round p.x)
             let dy = abs (p.y - round p.y)
@@ -118,7 +115,6 @@ pickBlock scene cursor (State state) screenX screenY = do
 
                 Move -> pure Nothing
 
-    if getHit pickingInfo then pickup else pure Nothing
 
 update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> TargetCamera -> Options -> Eff (Effects eff) Unit
 update ref scene materials shadowMap cursor camera options = do
@@ -151,8 +147,8 @@ update ref scene materials shadowMap cursor camera options = do
 
         -- update shadow rendering list
         do
-            let ci = runChunkIndex cameraPositionChunkIndex
-            neighbors <- filterNeighbors options.shadowDisplayRange ci.x ci.y ci.z ter.map
+            let cci = runChunkIndex cameraPositionChunkIndex
+            neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z ter.map
             let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                         MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                         _ -> Nothing
@@ -169,7 +165,7 @@ update ref scene materials shadowMap cursor camera options = do
 
             let loadAndGenerateChunk index = do
 
-                    let ci = runChunkIndex index
+                    -- let ci = runChunkIndex index
 
                     createChunkMesh ref materials scene index
 
@@ -272,16 +268,16 @@ update ref scene materials shadowMap cursor camera options = do
 
 
 
-            let cx = st.viewReferencePoint.x + (position'.x       - st.viewReferencePoint.x) * options.cameraTargetSpeed
-            let cy = st.viewReferencePoint.y + (position'.y + 1.0 - st.viewReferencePoint.y) * options.cameraTargetSpeed
-            let cz = st.viewReferencePoint.z + (position'.z       - st.viewReferencePoint.z) * options.cameraTargetSpeed
-            let viewReferencePoint' = { x: cx, y: cy, z: cz }
+            let cameraTargetX' = st.viewReferencePoint.x + (position'.x       - st.viewReferencePoint.x) * options.cameraTargetSpeed
+            let cameraTargetY' = st.viewReferencePoint.y + (position'.y + 1.0 - st.viewReferencePoint.y) * options.cameraTargetSpeed
+            let cameraTargetZ' = st.viewReferencePoint.z + (position'.z       - st.viewReferencePoint.z) * options.cameraTargetSpeed
+            let viewReferencePoint' = { x: cameraTargetX', y: cameraTargetY', z: cameraTargetZ' }
 
             let st' = st {
                         position = position',
                         velocity = velocity',
                         cameraYaw = st.cameraYaw + ((if st.qKey then 1.0 else 0.0) - (if st.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                        cameraPitch = max 0.0 (min (pi * 0.48) (st.cameraPitch + ((if st.rKey then 1.0 else 0.0) - (if st.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
+                        cameraPitch = max 0.1 (min (pi * 0.48) (st.cameraPitch + ((if st.rKey then 1.0 else 0.0) - (if st.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
                         cameraRange = max 3.0 (min 20.0 (st.cameraRange + ((if st.gKey then 1.0 else 0.0) - (if st.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
                         animation = animation',
                         viewReferencePoint = viewReferencePoint',
@@ -301,20 +297,33 @@ update ref scene materials shadowMap cursor camera options = do
                 setRotation rotVector mesh
 
             -- update camera
-            let rot = negate st.cameraYaw - pi * 0.5
-            let cpx = position'.x + cos rot * cos st.cameraPitch * st.cameraRange
+            let theta = negate st.cameraYaw - pi * 0.5
+            let cpx = position'.x + cos theta * cos st.cameraPitch * st.cameraRange
             let cpy = position'.y + sin st.cameraPitch * st.cameraRange
-            let cpz = position'.z + sin rot * cos st.cameraPitch * st.cameraRange
+            let cpz = position'.z + sin theta * cos st.cameraPitch * st.cameraRange
 
-            currentCameraPosition <- Camera.getPosition (targetCameraToCamera camera) >>= runVector3
-            let ncpx = currentCameraPosition.x + (cpx - currentCameraPosition.x) * options.cameraTargetSpeed
-            let ncpy = currentCameraPosition.y + (cpy - currentCameraPosition.y) * options.cameraTargetSpeed
-            let ncpz = currentCameraPosition.z + (cpz - currentCameraPosition.z) * options.cameraTargetSpeed
-            nextCameraPosition <- createVector3 ncpx ncpy ncpz
-            Camera.setPosition nextCameraPosition (targetCameraToCamera camera)
+            let cameraPositionX = cameraPosition.x + (cpx - cameraPosition.x) * options.cameraTargetSpeed
+            let cameraPositionY = cameraPosition.y + (cpy - cameraPosition.y) * options.cameraTargetSpeed
+            let cameraPositionZ = cameraPosition.z + (cpz - cameraPosition.z) * options.cameraTargetSpeed
+            cameraPosition' <- createVector3 cameraPositionX cameraPositionY cameraPositionZ
 
-            nextCameraTarget <- createVector3 cx cy cz
-            setTarget nextCameraTarget camera
+            cameraTarget' <- createVector3 cameraTargetX' cameraTargetY' cameraTargetZ'
+
+            cameraDirection <- subtract cameraTarget' cameraPosition'
+            cameraDirectionLength <- length cameraDirection
+            cameraRay <- createRayWithLength cameraPosition' cameraDirection cameraDirectionLength
+            let predicate mesh = do
+                    let name = getName (abstractMeshToNode mesh)
+                    pure (name == "terrain")
+            picked <- pickWithRay cameraRay predicate true scene
+
+            let pickedPoint = getPickedPoint picked
+
+            let cameraPosition'' = case getPickedPoint picked of
+                    Nothing -> cameraPosition'
+                    Just point -> point
+            Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
+            setTarget cameraTarget' camera
 
             pure unit
 

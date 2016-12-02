@@ -29,7 +29,7 @@ import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
-import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom)
+import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom, setMaxZ, setMinZ)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
@@ -68,6 +68,8 @@ readOptions value = do
     cameraTargetSpeed <- readProp "cameraTargetSpeed" value
     cameraRotationSpeed <- readProp "cameraRotationSpeed" value
     cameraZoomSpeed <- readProp "cameraZoomSpeed" value
+    cameraMinZ <- readProp "cameraMinZ" value
+    cameraMaxZ <- readProp "cameraMaxZ" value
     pure {
         loadDistance,
         fogDensity,
@@ -81,7 +83,9 @@ readOptions value = do
         moveSpeed,
         cameraTargetSpeed,
         cameraRotationSpeed,
-        cameraZoomSpeed
+        cameraZoomSpeed,
+        cameraMinZ,
+        cameraMaxZ
     }
 
 
@@ -147,6 +151,8 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             -- target the camera to scene origin
             cameraTarget <- createVector3 0.0 8.0 0.0
             setTarget cameraTarget cam
+            setMaxZ options.cameraMaxZ (targetCameraToCamera cam)
+            setMinZ options.cameraMinZ (targetCameraToCamera cam)
             pure cam
 
 

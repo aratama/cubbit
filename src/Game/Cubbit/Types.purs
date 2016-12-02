@@ -75,7 +75,9 @@ type Options = {
     moveSpeed :: Number,
     cameraTargetSpeed :: Number,
     cameraRotationSpeed :: Number,
-    cameraZoomSpeed :: Number
+    cameraZoomSpeed :: Number,
+    cameraMaxZ :: Number,
+    cameraMinZ :: Number
 }
 
 foreign import data ForeachIndex :: *
