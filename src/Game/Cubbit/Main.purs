@@ -227,7 +227,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             debugLayer: false,
 
             cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
-            viewReferencePoint: { x: 0.5, y: 11.0, z: 0.5 },
+            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
             cameraYaw: 0.0,
             cameraPitch: 0.7,
             cameraRange: 12.0,

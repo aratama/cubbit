@@ -27,7 +27,7 @@ newtype State = State {
     -- camera
     cameraPosition :: Vec,
 
-    viewReferencePoint :: Vec,
+    cameraTarget :: Vec,
     cameraYaw :: Number,
     cameraPitch :: Number,
     cameraRange :: Number,

@@ -6,6 +6,14 @@ exports.onMouseMove = function(callback){
     }
 }
 
+exports.onMouseDown = function(callback){
+    return function(){
+        document.getElementById("renderCanvas").addEventListener("mousedown", function(e){
+            callback(e)();
+        });
+    }
+}
+
 exports.onMouseClick = function(callback){
     return function(){
         document.getElementById("renderCanvas").addEventListener("click", function(e){

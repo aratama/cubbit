@@ -10,6 +10,8 @@ foreign import onButtonClick :: forall eff. String -> Eff (dom :: DOM | eff) Uni
 
 foreign import onMouseMove :: forall eff. ({ offsetX :: Int, offsetY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
+foreign import onMouseDown :: forall eff. ({ offsetX :: Int, offsetY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
+
 foreign import onMouseClick :: forall eff. ({ offsetX :: Int, offsetY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
 wait :: forall eff. Aff (dom :: DOM | eff) Unit
