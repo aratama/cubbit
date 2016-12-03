@@ -1,8 +1,10 @@
 module Game.Cubbit.Hud (Query(..), initializeHud) where
 
 import Control.Monad.Aff (Aff)
+import Control.Monad.Eff.Ref (Ref)
 import DOM.HTML.Event.EventTypes (contextmenu)
 import Data.Maybe (Maybe(..))
+import Game.Cubbit.Types (State(..))
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, component, modify, runUI)
 import Halogen.Driver (Driver)
 import Halogen.HTML.Elements.Indexed (canvas)
@@ -18,19 +20,19 @@ import Unsafe.Coerce (unsafeCoerce)
 
 data Query a = ToggleState a
 
-type State = { on :: Boolean }
+type HudState = { on :: Boolean }
 
-initialState :: State
+initialState :: HudState
 initialState = { on: false }
 
 styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (propName "style") Nothing value)
 
-ui :: forall g. Component State Query g
+ui :: forall g. Component HudState Query g
 ui = component { render, eval }
     where
 
-        render :: State -> ComponentHTML Query
+        render :: HudState -> ComponentHTML Query
         render state = div [id_ "content", class_ (className "content-layer"), onContextMenu (\_ -> preventDefault $> stopPropagation $> Just (action ToggleState))] [
             canvas [id_ "renderCanvas"],
             canvas [id_ "canvas2d", width $ pixels 1280, height $ pixels 720],
@@ -50,12 +52,12 @@ ui = component { render, eval }
             div [id_ "cursor-position"] []
         ]
 
-        eval :: Query ~> ComponentDSL State Query g
+        eval :: Query ~> ComponentDSL HudState Query g
         eval (ToggleState next) = do
             modify (\state -> { on: not state.on })
             pure next
 
-initializeHud :: forall eff. Aff (HalogenEffects eff) (Driver Query eff)
-initializeHud = do
+initializeHud :: forall eff. Ref State -> Aff (HalogenEffects eff) (Driver Query eff)
+initializeHud ref = do
     body <- awaitBody
     runUI ui initialState body

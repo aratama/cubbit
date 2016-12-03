@@ -7,7 +7,7 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (errorShow, error)
 import Control.Monad.Eff.Exception (error) as EXP
-import Control.Monad.Eff.Ref (modifyRef, newRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
@@ -55,8 +55,8 @@ import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
 
 
-runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
-runApp canvasGL canvas2d = void $ runAff errorShow pure do
+runApp :: forall eff. Canvas -> CanvasElement -> Ref State -> Eff (Effects eff) Unit
+runApp canvasGL canvas2d ref = void $ runAff errorShow pure do
 
     -- load options
     response <- get "options.json"
@@ -86,7 +86,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
     liftEff do
 
-
+        modifyRef ref (\(State state) -> State state { playerMeshes = playerMeshes })
 
 
 
@@ -180,45 +180,6 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
         -- prepare materials
         materials <- initializeMaterials scene skybox texture alphaTexture options
 
-        -- initialize game state
-        initialTerrain <- emptyTerrain 0
-        ref <- newRef $ State {
-            mode: Move,
-            terrain: initialTerrain,
-            mousePosition: { x: 0, y: 0 },
-            debugLayer: false,
-
-            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
-            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
-            cameraYaw: 0.0,
-            cameraPitch: 0.7,
-            cameraRange: 5.0,
-            firstPersonView: false,
-            firstPersonViewPitch: 0.0,
-
-            position: { x: 0.5, y: 10.0, z: 0.5 },
-            velocity: { x: 0.0, y: 0.0, z: 0.0 },
-            playerRotation: 0.5,
-            playerPitch: 0.0,
-            minimap: false,
-            totalFrames: 0,
-            playerMeshes: playerMeshes,
-            updateIndex: toNullable Nothing,
-
-            wKey: false,
-            sKey: false,
-            aKey: false,
-            dKey: false,
-            qKey: false,
-            eKey: false,
-            rKey: false,
-            fKey: false,
-            tKey: false,
-            gKey: false,
-
-            animation: ""
-        }
-
         initializeUI canvasGL canvas2d ref cursor targetCamera miniMapCamera scene materials options
 
 
@@ -304,12 +265,55 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
 
 main :: forall eff. Eff (Effects eff) Unit
 main = runHalogenAff do
-    driver <- initializeHud
-    liftEff do
+
+    -- initialize game state
+    initialTerrain <- liftEff $ emptyTerrain 0
+    ref <- liftEff $ newRef $ State {
+        mode: Move,
+        terrain: initialTerrain,
+        mousePosition: { x: 0, y: 0 },
+        debugLayer: false,
+
+        cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
+        cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
+        cameraYaw: 0.0,
+        cameraPitch: 0.7,
+        cameraRange: 5.0,
+        firstPersonView: false,
+        firstPersonViewPitch: 0.0,
+
+        position: { x: 0.5, y: 10.0, z: 0.5 },
+        velocity: { x: 0.0, y: 0.0, z: 0.0 },
+        playerRotation: 0.5,
+        playerPitch: 0.0,
+        minimap: false,
+        totalFrames: 0,
+        playerMeshes: [],
+        updateIndex: toNullable Nothing,
+
+        wKey: false,
+        sKey: false,
+        aKey: false,
+        dKey: false,
+        qKey: false,
+        eKey: false,
+        rKey: false,
+        fKey: false,
+        tKey: false,
+        gKey: false,
+
+        animation: ""
+    }
+
+
+    -- initialize hud 
+    driver <- initializeHud ref
+
+    liftEff $ do
         canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
         canvas2dM <- getCanvasElementById "canvas2d"
         case canvasM, canvas2dM of
-            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d
+            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref
             _, _ -> error "canvasGL not found"
 
 
