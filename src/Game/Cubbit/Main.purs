@@ -73,6 +73,8 @@ readOptions value = do
     cameraFOV <- readProp "cameraFOV" value
     cameraMinimumRange <- readProp "cameraMinimumRange" value
     cameraMaximumRange <- readProp "cameraMaximumRange" value
+    cameraHorizontalSensitivity <- readProp "cameraHorizontalSensitivity" value
+    cameraVertialSensitivity <- readProp "cameraVertialSensitivity" value
     pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
     pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
     pure {
@@ -94,6 +96,8 @@ readOptions value = do
         cameraFOV,
         cameraMinimumRange,
         cameraMaximumRange,
+        cameraHorizontalSensitivity,
+        cameraVertialSensitivity,
         pointerHorizontalSensitivity,
         pointerVerticalSensitivity
     }

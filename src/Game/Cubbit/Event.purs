@@ -12,6 +12,10 @@ foreign import onMouseMove :: forall eff. ({ offsetX :: Int, offsetY :: Int } ->
 
 foreign import onMouseDown :: forall eff. ({ offsetX :: Int, offsetY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
+foreign import onRightMouseDrag :: forall eff. ({ movementX :: Int, movementY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
+
+foreign import onWheel :: forall eff. ({ deltaY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
+
 foreign import onMouseClick :: forall eff. ({ offsetX :: Int, offsetY :: Int } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
 
 wait :: forall eff. Aff (dom :: DOM | eff) Unit

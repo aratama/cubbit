@@ -6,6 +6,37 @@ exports.onMouseMove = function(callback){
     }
 }
 
+exports.onRightMouseDrag = function(callback){
+    return function(){
+        var canvas = document.getElementById("renderCanvas");
+        var x;
+        var y;
+        canvas.addEventListener("mousedown", function(e){
+            x = e.clientX;
+            y = e.clientY;
+        });
+        canvas.addEventListener("mousemove", function(e){
+            if(e.buttons === 2){
+                callback({
+                    movementX: e.x - x,
+                    movementY: e.y - y
+                })();
+                x = e.x;
+                y = e.y;
+            }
+        });
+    }
+}
+
+exports.onWheel = function(callback){
+    return function(){
+        var canvas = document.getElementById("renderCanvas");
+        canvas.addEventListener("wheel", function(e){
+            callback(e)();
+        });
+    }
+}
+
 exports.onMouseDown = function(callback){
     return function(){
         document.getElementById("renderCanvas").addEventListener("mousedown", function(e){

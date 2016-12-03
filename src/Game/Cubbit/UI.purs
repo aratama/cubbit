@@ -6,10 +6,11 @@ import Control.Bind (bind, (>>=))
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import Data.BooleanAlgebra (not)
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockType (dirtBlock, airBlock)
-import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove)
+import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove, onRightMouseDrag, onWheel)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Types (Effects, Materials, Mode(..), State(State), Options)
 import Game.Cubbit.Update (pickBlock, requestPointerLock, exitPointerLock)
@@ -120,7 +121,15 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials o
             Move -> pure unit
 
 
+    onRightMouseDrag \e -> do
+        modifyRef ref \(State state) -> State state {
+            cameraYaw = state.cameraYaw + toNumber e.movementX * options.cameraHorizontalSensitivity,
+            cameraPitch = max (-pi * 0.45) $ min (pi * 0.45) $ state.cameraPitch + toNumber e.movementY * options.cameraVertialSensitivity
+        }
 
-
+    onWheel \e -> do
+        modifyRef ref \(State state) -> State state {
+            cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (state.cameraRange + (toNumber e.deltaY * options.cameraZoomSpeed)))
+        }
 
 
