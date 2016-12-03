@@ -4,12 +4,13 @@ import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
-import Data.Maybe (Maybe(Just, Nothing))
+import Data.Maybe (Maybe(Just, Nothing), isNothing)
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
 import Data.Show (show)
@@ -43,7 +44,9 @@ playAnimation name ref = do
     State state <- readRef ref
     for_ state.playerMeshes \mesh -> void do
         skeleton <- getSkeleton mesh
-        beginAnimation name true 1.0 pure skeleton
+        animatable <- beginAnimation name true 1.0 pure skeleton
+        when (isNothing animatable) do
+            error ("playAnimation: animation named \"" <> name <> "\" not found.")
 
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do
@@ -159,7 +162,7 @@ update ref scene materials shadowMap cursor camera options skybox = do
                         z: state.position.z + velocity.z
                     }
 
-            let animation' = if state.wKey || state.sKey || state.aKey || state.dKey then "Action" else "Stand"
+            let animation' = if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle"
 
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
             blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
