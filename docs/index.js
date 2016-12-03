@@ -4062,6 +4062,37 @@ var PS = {};
       }
   }
 
+  exports.onRightMouseDrag = function(callback){
+      return function(){
+          var canvas = document.getElementById("renderCanvas");
+          var x;
+          var y;
+          canvas.addEventListener("mousedown", function(e){
+              x = e.clientX;
+              y = e.clientY;
+          });
+          canvas.addEventListener("mousemove", function(e){
+              if(e.buttons === 2){
+                  callback({
+                      movementX: e.x - x,
+                      movementY: e.y - y
+                  })();
+                  x = e.x;
+                  y = e.y;
+              }
+          });
+      }
+  }
+
+  exports.onWheel = function(callback){
+      return function(){
+          var canvas = document.getElementById("renderCanvas");
+          canvas.addEventListener("wheel", function(e){
+              callback(e)();
+          });
+      }
+  }
+
   exports.onMouseClick = function(callback){
       return function(){
           document.getElementById("renderCanvas").addEventListener("click", function(e){
@@ -4125,6 +4156,8 @@ var PS = {};
   exports["onKeyUp"] = $foreign.onKeyUp;
   exports["onMouseClick"] = $foreign.onMouseClick;
   exports["onMouseMove"] = $foreign.onMouseMove;
+  exports["onRightMouseDrag"] = $foreign.onRightMouseDrag;
+  exports["onWheel"] = $foreign.onWheel;
 })(PS["Game.Cubbit.Event"] = PS["Game.Cubbit.Event"] || {});
 (function(exports) {
     "use strict";
@@ -7628,6 +7661,7 @@ var PS = {};
   var Control_Monad_Eff = PS["Control.Monad.Eff"];
   var Control_Monad_Eff_Ref = PS["Control.Monad.Eff.Ref"];
   var Data_BooleanAlgebra = PS["Data.BooleanAlgebra"];
+  var Data_Int = PS["Data.Int"];
   var Data_Maybe = PS["Data.Maybe"];
   var Data_Unit = PS["Data.Unit"];
   var Game_Cubbit_BlockType = PS["Game.Cubbit.BlockType"];
@@ -7664,31 +7698,31 @@ var PS = {};
                                       return function __do() {
                                           Game_Cubbit_Event.onMouseMove(function (e) {
                                               return Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                                  var $14 = {};
-                                                  for (var $15 in v) {
-                                                      if (v.hasOwnProperty($15)) {
-                                                          $14[$15] = v[$15];
+                                                  var $16 = {};
+                                                  for (var $17 in v) {
+                                                      if (v.hasOwnProperty($17)) {
+                                                          $16[$17] = v[$17];
                                                       };
                                                   };
-                                                  $14.mousePosition = {
+                                                  $16.mousePosition = {
                                                       x: e.offsetX, 
                                                       y: e.offsetY
                                                   };
-                                                  return $14;
+                                                  return $16;
                                               });
                                           })();
                                           var prepareModeButton = function (id) {
                                               return function (value) {
                                                   return Game_Cubbit_Event.onButtonClick(id)(function __do() {
                                                       Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                                          var $18 = {};
-                                                          for (var $19 in v) {
-                                                              if (v.hasOwnProperty($19)) {
-                                                                  $18[$19] = v[$19];
+                                                          var $20 = {};
+                                                          for (var $21 in v) {
+                                                              if (v.hasOwnProperty($21)) {
+                                                                  $20[$21] = v[$21];
                                                               };
                                                           };
-                                                          $18.mode = value;
-                                                          return $18;
+                                                          $20.mode = value;
+                                                          return $20;
                                                       })();
                                                       return Graphics_Babylon_AbstractMesh.setIsVisible((function () {
                                                           if (value instanceof Game_Cubbit_Types.Put) {
@@ -7700,7 +7734,7 @@ var PS = {};
                                                           if (value instanceof Game_Cubbit_Types.Move) {
                                                               return false;
                                                           };
-                                                          throw new Error("Failed pattern match at Game.Cubbit.UI line 63, column 27 - line 66, column 30: " + [ value.constructor.name ]);
+                                                          throw new Error("Failed pattern match at Game.Cubbit.UI line 64, column 27 - line 67, column 30: " + [ value.constructor.name ]);
                                                       })())(Graphics_Babylon_Mesh.meshToAbstractMesh(cursor))();
                                                   });
                                               };
@@ -7709,29 +7743,29 @@ var PS = {};
                                           prepareModeButton("add")(Game_Cubbit_Types.Put.value)();
                                           prepareModeButton("remove")(Game_Cubbit_Types.Remove.value)();
                                           Game_Cubbit_Event.onButtonClick("position")(Data_Functor["void"](Control_Monad_Eff.functorEff)(Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                              var $23 = {};
-                                              for (var $24 in v) {
-                                                  if (v.hasOwnProperty($24)) {
-                                                      $23[$24] = v[$24];
+                                              var $25 = {};
+                                              for (var $26 in v) {
+                                                  if (v.hasOwnProperty($26)) {
+                                                      $25[$26] = v[$26];
                                                   };
                                               };
-                                              $23.position = {
+                                              $25.position = {
                                                   x: 0.0, 
                                                   y: 30.0, 
                                                   z: 0.0
                                               };
-                                              return $23;
+                                              return $25;
                                           })))();
                                           Game_Cubbit_Event.onButtonClick("minimap")(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                                  var $27 = {};
-                                                  for (var $28 in v) {
-                                                      if (v.hasOwnProperty($28)) {
-                                                          $27[$28] = v[$28];
+                                                  var $29 = {};
+                                                  for (var $30 in v) {
+                                                      if (v.hasOwnProperty($30)) {
+                                                          $29[$30] = v[$30];
                                                       };
                                                   };
-                                                  $27.minimap = !v.minimap;
-                                                  return $27;
+                                                  $29.minimap = !v.minimap;
+                                                  return $29;
                                               })();
                                               var v = Control_Monad_Eff_Ref.readRef(ref)();
                                               if (v.minimap) {
@@ -7740,62 +7774,62 @@ var PS = {};
                                               if (!v.minimap) {
                                                   return Graphics_Babylon_Scene.setActiveCameras([ Graphics_Babylon_TargetCamera.targetCameraToCamera(camera) ])(scene)();
                                               };
-                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 81, column 9 - line 83, column 70: " + [ v.minimap.constructor.name ]);
+                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 82, column 9 - line 84, column 70: " + [ v.minimap.constructor.name ]);
                                           })();
                                           Game_Cubbit_Event.onButtonClick("first-person-view")(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                                  var $33 = {};
-                                                  for (var $34 in v) {
-                                                      if (v.hasOwnProperty($34)) {
-                                                          $33[$34] = v[$34];
+                                                  var $35 = {};
+                                                  for (var $36 in v) {
+                                                      if (v.hasOwnProperty($36)) {
+                                                          $35[$36] = v[$36];
                                                       };
                                                   };
-                                                  $33.firstPersonView = !v.firstPersonView;
-                                                  return $33;
+                                                  $35.firstPersonView = !v.firstPersonView;
+                                                  return $35;
                                               })();
                                               var v = Control_Monad_Eff_Ref.readRef(ref)();
                                               if (v.firstPersonView) {
                                                   return Game_Cubbit_Update.requestPointerLock(function (e) {
                                                       return function __do() {
                                                           Control_Monad_Eff_Ref.modifyRef(ref)(function (v1) {
-                                                              var $39 = {};
-                                                              for (var $40 in v1) {
-                                                                  if (v1.hasOwnProperty($40)) {
-                                                                      $39[$40] = v1[$40];
+                                                              var $41 = {};
+                                                              for (var $42 in v1) {
+                                                                  if (v1.hasOwnProperty($42)) {
+                                                                      $41[$42] = v1[$42];
                                                                   };
                                                               };
-                                                              $39.playerRotation = v1.playerRotation + e.movementX * options.pointerHorizontalSensitivity;
-                                                              $39.playerPitch = $$Math.max(-$$Math.pi * 0.45)($$Math.min($$Math.pi * 0.45)(v1.playerPitch) - e.movementY * options.pointerVerticalSensitivity);
-                                                              return $39;
+                                                              $41.playerRotation = v1.playerRotation + e.movementX * options.pointerHorizontalSensitivity;
+                                                              $41.playerPitch = $$Math.max(-$$Math.pi * 0.45)($$Math.min($$Math.pi * 0.45)(v1.playerPitch) - e.movementY * options.pointerVerticalSensitivity);
+                                                              return $41;
                                                           })();
                                                           return Data_Unit.unit;
                                                       };
                                                   })(Control_Monad_Eff_Ref.modifyRef(ref)(function (v1) {
-                                                      var $43 = {};
-                                                      for (var $44 in v1) {
-                                                          if (v1.hasOwnProperty($44)) {
-                                                              $43[$44] = v1[$44];
+                                                      var $45 = {};
+                                                      for (var $46 in v1) {
+                                                          if (v1.hasOwnProperty($46)) {
+                                                              $45[$46] = v1[$46];
                                                           };
                                                       };
-                                                      $43.firstPersonView = false;
-                                                      return $43;
+                                                      $45.firstPersonView = false;
+                                                      return $45;
                                                   }))();
                                               };
                                               if (!v.firstPersonView) {
                                                   return Game_Cubbit_Update.exitPointerLock();
                                               };
-                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 88, column 9 - line 98, column 33: " + [ v.firstPersonView.constructor.name ]);
+                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 89, column 9 - line 99, column 33: " + [ v.firstPersonView.constructor.name ]);
                                           })();
                                           Game_Cubbit_Event.onButtonClick("debuglayer")(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
-                                                  var $47 = {};
-                                                  for (var $48 in v) {
-                                                      if (v.hasOwnProperty($48)) {
-                                                          $47[$48] = v[$48];
+                                                  var $49 = {};
+                                                  for (var $50 in v) {
+                                                      if (v.hasOwnProperty($50)) {
+                                                          $49[$50] = v[$50];
                                                       };
                                                   };
-                                                  $47.debugLayer = !v.debugLayer;
-                                                  return $47;
+                                                  $49.debugLayer = !v.debugLayer;
+                                                  return $49;
                                               })();
                                               var v = Control_Monad_Eff_Ref.readRef(ref)();
                                               if (v.debugLayer) {
@@ -7804,9 +7838,9 @@ var PS = {};
                                               if (!v.debugLayer) {
                                                   return Control_Bind.bind(Control_Monad_Eff.bindEff)(Graphics_Babylon_Scene.getDebugLayer(scene))(Graphics_Babylon_DebugLayer.hide)();
                                               };
-                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 103, column 9 - line 105, column 57: " + [ v.debugLayer.constructor.name ]);
+                                              throw new Error("Failed pattern match at Game.Cubbit.UI line 104, column 9 - line 106, column 57: " + [ v.debugLayer.constructor.name ]);
                                           })();
-                                          return Game_Cubbit_Event.onMouseClick(function (e) {
+                                          Game_Cubbit_Event.onMouseClick(function (e) {
                                               return function __do() {
                                                   var v = Control_Monad_Eff_Ref.readRef(ref)();
                                                   var put = function (block) {
@@ -7818,7 +7852,7 @@ var PS = {};
                                                           if (v1 instanceof Data_Maybe.Just) {
                                                               return Game_Cubbit_MeshBuilder.editBlock(ref)(materials)(scene)(v1.value0)(block)();
                                                           };
-                                                          throw new Error("Failed pattern match at Game.Cubbit.UI line 113, column 17 - line 115, column 86: " + [ v1.constructor.name ]);
+                                                          throw new Error("Failed pattern match at Game.Cubbit.UI line 114, column 17 - line 116, column 86: " + [ v1.constructor.name ]);
                                                       };
                                                   };
                                                   if (v.mode instanceof Game_Cubbit_Types.Put) {
@@ -7830,8 +7864,33 @@ var PS = {};
                                                   if (v.mode instanceof Game_Cubbit_Types.Move) {
                                                       return Data_Unit.unit;
                                                   };
-                                                  throw new Error("Failed pattern match at Game.Cubbit.UI line 117, column 9 - line 120, column 26: " + [ v.mode.constructor.name ]);
+                                                  throw new Error("Failed pattern match at Game.Cubbit.UI line 118, column 9 - line 121, column 30: " + [ v.mode.constructor.name ]);
                                               };
+                                          })();
+                                          Game_Cubbit_Event.onRightMouseDrag(function (e) {
+                                              return Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
+                                                  var $60 = {};
+                                                  for (var $61 in v) {
+                                                      if (v.hasOwnProperty($61)) {
+                                                          $60[$61] = v[$61];
+                                                      };
+                                                  };
+                                                  $60.cameraYaw = v.cameraYaw + Data_Int.toNumber(e.movementX) * options.cameraHorizontalSensitivity;
+                                                  $60.cameraPitch = $$Math.max(-$$Math.pi * 0.45)($$Math.min($$Math.pi * 0.45)(v.cameraPitch + Data_Int.toNumber(e.movementY) * options.cameraVertialSensitivity));
+                                                  return $60;
+                                              });
+                                          })();
+                                          return Game_Cubbit_Event.onWheel(function (e) {
+                                              return Control_Monad_Eff_Ref.modifyRef(ref)(function (v) {
+                                                  var $64 = {};
+                                                  for (var $65 in v) {
+                                                      if (v.hasOwnProperty($65)) {
+                                                          $64[$65] = v[$65];
+                                                      };
+                                                  };
+                                                  $64.cameraRange = $$Math.max(options.cameraMinimumRange)($$Math.min(options.cameraMaximumRange)(v.cameraRange + Data_Int.toNumber(e.deltaY) * options.cameraZoomSpeed));
+                                                  return $64;
+                                              });
                                           })();
                                       };
                                   };
@@ -8149,29 +8208,35 @@ var PS = {};
                                                                   return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("cameraFOV")(value))(function (v15) {
                                                                       return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("cameraMinimumRange")(value))(function (v16) {
                                                                           return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("cameraMaximumRange")(value))(function (v17) {
-                                                                              return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("pointerHorizontalSensitivity")(value))(function (v18) {
-                                                                                  return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("pointerVerticalSensitivity")(value))(function (v19) {
-                                                                                      return Control_Applicative.pure(Control_Monad_Except_Trans.applicativeExceptT(Data_Identity.monadIdentity))({
-                                                                                          loadDistance: v, 
-                                                                                          fogDensity: v1, 
-                                                                                          maximumLoadedChunks: v2, 
-                                                                                          shadowDisplayRange: v3, 
-                                                                                          shadowMapSize: v4, 
-                                                                                          enableWaterMaterial: v5, 
-                                                                                          chunkUnloadSpeed: v6, 
-                                                                                          jumpVelocity: v7, 
-                                                                                          initialWorldSize: v8, 
-                                                                                          moveSpeed: v9, 
-                                                                                          cameraTargetSpeed: v10, 
-                                                                                          cameraRotationSpeed: v11, 
-                                                                                          cameraZoomSpeed: v12, 
-                                                                                          cameraMinZ: v13, 
-                                                                                          cameraMaxZ: v14, 
-                                                                                          cameraFOV: v15, 
-                                                                                          cameraMinimumRange: v16, 
-                                                                                          cameraMaximumRange: v17, 
-                                                                                          pointerHorizontalSensitivity: v18, 
-                                                                                          pointerVerticalSensitivity: v19
+                                                                              return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("cameraHorizontalSensitivity")(value))(function (v18) {
+                                                                                  return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("cameraVertialSensitivity")(value))(function (v19) {
+                                                                                      return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("pointerHorizontalSensitivity")(value))(function (v20) {
+                                                                                          return Control_Bind.bind(Control_Monad_Except_Trans.bindExceptT(Data_Identity.monadIdentity))(Data_Foreign_Class.readProp(Data_Foreign_Class.numberIsForeign)(Data_Foreign_Index.indexString)("pointerVerticalSensitivity")(value))(function (v21) {
+                                                                                              return Control_Applicative.pure(Control_Monad_Except_Trans.applicativeExceptT(Data_Identity.monadIdentity))({
+                                                                                                  loadDistance: v, 
+                                                                                                  fogDensity: v1, 
+                                                                                                  maximumLoadedChunks: v2, 
+                                                                                                  shadowDisplayRange: v3, 
+                                                                                                  shadowMapSize: v4, 
+                                                                                                  enableWaterMaterial: v5, 
+                                                                                                  chunkUnloadSpeed: v6, 
+                                                                                                  jumpVelocity: v7, 
+                                                                                                  initialWorldSize: v8, 
+                                                                                                  moveSpeed: v9, 
+                                                                                                  cameraTargetSpeed: v10, 
+                                                                                                  cameraRotationSpeed: v11, 
+                                                                                                  cameraZoomSpeed: v12, 
+                                                                                                  cameraMinZ: v13, 
+                                                                                                  cameraMaxZ: v14, 
+                                                                                                  cameraFOV: v15, 
+                                                                                                  cameraMinimumRange: v16, 
+                                                                                                  cameraMaximumRange: v17, 
+                                                                                                  cameraHorizontalSensitivity: v18, 
+                                                                                                  cameraVertialSensitivity: v19, 
+                                                                                                  pointerHorizontalSensitivity: v20, 
+                                                                                                  pointerVerticalSensitivity: v21
+                                                                                              });
+                                                                                          });
                                                                                       });
                                                                                   });
                                                                               });
@@ -8198,14 +8263,14 @@ var PS = {};
       return function (canvas2d) {
           return Data_Functor["void"](Control_Monad_Eff.functorEff)(Control_Monad_Aff.runAff(Control_Monad_Eff_Console.errorShow(Control_Monad_Eff_Exception.showError))(Control_Applicative.pure(Control_Monad_Eff.applicativeEff))(Control_Bind.bind(Control_Monad_Aff.bindAff)(Network_HTTP_Affjax.get(Network_HTTP_Affjax_Response.responsableForeign)("options.json"))(function (v) {
               return Control_Bind.bind(Control_Monad_Aff.bindAff)((function () {
-                  var $105 = Control_Monad_Except.runExcept(readOptions(v.response));
-                  if ($105 instanceof Data_Either.Left) {
-                      return Control_Monad_Error_Class.throwError(Control_Monad_Aff.monadErrorAff)(Control_Monad_Eff_Exception.error(Data_Show.show(Data_List_Types.showNonEmptyList(Data_Foreign.showForeignError))($105.value0)));
+                  var $109 = Control_Monad_Except.runExcept(readOptions(v.response));
+                  if ($109 instanceof Data_Either.Left) {
+                      return Control_Monad_Error_Class.throwError(Control_Monad_Aff.monadErrorAff)(Control_Monad_Eff_Exception.error(Data_Show.show(Data_List_Types.showNonEmptyList(Data_Foreign.showForeignError))($109.value0)));
                   };
-                  if ($105 instanceof Data_Either.Right) {
-                      return Control_Applicative.pure(Control_Monad_Aff.applicativeAff)($105.value0);
+                  if ($109 instanceof Data_Either.Right) {
+                      return Control_Applicative.pure(Control_Monad_Aff.applicativeAff)($109.value0);
                   };
-                  throw new Error("Failed pattern match at Game.Cubbit.Main line 108, column 16 - line 110, column 30: " + [ $105.constructor.name ]);
+                  throw new Error("Failed pattern match at Game.Cubbit.Main line 112, column 16 - line 114, column 30: " + [ $109.constructor.name ]);
               })())(function (v1) {
                   return Control_Bind.bind(Control_Monad_Aff.bindAff)(Control_Monad_Eff_Class.liftEff(Control_Monad_Aff.monadEffAff)(Graphics_Babylon_Engine.createEngine(canvasGL)(true)))(function (v2) {
                       return Control_Bind.bind(Control_Monad_Aff.bindAff)(Control_Monad_Eff_Class.liftEff(Control_Monad_Aff.monadEffAff)(function __do() {
@@ -8222,15 +8287,15 @@ var PS = {};
                                   return Control_Bind.bind(Control_Monad_Aff.bindAff)(Graphics_Babylon_Texture_Aff.loadTexture("./alice/texture.png")(v3)(Graphics_Babylon_Texture.defaultCreateTextureOptions))(function () {
                                       return Control_Bind.bind(Control_Monad_Aff.bindAff)(Graphics_Babylon_SceneLoader_Aff.loadMesh("")("./alice/")("alice.babylon")(v3)(Control_Applicative.pure(Control_Monad_Eff.applicativeEff)))(function (v6) {
                                           return Control_Bind.bind(Control_Monad_Aff.bindAff)(Graphics_Babylon_Sound_Aff.loadSound("forest.mp3")("forest.mp3")(v3)((function () {
-                                              var $116 = {};
-                                              for (var $117 in Graphics_Babylon_Sound.defaultCreateSoundOptions) {
-                                                  if (Graphics_Babylon_Sound.defaultCreateSoundOptions.hasOwnProperty($117)) {
-                                                      $116[$117] = Graphics_Babylon_Sound.defaultCreateSoundOptions[$117];
+                                              var $120 = {};
+                                              for (var $121 in Graphics_Babylon_Sound.defaultCreateSoundOptions) {
+                                                  if (Graphics_Babylon_Sound.defaultCreateSoundOptions.hasOwnProperty($121)) {
+                                                      $120[$121] = Graphics_Babylon_Sound.defaultCreateSoundOptions[$121];
                                                   };
                                               };
-                                              $116.autoplay = true;
-                                              $116.loop = true;
-                                              return $116;
+                                              $120.autoplay = true;
+                                              $120.loop = true;
+                                              return $120;
                                           })()))(function (v7) {
                                               return Control_Monad_Eff_Class.liftEff(Control_Monad_Aff.monadEffAff)(function __do() {
                                                   var v8 = (function __do() {
@@ -8371,227 +8436,227 @@ var PS = {};
                                                   Game_Cubbit_Event.onKeyDown(function (e) {
                                                       return function __do() {
                                                           Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 32)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
-                                                              var $155 = {};
-                                                              for (var $156 in v16) {
-                                                                  if (v16.hasOwnProperty($156)) {
-                                                                      $155[$156] = v16[$156];
-                                                                  };
-                                                              };
-                                                              $155.velocity = (function () {
-                                                                  var $152 = {};
-                                                                  for (var $153 in v16.velocity) {
-                                                                      if (v16.velocity.hasOwnProperty($153)) {
-                                                                          $152[$153] = v16.velocity[$153];
-                                                                      };
-                                                                  };
-                                                                  $152.y = v16.velocity.y + v1.jumpVelocity;
-                                                                  return $152;
-                                                              })();
-                                                              return $155;
-                                                          }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 87)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $159 = {};
                                                               for (var $160 in v16) {
                                                                   if (v16.hasOwnProperty($160)) {
                                                                       $159[$160] = v16[$160];
                                                                   };
                                                               };
-                                                              $159.wKey = true;
+                                                              $159.velocity = (function () {
+                                                                  var $156 = {};
+                                                                  for (var $157 in v16.velocity) {
+                                                                      if (v16.velocity.hasOwnProperty($157)) {
+                                                                          $156[$157] = v16.velocity[$157];
+                                                                      };
+                                                                  };
+                                                                  $156.y = v16.velocity.y + v1.jumpVelocity;
+                                                                  return $156;
+                                                              })();
                                                               return $159;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 83)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 87)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $163 = {};
                                                               for (var $164 in v16) {
                                                                   if (v16.hasOwnProperty($164)) {
                                                                       $163[$164] = v16[$164];
                                                                   };
                                                               };
-                                                              $163.sKey = true;
+                                                              $163.wKey = true;
                                                               return $163;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 65)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 83)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $167 = {};
                                                               for (var $168 in v16) {
                                                                   if (v16.hasOwnProperty($168)) {
                                                                       $167[$168] = v16[$168];
                                                                   };
                                                               };
-                                                              $167.aKey = true;
+                                                              $167.sKey = true;
                                                               return $167;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 68)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 65)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $171 = {};
                                                               for (var $172 in v16) {
                                                                   if (v16.hasOwnProperty($172)) {
                                                                       $171[$172] = v16[$172];
                                                                   };
                                                               };
-                                                              $171.dKey = true;
+                                                              $171.aKey = true;
                                                               return $171;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 82)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 68)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $175 = {};
                                                               for (var $176 in v16) {
                                                                   if (v16.hasOwnProperty($176)) {
                                                                       $175[$176] = v16[$176];
                                                                   };
                                                               };
-                                                              $175.rKey = true;
+                                                              $175.dKey = true;
                                                               return $175;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 70)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 82)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $179 = {};
                                                               for (var $180 in v16) {
                                                                   if (v16.hasOwnProperty($180)) {
                                                                       $179[$180] = v16[$180];
                                                                   };
                                                               };
-                                                              $179.fKey = true;
+                                                              $179.rKey = true;
                                                               return $179;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 81)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 70)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $183 = {};
                                                               for (var $184 in v16) {
                                                                   if (v16.hasOwnProperty($184)) {
                                                                       $183[$184] = v16[$184];
                                                                   };
                                                               };
-                                                              $183.qKey = true;
+                                                              $183.fKey = true;
                                                               return $183;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 69)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 81)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $187 = {};
                                                               for (var $188 in v16) {
                                                                   if (v16.hasOwnProperty($188)) {
                                                                       $187[$188] = v16[$188];
                                                                   };
                                                               };
-                                                              $187.eKey = true;
+                                                              $187.qKey = true;
                                                               return $187;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 84)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 69)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $191 = {};
                                                               for (var $192 in v16) {
                                                                   if (v16.hasOwnProperty($192)) {
                                                                       $191[$192] = v16[$192];
                                                                   };
                                                               };
-                                                              $191.tKey = true;
+                                                              $191.eKey = true;
                                                               return $191;
                                                           }))();
-                                                          return Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 71)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 84)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $195 = {};
                                                               for (var $196 in v16) {
                                                                   if (v16.hasOwnProperty($196)) {
                                                                       $195[$196] = v16[$196];
                                                                   };
                                                               };
-                                                              $195.gKey = true;
+                                                              $195.tKey = true;
                                                               return $195;
                                                           }))();
-                                                      };
-                                                  })();
-                                                  Game_Cubbit_Event.onKeyUp(function (e) {
-                                                      return function __do() {
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 87)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          return Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 71)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $199 = {};
                                                               for (var $200 in v16) {
                                                                   if (v16.hasOwnProperty($200)) {
                                                                       $199[$200] = v16[$200];
                                                                   };
                                                               };
-                                                              $199.wKey = false;
+                                                              $199.gKey = true;
                                                               return $199;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 83)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                      };
+                                                  })();
+                                                  Game_Cubbit_Event.onKeyUp(function (e) {
+                                                      return function __do() {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 87)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $203 = {};
                                                               for (var $204 in v16) {
                                                                   if (v16.hasOwnProperty($204)) {
                                                                       $203[$204] = v16[$204];
                                                                   };
                                                               };
-                                                              $203.sKey = false;
+                                                              $203.wKey = false;
                                                               return $203;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 65)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 83)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $207 = {};
                                                               for (var $208 in v16) {
                                                                   if (v16.hasOwnProperty($208)) {
                                                                       $207[$208] = v16[$208];
                                                                   };
                                                               };
-                                                              $207.aKey = false;
+                                                              $207.sKey = false;
                                                               return $207;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 68)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 65)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $211 = {};
                                                               for (var $212 in v16) {
                                                                   if (v16.hasOwnProperty($212)) {
                                                                       $211[$212] = v16[$212];
                                                                   };
                                                               };
-                                                              $211.dKey = false;
+                                                              $211.aKey = false;
                                                               return $211;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 82)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 68)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $215 = {};
                                                               for (var $216 in v16) {
                                                                   if (v16.hasOwnProperty($216)) {
                                                                       $215[$216] = v16[$216];
                                                                   };
                                                               };
-                                                              $215.rKey = false;
+                                                              $215.dKey = false;
                                                               return $215;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 70)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 82)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $219 = {};
                                                               for (var $220 in v16) {
                                                                   if (v16.hasOwnProperty($220)) {
                                                                       $219[$220] = v16[$220];
                                                                   };
                                                               };
-                                                              $219.fKey = false;
+                                                              $219.rKey = false;
                                                               return $219;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 81)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 70)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $223 = {};
                                                               for (var $224 in v16) {
                                                                   if (v16.hasOwnProperty($224)) {
                                                                       $223[$224] = v16[$224];
                                                                   };
                                                               };
-                                                              $223.qKey = false;
+                                                              $223.fKey = false;
                                                               return $223;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 69)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 81)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $227 = {};
                                                               for (var $228 in v16) {
                                                                   if (v16.hasOwnProperty($228)) {
                                                                       $227[$228] = v16[$228];
                                                                   };
                                                               };
-                                                              $227.eKey = false;
+                                                              $227.qKey = false;
                                                               return $227;
                                                           }))();
-                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 84)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 69)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $231 = {};
                                                               for (var $232 in v16) {
                                                                   if (v16.hasOwnProperty($232)) {
                                                                       $231[$232] = v16[$232];
                                                                   };
                                                               };
-                                                              $231.tKey = false;
+                                                              $231.eKey = false;
                                                               return $231;
                                                           }))();
-                                                          return Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 71)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                          Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 84)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
                                                               var $235 = {};
                                                               for (var $236 in v16) {
                                                                   if (v16.hasOwnProperty($236)) {
                                                                       $235[$236] = v16[$236];
                                                                   };
                                                               };
-                                                              $235.gKey = false;
+                                                              $235.tKey = false;
                                                               return $235;
+                                                          }))();
+                                                          return Control_Applicative.when(Control_Monad_Eff.applicativeEff)(e.keyCode === 71)(Control_Monad_Eff_Ref.modifyRef(v15)(function (v16) {
+                                                              var $239 = {};
+                                                              for (var $240 in v16) {
+                                                                  if (v16.hasOwnProperty($240)) {
+                                                                      $239[$240] = v16[$240];
+                                                                  };
+                                                              };
+                                                              $239.gKey = false;
+                                                              return $239;
                                                           }))();
                                                       };
                                                   })();

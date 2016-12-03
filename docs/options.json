@@ -12,12 +12,14 @@
     "moveSpeed": 0.1,
     "cameraTargetSpeed": 0.1,
     "cameraRotationSpeed": 0.04,
-    "cameraZoomSpeed": 0.2,
+    "cameraZoomSpeed": 0.02,
     "cameraMaxZ": 10000.0,
     "cameraMinZ": 0.1,
-    "cameraFOV": 1.5,
+    "cameraFOV": 1.2,
     "cameraMinimumRange": 2.0,
     "cameraMaximumRange": 20.0,
+    "cameraHorizontalSensitivity": 0.004,
+    "cameraVertialSensitivity": 0.004,
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002
 }
