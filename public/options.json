@@ -15,6 +15,7 @@
     "cameraZoomSpeed": 0.2,
     "cameraMaxZ": 10000.0,
     "cameraMinZ": 0.1,
+    "cameraFOV": 1.5,
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002
 }

@@ -84,6 +84,7 @@ type Options = {
     cameraZoomSpeed :: Number,
     cameraMaxZ :: Number,
     cameraMinZ :: Number,
+    cameraFOV :: Number,
     pointerHorizontalSensitivity :: Number,
     pointerVerticalSensitivity :: Number
 }

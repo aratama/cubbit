@@ -29,7 +29,7 @@ import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
-import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom, setMaxZ, setMinZ)
+import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom, setMaxZ, setMinZ, setFOV)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
@@ -70,6 +70,7 @@ readOptions value = do
     cameraZoomSpeed <- readProp "cameraZoomSpeed" value
     cameraMinZ <- readProp "cameraMinZ" value
     cameraMaxZ <- readProp "cameraMaxZ" value
+    cameraFOV <- readProp "cameraFOV" value
     pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
     pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
     pure {
@@ -88,6 +89,7 @@ readOptions value = do
         cameraZoomSpeed,
         cameraMinZ,
         cameraMaxZ,
+        cameraFOV,
         pointerHorizontalSensitivity,
         pointerVerticalSensitivity
     }
@@ -157,6 +159,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             setTarget cameraTarget cam
             setMaxZ options.cameraMaxZ (targetCameraToCamera cam)
             setMinZ options.cameraMinZ (targetCameraToCamera cam)
+            setFOV options.cameraFOV (targetCameraToCamera cam)
             pure cam
 
 

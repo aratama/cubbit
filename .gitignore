@@ -8,6 +8,8 @@ example/sandbox/public/worker.js
 **/*.log
 public/index.js
 cubbit-win32-x64
+**/*.rpp
+**/*.rpp-bak
 
 # Windows image file caches
 Thumbs.db
