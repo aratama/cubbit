@@ -26,7 +26,8 @@ html, body {
     user-select: none;
 }
 
-#content {
+
+.content-layer {
     width   : 1280px;
     height  : 720px;
     position: absolute;
@@ -35,7 +36,9 @@ html, body {
     left: 0;
     right: 0;
     margin: auto;
+}
 
+#content {
 
 }
 
@@ -133,4 +136,6 @@ html, body {
     transition-duration: 1.0s;
     opacity: 1;
     background-color: black;
+
+    z-index: 10000;
 }

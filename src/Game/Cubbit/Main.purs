@@ -12,8 +12,6 @@ import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
-import Data.Foreign (F, Foreign)
-import Data.Foreign.Class (readProp)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
@@ -21,10 +19,12 @@ import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
+import Game.Cubbit.Hud (initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(..), State(State), Options)
+import Game.Cubbit.Types (Effects, Mode(Move), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
@@ -50,58 +50,9 @@ import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
+import Halogen.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
-
-readOptions :: Foreign -> F Options
-readOptions value = do
-    loadDistance <- readProp "loadDistance" value
-    fogDensity <- readProp "fogDensity" value
-    maximumLoadedChunks <- readProp "maximumLoadedChunks" value
-    shadowDisplayRange <- readProp "shadowDisplayRange" value
-    shadowMapSize <- readProp "shadowMapSize" value
-    enableWaterMaterial <- readProp "enableWaterMaterial" value
-    chunkUnloadSpeed <- readProp "chunkUnloadSpeed" value
-    jumpVelocity <- readProp "jumpVelocity" value
-    initialWorldSize <- readProp "initialWorldSize" value
-    moveSpeed <- readProp "moveSpeed" value
-    cameraTargetSpeed <- readProp "cameraTargetSpeed" value
-    cameraRotationSpeed <- readProp "cameraRotationSpeed" value
-    cameraZoomSpeed <- readProp "cameraZoomSpeed" value
-    cameraMinZ <- readProp "cameraMinZ" value
-    cameraMaxZ <- readProp "cameraMaxZ" value
-    cameraFOV <- readProp "cameraFOV" value
-    cameraMinimumRange <- readProp "cameraMinimumRange" value
-    cameraMaximumRange <- readProp "cameraMaximumRange" value
-    cameraHorizontalSensitivity <- readProp "cameraHorizontalSensitivity" value
-    cameraVertialSensitivity <- readProp "cameraVertialSensitivity" value
-    pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
-    pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
-    pure {
-        loadDistance,
-        fogDensity,
-        maximumLoadedChunks,
-        shadowDisplayRange,
-        shadowMapSize,
-        enableWaterMaterial,
-        chunkUnloadSpeed,
-        jumpVelocity,
-        initialWorldSize,
-        moveSpeed,
-        cameraTargetSpeed,
-        cameraRotationSpeed,
-        cameraZoomSpeed,
-        cameraMinZ,
-        cameraMaxZ,
-        cameraFOV,
-        cameraMinimumRange,
-        cameraMaximumRange,
-        cameraHorizontalSensitivity,
-        cameraVertialSensitivity,
-        pointerHorizontalSensitivity,
-        pointerVerticalSensitivity
-    }
-
 
 
 runApp :: forall eff. Canvas -> CanvasElement -> Eff (Effects eff) Unit
@@ -132,14 +83,14 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
     forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
 
 
-    -- initialize scene
+
     liftEff do
 
 
 
 
 
-
+        -- initialize scene
 
         miniMapCamera <- do
             let minimapScale = 200.0
@@ -352,12 +303,14 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
         hideLoading
 
 main :: forall eff. Eff (Effects eff) Unit
-main = onDOMContentLoaded do
-    canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
-    canvas2dM <- getCanvasElementById "canvas2d"
-    case canvasM, canvas2dM of
-        Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d
-        _, _ -> error "canvasGL not found"
+main = runHalogenAff do
+    driver <- initializeHud
+    liftEff do
+        canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
+        canvas2dM <- getCanvasElementById "canvas2d"
+        case canvasM, canvas2dM of
+            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d
+            _, _ -> error "canvasGL not found"
 
 
 

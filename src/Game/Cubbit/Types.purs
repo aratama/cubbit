@@ -1,6 +1,8 @@
 module Game.Cubbit.Types where
 
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
@@ -14,7 +16,16 @@ import Graphics.Babylon.Vector3 (Vector3)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
-type Effects eff = (canvas :: CANVAS, now :: NOW, console :: CONSOLE, dom :: DOM, babylon :: BABYLON, ref :: REF, ajax :: AJAX | eff)
+type Effects eff = (
+    canvas :: CANVAS,
+    now :: NOW,
+    console :: CONSOLE,
+    dom :: DOM,
+    babylon :: BABYLON,
+    ref :: REF,
+    ajax :: AJAX,
+    err :: EXCEPTION,
+    avar :: AVAR | eff)
 
 data Mode = Move | Put | Remove
 

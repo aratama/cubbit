@@ -26,7 +26,8 @@
     "purescript-canvas": "^2.0.0",
     "purescript-newtype": "^1.1.0",
     "purescript-foreign": "^3.0.1",
-    "purescript-affjax": "^3.0.1"
+    "purescript-affjax": "^3.0.1",
+    "purescript-halogen": "^0.12.0"
   },
   "devDependencies": {
     "purescript-strongcheck": "^2.0.1"

@@ -7,7 +7,7 @@
     "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
     "posttest": "node public/index.js",
     "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
-    "build": "psc-bundle --module Main --main Main --output public/index.js output/**/*.js",
+    "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
     "server": "start http-server public",
     "publish": "cpx public/**/*.* docs",
@@ -15,9 +15,9 @@
   },
   "author": "aratama",
   "license": "UNLICENSED",
-  "directories": {
-  },
+  "directories": {},
   "description": "",
   "dependencies": {
+    "virtual-dom": "^2.1.1"
   }
 }
