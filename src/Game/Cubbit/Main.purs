@@ -71,6 +71,8 @@ readOptions value = do
     cameraMinZ <- readProp "cameraMinZ" value
     cameraMaxZ <- readProp "cameraMaxZ" value
     cameraFOV <- readProp "cameraFOV" value
+    cameraMinimumRange <- readProp "cameraMinimumRange" value
+    cameraMaximumRange <- readProp "cameraMaximumRange" value
     pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
     pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
     pure {
@@ -90,6 +92,8 @@ readOptions value = do
         cameraMinZ,
         cameraMaxZ,
         cameraFOV,
+        cameraMinimumRange,
+        cameraMaximumRange,
         pointerHorizontalSensitivity,
         pointerVerticalSensitivity
     }
@@ -233,7 +237,7 @@ runApp canvasGL canvas2d = void $ runAff errorShow pure do
             cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
             cameraYaw: 0.0,
             cameraPitch: 0.7,
-            cameraRange: 12.0,
+            cameraRange: 5.0,
             firstPersonView: false,
             firstPersonViewPitch: 0.0,
 

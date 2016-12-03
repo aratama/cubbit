@@ -16,6 +16,8 @@
     "cameraMaxZ": 10000.0,
     "cameraMinZ": 0.1,
     "cameraFOV": 1.5,
+    "cameraMinimumRange": 2.0,
+    "cameraMaximumRange": 20.0,
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002
 }
