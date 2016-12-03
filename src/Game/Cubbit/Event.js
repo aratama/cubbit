@@ -18,11 +18,11 @@ exports.onRightMouseDrag = function(callback){
         canvas.addEventListener("mousemove", function(e){
             if(e.buttons === 2){
                 callback({
-                    movementX: e.x - x,
-                    movementY: e.y - y
+                    movementX: e.clientX - x,
+                    movementY: e.clientY - y
                 })();
-                x = e.x;
-                y = e.y;
+                x = e.clientX;
+                y = e.clientY;
             }
         });
     }
