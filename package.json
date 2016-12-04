@@ -11,13 +11,15 @@
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico",
     "server": "start http-server public",
     "publish": "cpx public/**/*.* docs",
-    "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs"
+    "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs",
+    "license": "node res/license.js"
   },
   "author": "aratama",
   "license": "UNLICENSED",
   "directories": {},
   "description": "",
   "dependencies": {
+    "glob": "^7.1.1",
     "virtual-dom": "^2.1.1"
   }
 }

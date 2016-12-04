@@ -30,10 +30,9 @@ This project includes following libraries, fonts, images and audio files:
 
 * Babylonjs (http://www.babylonjs.com/)
 * josephg/noisejs (https://github.com/josephg/noisejs)
-* しねきゃぷしょん (http://chiphead.jp/)
 * 刻明朝 (http://freefonts.jp/font-koku-min.html)
-* Skyboxes (http://www.custommapmakers.org/skyboxes.php)
-* "ForestBirds.wav" (https://www.freesound.org/people/HerbertBoland/sounds/28239/)
+* Skyboxes (http://www.alabsoft.com/unity3d.shtml)
+* ForestBirds.wav (https://www.freesound.org/people/HerbertBoland/sounds/28239/)
 
 ----
 

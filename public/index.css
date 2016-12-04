@@ -3,11 +3,6 @@
     src: url("font_1_kokumr_1.00_rls.ttf");
 }
 
-@font-face {
-    font-family: "cinecaption";
-    src: url("cinecaption227.TTF");
-}
-
 html, body {
     overflow: hidden;
     margin  : 0;
@@ -140,4 +135,22 @@ html, body {
     background-color: black;
 
     z-index: 10000;
+}
+
+footer {
+    display: block;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+}
+
+footer a {
+    color: white;
+    text-decoration: none;
+    font-size: x-small;
+    opacity: 0.3;
+}
+
+footer a:hover {
+    opacity: 1.0;
 }
