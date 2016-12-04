@@ -20,7 +20,6 @@ import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Types (Mode(..), State(..), Options)
 import Game.Cubbit.Vec (Vec)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
-import Halogen.Aff.Util (awaitBody)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), button, div, img, p, prop, text)
 import Halogen.HTML.Elements (canvas)
 import Halogen.HTML.Events (onClick, onContextMenu)
@@ -117,15 +116,10 @@ eval = case _ of
 ui :: forall eff. Ref State -> Options -> Component HTML Query Void (Aff (HudEffects eff))
 ui ref options = component { render, eval, initialState: initialState ref options }
 
-
-
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
 initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud ref options body = do
-
-    runUI (ui ref options) body
-
+initializeHud ref options body = runUI (ui ref options) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))
