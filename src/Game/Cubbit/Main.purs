@@ -26,7 +26,7 @@ import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, CoreEffects, Mode(Move), State(State))
+import Game.Cubbit.Types (CoreEffects, Effects, Mode(Move), State(State), Options)
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (BABYLON, Canvas, onDOMContentLoaded, querySelectorCanvas)
@@ -52,6 +52,7 @@ import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CANVAS, CanvasElement, getCanvasElementById)
+import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
@@ -65,14 +66,10 @@ runApp :: forall eff. Canvas
                         now :: NOW,
                         console :: CONSOLE,
                         babylon :: BABYLON,
-                        ref :: REF | eff) -> Eff (Effects eff) Unit
-runApp canvasGL canvas2d ref driver = void $ runAff errorShow pure do
+                        ref :: REF | eff) -> Options -> Eff (Effects eff) Unit
+runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
 
-    -- load options
-    response <- get "options.json"
-    options <- case runExcept (readOptions response.response) of
-        Left err -> throwError (EXP.error (show err))
-        Right opt -> pure opt
+
 
     engine <- liftEff $ createEngine canvasGL true
 
@@ -92,44 +89,20 @@ runApp canvasGL canvas2d ref driver = void $ runAff errorShow pure do
     playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
     forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
 
-
-
     liftEff do
 
         modifyRef ref (\(State state) -> State state { playerMeshes = playerMeshes })
 
-
-
         -- initialize scene
-
-        miniMapCamera <- do
-            let minimapScale = 200.0
-            position <- createVector3 0.0 30.0 0.0
-            cam <- createTargetCamera "minimap-camera" position scene
-            target <- createVector3 0.0 0.0 0.0
-            setTarget target cam
-            setMode oRTHOGRAPHIC_CAMERA (targetCameraToCamera cam)
-            setOrthoLeft (-minimapScale) (targetCameraToCamera cam)
-            setOrthoRight minimapScale (targetCameraToCamera cam)
-            setOrthoTop minimapScale (targetCameraToCamera cam)
-            setOrthoBottom (-minimapScale) (targetCameraToCamera cam)
-            viewport <- createViewport 0.75 0.65 0.24 0.32
-            setViewport viewport (targetCameraToCamera cam)
-            pure cam
-
         targetCamera <- do
-            cameraPosition <- createVector3 10.0 20.0 (negate 10.0)
-
-            cam <- createTargetCamera "target-camera" cameraPosition scene
-            -- setCheckCollisions true cam
-
-            -- target the camera to scene origin
+            position <- createVector3 10.0 20.0 (negate 10.0)
+            camera <- createTargetCamera "target-camera" position scene
             cameraTarget <- createVector3 0.0 8.0 0.0
-            setTarget cameraTarget cam
-            setMaxZ options.cameraMaxZ (targetCameraToCamera cam)
-            setMinZ options.cameraMinZ (targetCameraToCamera cam)
-            setFOV options.cameraFOV (targetCameraToCamera cam)
-            pure cam
+            setTarget cameraTarget camera
+            setMaxZ options.cameraMaxZ (targetCameraToCamera camera)
+            setMinZ options.cameraMinZ (targetCameraToCamera camera)
+            setFOV options.cameraFOV (targetCameraToCamera camera)
+            pure camera
 
 
         setActiveCameras [targetCameraToCamera targetCamera] scene
@@ -190,7 +163,7 @@ runApp canvasGL canvas2d ref driver = void $ runAff errorShow pure do
         -- prepare materials
         materials <- initializeMaterials scene skybox texture alphaTexture options
 
-        initializeUI canvasGL canvas2d ref cursor targetCamera miniMapCamera scene materials options
+        initializeUI canvasGL canvas2d ref cursor targetCamera scene materials options
 
 
         -- initialize player charactor mesh
@@ -315,15 +288,24 @@ main = runHalogenAff do
         animation: ""
     }
 
+    -- NOTE: have to do awaitBody before getting options
+    body <- awaitBody
+
+    -- load options
+    response <- get "options.json"
+    options <- case runExcept (readOptions response.response) of
+        Left err -> throwError (EXP.error (show err))
+        Right opt -> pure opt
+
 
     -- initialize hud
-    driver <- initializeHud ref
+    driver <- initializeHud ref options body
 
     liftEff $ do
         canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
         canvas2dM <- getCanvasElementById "canvas2d"
         case canvasM, canvas2dM of
-            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref driver
+            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref driver options
             _, _ -> error "canvasGL not found"
 
 

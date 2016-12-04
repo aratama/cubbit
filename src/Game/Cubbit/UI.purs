@@ -1,6 +1,5 @@
 module Game.Cubbit.UI (initializeUI) where
 
-import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind, (>>=))
 import Control.Monad.Eff (Eff)
@@ -13,15 +12,15 @@ import Game.Cubbit.BlockType (dirtBlock, airBlock)
 import Game.Cubbit.Event (onButtonClick, onMouseClick, onMouseMove, onRightMouseDrag, onWheel)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Types (Effects, Materials, Mode(..), State(State), Options)
-import Game.Cubbit.Update (pickBlock, requestPointerLock, exitPointerLock)
+import Game.Cubbit.Update (pickBlock)
 import Graphics.Babylon (Canvas)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
-import Graphics.Babylon.Scene (getDebugLayer, setActiveCameras)
-import Graphics.Babylon.TargetCamera (TargetCamera, targetCameraToCamera)
+import Graphics.Babylon.Scene (getDebugLayer)
+import Graphics.Babylon.TargetCamera (TargetCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Canvas (CanvasElement)
 import Math (max, min, pi)
-import Prelude (($), (+), (*), negate, (-))
+import Prelude (negate, ($), (*), (+))
 
 shadowMapSize :: Int
 shadowMapSize = 4096
@@ -44,9 +43,8 @@ collesionEnabledRange = 1
 enableWaterMaterial :: Boolean
 enableWaterMaterial = false
 
-initializeUI :: forall eff. Canvas -> CanvasElement -> Ref State -> Mesh -> TargetCamera -> TargetCamera -> Scene -> Materials -> Options -> Eff (Effects eff) Unit
-initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials options = do
-
+initializeUI :: forall eff. Canvas -> CanvasElement -> Ref State -> Mesh -> TargetCamera -> Scene -> Materials -> Options -> Eff (Effects eff) Unit
+initializeUI canvasGL canvas2d ref cursor camera scene materials options = do
 
     onMouseMove \e -> do
         modifyRef ref \(State s) -> State s {
@@ -55,33 +53,6 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials o
                 y: e.offsetY
             }
         }
-
-    onButtonClick "position" $ void do
-        modifyRef ref \(State state) -> State state {
-            position = { x: 0.0, y: 30.0, z: 0.0 }
-        }
-
-    onButtonClick "minimap" do
-        modifyRef ref (\(State state) -> State state { minimap = not state.minimap })
-        State state <- readRef ref
-        if state.minimap
-            then setActiveCameras [targetCameraToCamera camera, targetCameraToCamera miniMapCamera] scene
-            else setActiveCameras [targetCameraToCamera camera] scene
-
-    onButtonClick "first-person-view" do
-        modifyRef ref (\(State state) -> State state { firstPersonView = not state.firstPersonView })
-        State state <- readRef ref
-        if state.firstPersonView
-            then requestPointerLock (\e -> do
-                modifyRef ref (\(State state) -> State state {
-                    playerRotation = state.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
-                    playerPitch = max (-pi * 0.45) (min (pi * 0.45) state.playerPitch - e.movementY * options.pointerVerticalSensitivity)
-                })
-                pure unit
-            ) (modifyRef ref (\(State state) -> State state {
-                firstPersonView = false
-            }))
-            else exitPointerLock
 
     onButtonClick "debuglayer" do
         modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })

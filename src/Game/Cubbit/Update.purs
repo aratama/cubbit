@@ -1,17 +1,12 @@
-module Game.Cubbit.Update (update, pickBlock, requestPointerLock, exitPointerLock) where
+module Game.Cubbit.Update (update, pickBlock) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind)
-import Control.Coroutine (Consumer, consumer)
-import Control.Monad.Aff (Aff, Canceler(..), launchAff, runAff)
-import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (CONSOLE, error, errorShow, logShow)
-import Control.Monad.Eff.Exception (EXCEPTION)
-import Control.Monad.Eff.Now (NOW)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
-import Control.Monad.Free (liftF)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
 import Data.Foldable (for_)
@@ -19,17 +14,16 @@ import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
-import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
-import Game.Cubbit.Hud (HudDriver, Query(..), queryToHud)
+import Game.Cubbit.Hud (Query(SetCursorPosition), queryToHud)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
-import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex, Options)
+import Game.Cubbit.Types (Effects, ForeachIndex, Materials, Mode(Move, Remove, Put), Options, State(State))
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -44,13 +38,9 @@ import Graphics.Babylon.Skeleton (beginAnimation)
 import Graphics.Babylon.TargetCamera (TargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3, subtract, length)
-import Graphics.Canvas (CANVAS)
-import Halogen (HalogenEffects, HalogenIO, eventSource)
-import Halogen.Query (action)
-import Halogen.Query.EventSource (eventSource')
+import Halogen (HalogenIO)
 import Math (atan2, cos, max, pi, round, sin, sqrt)
-import Network.HTTP.Affjax (AJAX)
-import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), type (~>))
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
 playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
 playAnimation name ref = do
@@ -391,6 +381,4 @@ foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable
 
 foreign import setTextContent :: forall eff. String -> String -> Eff (dom :: DOM | eff) Unit
 
-foreign import requestPointerLock :: ∀eff . ({ movementX :: Number, movementY :: Number } -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit -> Eff (dom :: DOM | eff) Unit
 
-foreign import exitPointerLock :: ∀eff . Eff (dom :: DOM | eff) Unit

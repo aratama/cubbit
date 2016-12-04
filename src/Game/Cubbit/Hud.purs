@@ -6,34 +6,42 @@ import Control.Monad.Aff (Aff, runAff)
 import Control.Monad.Aff.Console (CONSOLE)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Eff.Ref (Ref, modifyRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
 import DOM.Event.Types (mouseEventToEvent)
+import DOM.HTML.Types (HTMLElement)
+import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(..))
+import Data.Ord (max, min)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Game.Cubbit.Types (Mode(..), State(..))
+import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
+import Game.Cubbit.Types (Mode(..), State(..), Options)
+import Game.Cubbit.Vec (Vec)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
 import Halogen.Aff.Util (awaitBody)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), button, div, img, p, prop, text)
 import Halogen.HTML.Elements (canvas)
-import Halogen.HTML.Events (input_, onClick, onContextMenu)
+import Halogen.HTML.Events (onClick, onContextMenu)
 import Halogen.HTML.Properties (LengthLiteral(..), I, IProp, class_, height, id_, src, width)
 import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
+import Math (pi)
 import Network.HTTP.Affjax (AJAX)
-import Prelude (type (~>), bind, pure, ($), (<>), show, (/=))
+import Prelude (type (~>), bind, pure, ($), (<>), show, (/=), (+), (*), negate, (-))
 import Unsafe.Coerce (unsafeCoerce)
 
-type HudState = { ref :: Ref State, cursorPosition :: BlockIndex }
+type HudState = { ref :: Ref State, cursorPosition :: BlockIndex, options :: Options }
 
-initialState :: Ref State -> HudState
-initialState ref = { ref, cursorPosition: blockIndex 0 0 0 }
+initialState :: Ref State -> Options -> HudState
+initialState ref options = { ref, cursorPosition: blockIndex 0 0 0, options }
 
 data Query a = SetCursorPosition BlockIndex a
              | PreventDefault Event a
              | SetMode Mode a
+             | SetPosition Vec a
+             | TogglePointerLock a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
@@ -49,9 +57,8 @@ render state = div [id_ "content", class_ (ClassName "content-layer"), onContext
         button [id_ "move", onClick \e -> Just (SetMode Move unit)] [text "Move"],
         button [id_ "add", onClick \e -> Just (SetMode Put unit)] [text "Add"],
         button [id_ "remove", onClick \e -> Just (SetMode Remove unit)] [text "Remove"],
-        button [id_ "position"] [text "Init Pos"],
-        button [id_ "minimap"] [text "Minimap"],
-        button [id_ "first-person-view"] [text "Fst Person View"],
+        button [id_ "position", onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [text "Init Pos"],
+        button [id_ "first-person-view", onClick \e -> Just (TogglePointerLock unit)] [text "Fst Person View"],
         button [id_ "debuglayer"] [text "DebugLayer"]
     ],
     div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"]
@@ -83,17 +90,41 @@ eval = case _ of
         liftEff (modifyRef state.ref (\(State s) -> State s { mode = mode }))
         pure next
 
-ui :: forall eff. Ref State -> Component HTML Query Void (Aff (HudEffects eff))
-ui ref = component { render, eval, initialState: initialState ref }
+    (SetPosition position next) -> do
+        state <- get
+        liftEff (modifyRef state.ref (\(State s) -> State s { position = position }))
+        pure next
+
+    (TogglePointerLock next) -> do
+        s <- get
+        liftEff do
+            modifyRef s.ref (\(State state) -> State state { firstPersonView = not state.firstPersonView })
+            State state <- readRef s.ref
+            let options = s.options
+            if state.firstPersonView
+                then requestPointerLock (\e -> do
+                    modifyRef s.ref (\(State state) -> State state {
+                        playerRotation = state.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
+                        playerPitch = max (-pi * 0.45) (min (pi * 0.45) state.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                    })
+                    pure unit
+                ) (modifyRef s.ref (\(State state) -> State state {
+                    firstPersonView = false
+                }))
+                else exitPointerLock
+        pure next
+
+ui :: forall eff. Ref State -> Options -> Component HTML Query Void (Aff (HudEffects eff))
+ui ref options = component { render, eval, initialState: initialState ref options }
 
 
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
-initializeHud :: forall eff. Ref State -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud ref = do
-    body <- awaitBody
-    runUI (ui ref) body
+initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud ref options body = do
+
+    runUI (ui ref options) body
 
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
