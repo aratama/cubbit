@@ -21,7 +21,7 @@ import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
-import Game.Cubbit.Hud (HudDriver, initializeHud)
+import Game.Cubbit.Hud (HudDriver, initializeHud, queryToHud, Query(..))
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (readOptions)
@@ -81,6 +81,9 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
         setFogColor fogColor sce
         setCollisionsEnabled true sce
         pure sce
+
+
+
 
     -- load resources
     texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
@@ -238,6 +241,9 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
                     let index = chunkIndex x 0 z
                     createChunkMesh ref materials scene index
 
+
+
+        queryToHud driver (SetScene { scene, cursor, materials })
 
         -- start game loop
         engine # runRenderLoop do

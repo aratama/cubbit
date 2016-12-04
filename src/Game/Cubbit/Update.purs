@@ -1,4 +1,4 @@
-module Game.Cubbit.Update (update, pickBlock) where
+module Game.Cubbit.Update (update) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
@@ -20,6 +20,7 @@ import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
+import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud (Query(SetCursorPosition), queryToHud)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
@@ -41,86 +42,6 @@ import Graphics.Babylon.Vector3 (createVector3, runVector3, subtract, length)
 import Halogen (HalogenIO)
 import Math (atan2, cos, max, pi, round, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
-
-playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
-playAnimation name ref = do
-    State state <- readRef ref
-    for_ state.playerMeshes \mesh -> void do
-        skeleton <- getSkeleton mesh
-        animatable <- beginAnimation name true 1.0 pure skeleton
-        when (isNothing animatable) do
-            error ("playAnimation: animation named \"" <> name <> "\" not found.")
-
-pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
-pickBlock scene cursor (State state) screenX screenY = do
-    let predicate mesh = do
-            let name = getName (abstractMeshToNode mesh)
-            pure (name /= "cursor")
-
-    pickingInfo <- pick screenX screenY predicate false scene
-
-    case getPickedPoint pickingInfo of
-        Nothing -> pure Nothing
-        Just point -> do
-            p <- runVector3 point
-            let dx = abs (p.x - round p.x)
-            let dy = abs (p.y - round p.y)
-            let dz = abs (p.z - round p.z)
-            let minDelta = min dx (min dy dz)
-            let lookupBlock' x y z = lookupSolidBlockByVec { x, y, z } state.terrain
-
-            let putCursor bi = do
-                    let rbi = runBlockIndex bi
-                    r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
-                    setPosition r cursor
-
-            case state.mode of
-                Put -> if minDelta == dx then do
-                        l <- lookupBlock' (p.x + 0.5) p.y p.z
-                        r <- lookupBlock' (p.x - 0.5) p.y p.z
-                        case l, r of
-                            Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex (p.x - 0.5) p.y p.z
-                            Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex (p.x + 0.5) p.y p.z
-                            _, _ -> pure Nothing
-                        else if minDelta == dy then do
-                                m <- lookupBlock' p.x (p.y + 0.5) p.z
-                                n <- lookupBlock' p.x (p.y - 0.5) p.z
-                                case m, n of
-                                    Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y - 0.5) p.z
-                                    Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y + 0.5) p.z
-                                    _, _ -> pure Nothing
-                            else do
-                                x <- lookupBlock' p.x p.y (p.z + 0.5)
-                                y <- lookupBlock' p.x p.y (p.z - 0.5)
-                                case x, y of
-                                    Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z - 0.5)
-                                    Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z + 0.5)
-                                    _, _ -> pure Nothing
-
-                Remove -> if minDelta == dx then do
-                        l <- lookupBlock' (p.x + 0.5) p.y p.z
-                        r <- lookupBlock' (p.x - 0.5) p.y p.z
-                        case l, r of
-                            Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex (p.x + 0.5) p.y p.z
-                            Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex (p.x - 0.5) p.y p.z
-                            _, _ -> pure Nothing
-                        else if minDelta == dy then do
-                                m <- lookupBlock' p.x (p.y + 0.5) p.z
-                                n <- lookupBlock' p.x (p.y - 0.5) p.z
-                                case m, n of
-                                    Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y + 0.5) p.z
-                                    Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x (p.y - 0.5) p.z
-                                    _, _ -> pure Nothing
-                            else do
-                                x <- lookupBlock' p.x p.y (p.z + 0.5)
-                                y <- lookupBlock' p.x p.y (p.z - 0.5)
-                                case x, y of
-                                    Just block, Nothing -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z + 0.5)
-                                    Nothing, Just block -> pure $ Just $ globalPositionToGlobalIndex p.x p.y (p.z - 0.5)
-                                    _, _ -> pure Nothing
-
-                Move -> pure Nothing
-
 
 update :: forall eff. Ref State
                    -> Scene
