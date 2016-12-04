@@ -9,30 +9,7 @@ Minecraft-like sandbox game project written in PureScript. See [the article](htt
 
 You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge.
 
-W/A/S/D key to move the charactor. Right mouse drag or Q/E/R/F/T/G key to look  around. Space key to jump.
-
-
-## Build
-
-```
-$ psc --version
-0.10.2
-$ npm install
-$ bower update
-$ npm run build
-```
-
-## License Attribution
-
-This game is my private project and **not** licensed. You can read the source files to study Functional Programming or PureScript, but all rights are reserved. I might make this repository private later.
-
-This project includes following libraries, fonts, images and audio files:
-
-* Babylonjs (http://www.babylonjs.com/)
-* josephg/noisejs (https://github.com/josephg/noisejs)
-* 刻明朝 (http://freefonts.jp/font-koku-min.html)
-* Skyboxes (http://www.alabsoft.com/unity3d.shtml)
-* ForestBirds.wav (https://www.freesound.org/people/HerbertBoland/sounds/28239/)
+W/A/S/D key to move the charactor. Right mouse drag or Q/E/R/F/T/G key to look  around. Space key to jump. Press the "Add" button or the "Remove" button to edit terrain blocks. Have fun!
 
 ----
 
