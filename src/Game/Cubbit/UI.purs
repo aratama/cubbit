@@ -15,10 +15,7 @@ import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Types (Effects, Materials, Mode(..), State(State), Options)
 import Game.Cubbit.Update (pickBlock, requestPointerLock, exitPointerLock)
 import Graphics.Babylon (Canvas)
-import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
-import Graphics.Babylon.FreeCamera (FreeCamera, freeCameraToCamera)
-import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Scene (getDebugLayer, setActiveCameras)
 import Graphics.Babylon.TargetCamera (TargetCamera, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
@@ -58,18 +55,6 @@ initializeUI canvasGL canvas2d ref cursor camera miniMapCamera scene materials o
                 y: e.offsetY
             }
         }
-
-    let prepareModeButton id value = onButtonClick id do
-            modifyRef ref (\(State state) -> State state { mode = value })
-            setIsVisible (case value of
-                Put -> true
-                Remove -> true
-                Move -> false) (meshToAbstractMesh cursor)
-
-
-    prepareModeButton "move" Move
-    prepareModeButton "add" Put
-    prepareModeButton "remove" Remove
 
     onButtonClick "position" $ void do
         modifyRef ref \(State state) -> State state {

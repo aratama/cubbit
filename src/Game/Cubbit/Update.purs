@@ -31,7 +31,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
 import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setRotation, setVisibility)
+import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
@@ -379,6 +379,13 @@ update ref scene materials shadowMap cursor camera options skybox driver = do
                                 r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                                 setPosition r cursor
                                 queryToHud driver (SetCursorPosition bi)
+
+            do
+                setIsVisible (case state.mode of
+                    Put -> true
+                    Remove -> true
+                    Move -> false) (meshToAbstractMesh cursor)
+
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex
 
