@@ -20,18 +20,17 @@ import Data.Show (show)
 import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
-import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
+import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud (HudDriver, initializeHud, queryToHud, Query(..))
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (CoreEffects, Effects, Mode(Move), State(State), Options)
-import Game.Cubbit.UI (initializeUI)
+import Game.Cubbit.Types (Effects, Mode(Move), Options, State(State))
 import Game.Cubbit.Update (update)
-import Graphics.Babylon (BABYLON, Canvas, onDOMContentLoaded, querySelectorCanvas)
+import Graphics.Babylon (BABYLON, Canvas, querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
-import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom, setMaxZ, setMinZ, setFOV)
+import Graphics.Babylon.Camera (setFOV, setMaxZ, setMinZ)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
@@ -50,12 +49,11 @@ import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCamer
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
-import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CANVAS, CanvasElement, getCanvasElementById)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
-import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
+import Prelude (negate, void, (#), ($), (/), (<$>))
 
 
 runApp :: forall eff. Canvas
@@ -166,9 +164,6 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
         -- prepare materials
         materials <- initializeMaterials scene skybox texture alphaTexture options
 
-        initializeUI canvasGL canvas2d ref cursor targetCamera scene materials options
-
-
         -- initialize player charactor mesh
         for_ playerMeshes \mesh -> void do
             p <- createVector3 0.5 13.0 0.5
@@ -180,58 +175,8 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
             --playAnimation "Stand" ref
             -- beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
 
-
-        -- TODO: handle key events
-        onKeyDown \e -> do
-            when (e.keyCode == 32) do
-                modifyRef ref \(State state) -> State state {
-                    velocity = state.velocity { y = state.velocity.y + options.jumpVelocity }
-                }
-
-            when (e.keyCode == 87) do -- w
-                modifyRef ref \(State state) -> State state { wKey = true }
-            when (e.keyCode == 83) do -- s
-                modifyRef ref \(State state) -> State state { sKey = true }
-            when (e.keyCode == 65) do -- a
-                modifyRef ref \(State state) -> State state { aKey = true }
-            when (e.keyCode == 68) do -- d
-                modifyRef ref \(State state) -> State state { dKey = true }
-            when (e.keyCode == 82) do -- r
-                modifyRef ref \(State state) -> State state { rKey = true }
-            when (e.keyCode == 70) do -- f
-                modifyRef ref \(State state) -> State state { fKey = true }
-            when (e.keyCode == 81) do -- q
-                modifyRef ref \(State state) -> State state { qKey = true }
-            when (e.keyCode == 69) do -- e
-                modifyRef ref \(State state) -> State state { eKey = true }
-            when (e.keyCode == 84) do -- t
-                modifyRef ref \(State state) -> State state { tKey = true }
-            when (e.keyCode == 71) do -- g
-                modifyRef ref \(State state) -> State state { gKey = true }
-
-        onKeyUp \e -> do
-            when (e.keyCode == 87) do -- w
-                modifyRef ref \(State state) -> State state { wKey = false }
-            when (e.keyCode == 83) do -- s
-                modifyRef ref \(State state) -> State state { sKey = false }
-            when (e.keyCode == 65) do -- a
-                modifyRef ref \(State state) -> State state { aKey = false }
-            when (e.keyCode == 68) do -- d
-                modifyRef ref \(State state) -> State state { dKey = false }
-            when (e.keyCode == 82) do -- r
-                modifyRef ref \(State state) -> State state { rKey = false }
-            when (e.keyCode == 70) do -- f
-                modifyRef ref \(State state) -> State state { fKey = false }
-            when (e.keyCode == 81) do -- q
-                modifyRef ref \(State state) -> State state { qKey = false }
-            when (e.keyCode == 69) do -- e
-                modifyRef ref \(State state) -> State state { eKey = false }
-            when (e.keyCode == 84) do -- t
-                modifyRef ref \(State state) -> State state { tKey = false }
-            when (e.keyCode == 71) do -- g
-                modifyRef ref \(State state) -> State state { gKey = false }
         -- focus
-        focus "renderCanvas"
+        focus "content"
 
         -- load initial chunks
         do

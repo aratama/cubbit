@@ -8,17 +8,19 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
-import DOM.Event.MouseEvent (MouseEvent)
-import DOM.Event.Types (mouseEventToEvent)
+import DOM.Event.KeyboardEvent (KeyboardEvent, key, keyboardEventToEvent)
+import DOM.Event.MouseEvent (MouseEvent, buttons)
+import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import DOM.HTML.Types (HTMLElement)
 import Data.BooleanAlgebra (not)
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Ord (max, min)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (airBlock, dirtBlock)
-import Game.Cubbit.Control (playAnimation, pickBlock)
+import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Types (Mode(..), Options, State(..), Materials)
@@ -30,13 +32,13 @@ import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), button, div, img, p, prop, text)
 import Halogen.HTML.Elements (canvas)
-import Halogen.HTML.Events (onClick, onContextMenu, onMouseDown, onMouseMove)
-import Halogen.HTML.Properties (LengthLiteral(..), I, IProp, class_, height, id_, src, width)
+import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
+import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
 import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
 import Math (pi)
 import Network.HTTP.Affjax (AJAX)
-import Prelude (type (~>), bind, pure, ($), (<>), show, (/=), (+), (*), negate, (-), (>>=))
+import Prelude (type (~>), bind, pure, ($), (<>), show, (/=), (+), (*), negate, (-), (>>=), (<<<), (==))
 import Unsafe.Coerce (unsafeCoerce)
 
 type HudState = {
@@ -58,6 +60,9 @@ data Query a = SetCursorPosition BlockIndex a
              | OnMouseClick MouseEvent a
              | SetScene SceneObjects a
              | ToggleDebugLayer a
+             | Zoom MouseEvent a
+             | OnKeyDown KeyboardEvent a
+             | OnKeyUp KeyboardEvent a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
 
@@ -68,8 +73,21 @@ type SceneObjects = {
 }
 
 render :: HudState -> ComponentHTML Query
-render state = div [id_ "content", class_ (ClassName "content-layer"), onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))) ] [
-    canvas [id_ "renderCanvas", onMouseMove \e -> Just (SetMousePosition e unit), onMouseDown \e -> Just (OnMouseClick e unit)],
+render state = div [
+    id_ "content",
+    class_ (ClassName "content-layer"),
+    onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
+    tabIndex 0,
+    unsafeCoerce (autofocus true),
+    onKeyDown \e -> Just (OnKeyDown e unit),
+    onKeyUp \e -> Just (OnKeyUp e unit)
+] [
+    canvas [
+        id_ "renderCanvas",
+        onMouseMove \e -> Just (SetMousePosition e unit),
+        onMouseDown \e -> Just (OnMouseClick e unit),
+        onWheel \e -> Just (Zoom e unit)
+    ],
     canvas [id_ "canvas2d", width $ Pixels 1280, height $ Pixels 720],
     img [src "screenshade.png", styleStr "pointer-events:none; display:block; position:absolute; left:0; top:0; width:100%; height: 100%;"],
 
@@ -139,12 +157,23 @@ eval = case _ of
     (SetMousePosition e next) -> do
         s <- get
         liftEff do
-            modifyRef s.ref \(State s) -> State s {
-                mousePosition = {
-                    x: offsetX e ,
-                    y: offsetY e
-                }
-            }
+            case s.scene of
+                Nothing -> pure unit
+                Just objs -> void do
+
+                    modifyRef s.ref \(State state) ->
+                        let isRightButton = buttons e == 2
+                            dx = offsetX e - state.mousePosition.x
+                            dy = offsetY e - state.mousePosition.y
+                                in State state {
+                                        mousePosition = {
+                                            x: offsetX e ,
+                                            y: offsetY e
+                                        },
+                                        cameraYaw = if isRightButton then state.cameraYaw + toNumber dx * s.options.cameraHorizontalSensitivity else state.cameraYaw,
+                                        cameraPitch = if isRightButton then max (-pi * 0.45) $ min (pi * 0.45) $ state.cameraPitch + toNumber dy * s.options.cameraVertialSensitivity else state.cameraPitch
+                                    }
+
         pure next
 
     (SetScene scene next) -> do
@@ -173,6 +202,13 @@ eval = case _ of
 
             State state <- readRef s.ref
 
+            modifyRef s.ref \(State s) -> State s {
+                mousePosition = {
+                    x: offsetX e ,
+                    y: offsetY e
+                }
+            }
+
             case s.scene of
                 Nothing -> pure unit
                 Just objs -> do
@@ -188,6 +224,65 @@ eval = case _ of
                         Remove -> put airBlock
                         Move -> pure unit
 
+        pure next
+
+    (Zoom e next) -> do
+        s <- get
+        liftEff do
+            case s.scene of
+                Nothing -> pure unit
+                Just objs -> do
+                    modifyRef s.ref \(State state) -> State state {
+                        cameraRange = max s.options.cameraMinimumRange (min s.options.cameraMaximumRange (state.cameraRange + (toNumber (deltaY e) * s.options.cameraZoomSpeed)))
+                    }
+        pure next
+
+
+    (OnKeyDown e next) -> do
+        s <- get
+        let ref = s.ref
+        let options = s.options
+        liftEff do
+            case key e of
+                " " -> void do
+                    modifyRef ref \(State state) -> State state {
+                            velocity = state.velocity { y = state.velocity.y + options.jumpVelocity }
+                        }
+                "w" -> void do modifyRef ref \(State state) -> State state { wKey = true }
+                "s" -> void do modifyRef ref \(State state) -> State state { sKey = true }
+                "a" -> void do modifyRef ref \(State state) -> State state { aKey = true }
+                "d" -> void do modifyRef ref \(State state) -> State state { dKey = true }
+                "r" -> void do modifyRef ref \(State state) -> State state { rKey = true }
+                "f" -> void do modifyRef ref \(State state) -> State state { fKey = true }
+                "q" -> void do modifyRef ref \(State state) -> State state { qKey = true }
+                "e" -> void do modifyRef ref \(State state) -> State state { eKey = true }
+                "t" -> void do modifyRef ref \(State state) -> State state { tKey = true }
+                "g" -> void do modifyRef ref \(State state) -> State state { gKey = true }
+                _ -> pure unit
+            preventDefault (keyboardEventToEvent e)
+            stopPropagation (keyboardEventToEvent e)
+
+        pure next
+
+    (OnKeyUp e next) -> do
+        s <- get
+        let ref = s.ref
+        let options = s.options
+        liftEff do
+            case key e of
+                "w" -> void do modifyRef ref \(State state) -> State state { wKey = false }
+                "s" -> void do modifyRef ref \(State state) -> State state { sKey = false }
+                "a" -> void do modifyRef ref \(State state) -> State state { aKey = false }
+                "d" -> void do modifyRef ref \(State state) -> State state { dKey = false }
+                "r" -> void do modifyRef ref \(State state) -> State state { rKey = false }
+                "f" -> void do modifyRef ref \(State state) -> State state { fKey = false }
+                "q" -> void do modifyRef ref \(State state) -> State state { qKey = false }
+                "e" -> void do modifyRef ref \(State state) -> State state { eKey = false }
+                "t" -> void do modifyRef ref \(State state) -> State state { tKey = false }
+                "g" -> void do modifyRef ref \(State state) -> State state { gKey = false }
+                _ -> pure unit
+            preventDefault (keyboardEventToEvent e)
+            stopPropagation (keyboardEventToEvent e)
         pure next
 
 ui :: forall eff. Ref State -> Options -> Component HTML Query Void (Aff (HudEffects eff))
@@ -206,3 +301,13 @@ offsetX e = (unsafeCoerce e).offsetX
 
 offsetY :: MouseEvent -> Int
 offsetY e = (unsafeCoerce e).offsetY
+
+deltaY :: MouseEvent -> Int
+deltaY e = (unsafeCoerce e).deltaY
+
+onWheel :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseDown :: I | r) i
+onWheel = handler (EventType "wheel") <<< mouseHandler
+
+mouseHandler :: forall i. (MouseEvent -> Maybe i) -> Event -> Maybe i
+mouseHandler = unsafeCoerce
+
