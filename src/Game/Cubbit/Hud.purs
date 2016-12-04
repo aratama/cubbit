@@ -80,7 +80,7 @@ render state = div [
         width $ Pixels 1280,
         height $ Pixels 720
     ],
-    img [src "screenshade.png", styleStr "pointer-events:none; display:block; position:absolute; left:0; top:0; width:100%; height: 100%;"],
+    img [id_ "screen-shade", src "screenshade.png"],
 
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
