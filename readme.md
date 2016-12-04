@@ -9,7 +9,7 @@ Minecraft-like sandbox game project written in PureScript. See [the article](htt
 
 You can play the working demo at https://aratama.github.io/cubbit/ if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge.
 
-W/A/S/D key to move the charactor. Q/E/R/F/T/G key to look  around. Space key to jump.
+W/A/S/D key to move the charactor. Right mouse drag or Q/E/R/F/T/G key to look  around. Space key to jump.
 
 
 ## Build
