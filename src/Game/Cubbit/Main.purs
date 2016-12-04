@@ -1,15 +1,12 @@
 module Game.Cubbit.Main (main) where
 
 import Control.Alternative (pure)
-import Control.Bind (bind, when)
-import Control.Monad.Aff (runAff)
-import Control.Monad.Aff.Console (CONSOLE)
+import Control.Bind (bind)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (errorShow, error)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Exception (error) as EXP
-import Control.Monad.Eff.Now (NOW)
-import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef)
+import Control.Monad.Eff.Ref (modifyRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
@@ -21,14 +18,14 @@ import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (focus)
-import Game.Cubbit.Hud (HudDriver, initializeHud, queryToHud, Query(..))
+import Game.Cubbit.Hud (initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(Move), Options, State(State))
+import Game.Cubbit.Types (Effects, Mode(Move), State(State))
 import Game.Cubbit.Update (update)
-import Graphics.Babylon (BABYLON, Canvas, querySelectorCanvas)
+import Graphics.Babylon (querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Camera (setFOV, setMaxZ, setMinZ)
 import Graphics.Babylon.Color3 (createColor3)
@@ -49,86 +46,82 @@ import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCamer
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
-import Graphics.Canvas (CANVAS, CanvasElement, getCanvasElementById)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
-import Prelude (negate, void, (#), ($), (/), (<$>))
+import Prelude (negate, void, (#), ($), (/), (<$>), (>>=))
 
+main :: forall eff. Eff (Effects eff) Unit
+main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
+    Nothing -> error "canvasGL not found"
+    Just canvasGL -> runHalogenAff do
 
-runApp :: forall eff. Canvas
-                   -> CanvasElement
-                   -> Ref State
-                   -> HudDriver (
-                        canvas :: CANVAS,
-                        now :: NOW,
-                        console :: CONSOLE,
-                        babylon :: BABYLON,
-                        ref :: REF | eff) -> Options -> Eff (Effects eff) Unit
-runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
+        -- NOTE: have to do awaitBody before getting options
+        body <- awaitBody
 
+        -- load options
+        response <- get "options.json"
+        options <- case runExcept (readOptions response.response) of
+            Left err -> throwError (EXP.error (show err))
+            Right opt -> pure opt
 
+        engine <- liftEff $ createEngine canvasGL true
 
-    engine <- liftEff $ createEngine canvasGL true
+        scene <- liftEff do
+            sce <- createScene engine
+            setFogMode fOGMODE_EXP sce
+            setFogDensity options.fogDensity sce
+            fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
+            setFogColor fogColor sce
+            setCollisionsEnabled true sce
+            pure sce
 
-    scene <- liftEff do
-        sce <- createScene engine
-        setFogMode fOGMODE_EXP sce
-        setFogDensity options.fogDensity sce
-        fogColor <- createColor3 (155.0 / 255.0) (181.0 / 255.0) (230.0 / 255.0)
-        setFogColor fogColor sce
-        setCollisionsEnabled true sce
-        pure sce
+        -- initialize game state
+        initialTerrain <- liftEff $ emptyTerrain 0
+        ref <- liftEff $ newRef $ State {
+            mode: Move,
+            terrain: initialTerrain,
+            mousePosition: { x: 0, y: 0 },
+            debugLayer: false,
 
+            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
+            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
+            cameraYaw: 0.0,
+            cameraPitch: 0.7,
+            cameraRange: 5.0,
+            firstPersonView: false,
+            firstPersonViewPitch: 0.0,
 
+            position: { x: 0.5, y: 10.0, z: 0.5 },
+            velocity: { x: 0.0, y: 0.0, z: 0.0 },
+            playerRotation: 0.5,
+            playerPitch: 0.0,
+            minimap: false,
+            totalFrames: 0,
+            playerMeshes: [],
+            updateIndex: toNullable Nothing,
 
+            wKey: false,
+            sKey: false,
+            aKey: false,
+            dKey: false,
+            qKey: false,
+            eKey: false,
+            rKey: false,
+            fKey: false,
+            tKey: false,
+            gKey: false,
 
-    -- load resources
-    texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
-    alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
-    loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
-    playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
-    forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
+            animation: ""
+        }
 
-    liftEff do
+        texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
+        alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
+        loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
+        playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
+        forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
 
-        modifyRef ref (\(State state) -> State state { playerMeshes = playerMeshes })
-
-        -- initialize scene
-        targetCamera <- do
-            position <- createVector3 10.0 20.0 (negate 10.0)
-            camera <- createTargetCamera "target-camera" position scene
-            cameraTarget <- createVector3 0.0 8.0 0.0
-            setTarget cameraTarget camera
-            setMaxZ options.cameraMaxZ (targetCameraToCamera camera)
-            setMinZ options.cameraMinZ (targetCameraToCamera camera)
-            setFOV options.cameraFOV (targetCameraToCamera camera)
-            pure camera
-
-
-        setActiveCameras [targetCameraToCamera targetCamera] scene
-        setActiveCamera (targetCameraToCamera targetCamera) scene
-
-        do
-            hemiPosition <- createVector3 0.0 1.0 0.0
-            hemiLight <- createHemisphericLight "Hemi0" hemiPosition scene
-            diffuse <- createColor3 0.6 0.6 0.6
-            setDiffuse diffuse (hemisphericLightToLight hemiLight)
-
-        shadowMap <- do
-            -- create a basic light, aiming 0,1,0 - meaning, to the sky
-            lightDirection <- createVector3 0.3 (negate 1.0) 0.5
-            light <- createDirectionalLight "light1" lightDirection scene
-            dirColor <- createColor3 0.8 0.8 0.8
-            setDiffuse dirColor (directionalLightToLight light)
-
-            -- shadow
-            shadowGenerator <- createShadowGenerator options.shadowMapSize light  -- over 8192 pixel-size texture causes performance regressions
-            setBias 0.000005 shadowGenerator
-            setUsePoissonSampling true shadowGenerator
-            getShadowMap shadowGenerator
-
-        cursor <- do
+        cursor <- liftEff do
             cursorbox <- createBox "cursor" 1.0 scene
             setRenderingGroupId 1 (meshToAbstractMesh cursorbox)
             setIsPickable false (meshToAbstractMesh cursorbox)
@@ -141,7 +134,7 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
             pure cursorbox
 
         -- skybox
-        skybox <- do
+        skybox <- liftEff do
             skyBoxCubeTex <- createCubeTexture "skybox/skybox" scene
             setCoordinatesMode sKYBOX_MODE (cubeTextureToTexture skyBoxCubeTex)
 
@@ -162,103 +155,75 @@ runApp canvasGL canvas2d ref driver options = void $ runAff errorShow pure do
             pure skyboxMesh
 
         -- prepare materials
-        materials <- initializeMaterials scene skybox texture alphaTexture options
-
-        -- initialize player charactor mesh
-        for_ playerMeshes \mesh -> void do
-            p <- createVector3 0.5 13.0 0.5
-            setPosition p mesh
-            setRenderingGroupId 1 mesh
-            setReceiveShadows true mesh
-            skeleton <- getSkeleton mesh
-            setMaterial materials.cellShadingMaterial mesh
-            --playAnimation "Stand" ref
-            -- beginAnimation skeleton 0 30 true 1.0 (toNullable Nothing) (toNullable Nothing) scene
-
-        -- focus
-        focus "content"
-
-        -- load initial chunks
-        do
-            let initialWorldSize = options.initialWorldSize
-            forE (-initialWorldSize) initialWorldSize \x -> do
-                forE (-initialWorldSize) initialWorldSize \z -> void do
-                    let index = chunkIndex x 0 z
-                    createChunkMesh ref materials scene index
+        materials <- liftEff $ initializeMaterials scene skybox texture alphaTexture options
 
 
+        -- initialize hud
+        driver <- initializeHud ref options body scene cursor materials
 
-        queryToHud driver (SetScene { scene, cursor, materials })
+        liftEff do
 
-        -- start game loop
-        engine # runRenderLoop do
-            update ref scene materials shadowMap cursor targetCamera options skybox driver
-            render scene
+            modifyRef ref (\(State state) -> State state { playerMeshes = playerMeshes })
 
-        hideLoading
-
-main :: forall eff. Eff (Effects eff) Unit
-main = runHalogenAff do
-
-    -- initialize game state
-    initialTerrain <- liftEff $ emptyTerrain 0
-    ref <- liftEff $ newRef $ State {
-        mode: Move,
-        terrain: initialTerrain,
-        mousePosition: { x: 0, y: 0 },
-        debugLayer: false,
-
-        cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
-        cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
-        cameraYaw: 0.0,
-        cameraPitch: 0.7,
-        cameraRange: 5.0,
-        firstPersonView: false,
-        firstPersonViewPitch: 0.0,
-
-        position: { x: 0.5, y: 10.0, z: 0.5 },
-        velocity: { x: 0.0, y: 0.0, z: 0.0 },
-        playerRotation: 0.5,
-        playerPitch: 0.0,
-        minimap: false,
-        totalFrames: 0,
-        playerMeshes: [],
-        updateIndex: toNullable Nothing,
-
-        wKey: false,
-        sKey: false,
-        aKey: false,
-        dKey: false,
-        qKey: false,
-        eKey: false,
-        rKey: false,
-        fKey: false,
-        tKey: false,
-        gKey: false,
-
-        animation: ""
-    }
-
-    -- NOTE: have to do awaitBody before getting options
-    body <- awaitBody
-
-    -- load options
-    response <- get "options.json"
-    options <- case runExcept (readOptions response.response) of
-        Left err -> throwError (EXP.error (show err))
-        Right opt -> pure opt
+            -- initialize scene
+            targetCamera <- do
+                position <- createVector3 10.0 20.0 (negate 10.0)
+                camera <- createTargetCamera "target-camera" position scene
+                cameraTarget <- createVector3 0.0 8.0 0.0
+                setTarget cameraTarget camera
+                setMaxZ options.cameraMaxZ (targetCameraToCamera camera)
+                setMinZ options.cameraMinZ (targetCameraToCamera camera)
+                setFOV options.cameraFOV (targetCameraToCamera camera)
+                pure camera
 
 
-    -- initialize hud
-    driver <- initializeHud ref options body
+            setActiveCameras [targetCameraToCamera targetCamera] scene
+            setActiveCamera (targetCameraToCamera targetCamera) scene
 
-    liftEff $ do
-        canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
-        canvas2dM <- getCanvasElementById "canvas2d"
-        case canvasM, canvas2dM of
-            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref driver options
-            _, _ -> error "canvasGL not found"
+            do
+                hemiPosition <- createVector3 0.0 1.0 0.0
+                hemiLight <- createHemisphericLight "Hemi0" hemiPosition scene
+                diffuse <- createColor3 0.6 0.6 0.6
+                setDiffuse diffuse (hemisphericLightToLight hemiLight)
 
+            shadowMap <- do
+                -- create a basic light, aiming 0,1,0 - meaning, to the sky
+                lightDirection <- createVector3 0.3 (negate 1.0) 0.5
+                light <- createDirectionalLight "light1" lightDirection scene
+                dirColor <- createColor3 0.8 0.8 0.8
+                setDiffuse dirColor (directionalLightToLight light)
 
+                -- shadow
+                shadowGenerator <- createShadowGenerator options.shadowMapSize light  -- over 8192 pixel-size texture causes performance regressions
+                setBias 0.000005 shadowGenerator
+                setUsePoissonSampling true shadowGenerator
+                getShadowMap shadowGenerator
+
+            -- initialize player charactor mesh
+            for_ playerMeshes \mesh -> void do
+                p <- createVector3 0.5 13.0 0.5
+                setPosition p mesh
+                setRenderingGroupId 1 mesh
+                setReceiveShadows true mesh
+                skeleton <- getSkeleton mesh
+                setMaterial materials.cellShadingMaterial mesh
+
+            -- load initial chunks
+            do
+                let initialWorldSize = options.initialWorldSize
+                forE (-initialWorldSize) initialWorldSize \x -> do
+                    forE (-initialWorldSize) initialWorldSize \z -> void do
+                        let index = chunkIndex x 0 z
+                        createChunkMesh ref materials scene index
+
+            -- start game loop
+            engine # runRenderLoop do
+                update ref scene materials shadowMap cursor targetCamera options skybox driver
+                render scene
+
+            -- focus
+            focus "content"
+
+            hideLoading
 
 foreign import hideLoading :: forall eff. Eff eff Unit
