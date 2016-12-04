@@ -50,7 +50,7 @@ import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
 import Graphics.Canvas (CanvasElement, getCanvasElementById)
-import Halogen.Util (runHalogenAff)
+import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
 
@@ -306,7 +306,7 @@ main = runHalogenAff do
     }
 
 
-    -- initialize hud 
+    -- initialize hud
     driver <- initializeHud ref
 
     liftEff $ do
