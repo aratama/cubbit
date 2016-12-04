@@ -1,11 +1,16 @@
-module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud) where
+module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud, queryToHud) where
 
+import Control.Alt (void)
 import Control.Alternative (when)
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, runAff)
+import Control.Monad.Aff.Console (CONSOLE)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
 import DOM.Event.Types (mouseEventToEvent)
 import Data.Maybe (Maybe(..))
+import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.Types (State)
@@ -48,7 +53,7 @@ render state = div [id_ "content", class_ (ClassName "content-layer"), onContext
         button [id_ "first-person-view"] [text "Fst Person View"],
         button [id_ "debuglayer"] [text "DebugLayer"]
     ],
-    div [id_ "cursor-position"] [text $ show index.x <> ", " <> show index.y <> ", " <> show index.z]
+    div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"]
 ]
 
   where
@@ -83,3 +88,7 @@ initializeHud :: forall eff. Ref State -> Aff (HudEffects eff) (HudDriver eff)
 initializeHud ref = do
     body <- awaitBody
     runUI ui body
+
+
+queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
+queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

@@ -3,11 +3,13 @@ module Game.Cubbit.Main (main) where
 import Control.Alternative (pure)
 import Control.Bind (bind, when)
 import Control.Monad.Aff (runAff)
+import Control.Monad.Aff.Console (CONSOLE)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (errorShow, error)
 import Control.Monad.Eff.Exception (error) as EXP
-import Control.Monad.Eff.Ref (Ref, modifyRef, newRef)
+import Control.Monad.Eff.Now (NOW)
+import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
@@ -27,7 +29,7 @@ import Game.Cubbit.Terrain (emptyTerrain)
 import Game.Cubbit.Types (Effects, CoreEffects, Mode(Move), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
-import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
+import Graphics.Babylon (BABYLON, Canvas, onDOMContentLoaded, querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Camera (oRTHOGRAPHIC_CAMERA, setMode, setViewport, setOrthoLeft, setOrthoRight, setOrthoTop, setOrthoBottom, setMaxZ, setMinZ, setFOV)
 import Graphics.Babylon.Color3 (createColor3)
@@ -49,13 +51,21 @@ import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateT
 import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Viewport (createViewport)
-import Graphics.Canvas (CanvasElement, getCanvasElementById)
+import Graphics.Canvas (CANVAS, CanvasElement, getCanvasElementById)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
 
 
-runApp :: forall eff. Canvas -> CanvasElement -> Ref State -> HudDriver (CoreEffects eff) -> Eff (Effects eff) Unit
+runApp :: forall eff. Canvas
+                   -> CanvasElement
+                   -> Ref State
+                   -> HudDriver (
+                        canvas :: CANVAS,
+                        now :: NOW,
+                        console :: CONSOLE,
+                        babylon :: BABYLON,
+                        ref :: REF | eff) -> Eff (Effects eff) Unit
 runApp canvasGL canvas2d ref driver = void $ runAff errorShow pure do
 
     -- load options

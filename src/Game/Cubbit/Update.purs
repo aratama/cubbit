@@ -9,6 +9,7 @@ import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, error, errorShow, logShow)
 import Control.Monad.Eff.Exception (EXCEPTION)
+import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
 import Control.Monad.Free (liftF)
 import DOM (DOM)
@@ -25,7 +26,7 @@ import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
-import Game.Cubbit.Hud (HudDriver, Query(..))
+import Game.Cubbit.Hud (HudDriver, Query(..), queryToHud)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
 import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex, Options)
@@ -43,7 +44,8 @@ import Graphics.Babylon.Skeleton (beginAnimation)
 import Graphics.Babylon.TargetCamera (TargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3, subtract, length)
-import Halogen (HalogenEffects, eventSource)
+import Graphics.Canvas (CANVAS)
+import Halogen (HalogenEffects, HalogenIO, eventSource)
 import Halogen.Query (action)
 import Halogen.Query.EventSource (eventSource')
 import Math (atan2, cos, max, pi, round, sin, sqrt)
@@ -130,7 +132,16 @@ pickBlock scene cursor (State state) screenX screenY = do
                 Move -> pure Nothing
 
 
-update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> TargetCamera -> Options -> Mesh -> HudDriver (CoreEffects eff) -> Eff (Effects eff) Unit
+update :: forall eff. Ref State
+                   -> Scene
+                   -> Materials
+                   -> ShadowMap
+                   -> Mesh
+                   -> TargetCamera
+                   -> Options
+                   -> Mesh
+                   -> HalogenIO Query Void (Aff (Effects eff))
+                   -> Eff (Effects eff) Unit
 update ref scene materials shadowMap cursor camera options skybox driver = do
 
         State state@{ terrain: Terrain terrain } <- readRef ref
@@ -363,38 +374,11 @@ update ref scene materials shadowMap cursor camera options skybox driver = do
                         pickedBlock <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
                         case pickedBlock of
                             Nothing -> pure unit
-                            Just bi -> do
+                            Just bi -> void do
                                 let rbi = runBlockIndex bi
                                 r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                                 setPosition r cursor
-
-                                setTextContent "cursor-position" (show rbi.x <> ", " <> show rbi.y <> ", " <> show rbi.z)
-
-                                let e = eventSource
-
-                                --let v = driver :: N eff2
-                                --let t = driver.query :: Query ~> (Aff (HalogenEffects (ajax :: AJAX | eff2)))
-                                --let u = driver.query (SetCursorPosition bi unit) :: (Aff (HalogenEffects (ajax :: AJAX | eff2))) Unit
-
-                                --let p = runAff errorShow pure :: Aff (console :: CONSOLE | eff2) Unit -> Eff (console :: CONSOLE | eff2) (Canceler (console :: CONSOLE | eff2))
-
-
-
-                                --let v = (driver.query (SetCursorPosition bi unit)) :: Aff (avar :: AVAR, ref :: REF, err :: EXCEPTION, dom :: DOM, ajax :: AJAX | eff)  Unit
-                                --let s = launchAff (driver.query (SetCursorPosition bi unit)) -- :: forall eff. v Unit
-                                -- let s = runAff logShow (\_ -> pure unit) (driver.query (SetCursorPosition bi unit))
-
-
-                                pure unit
-
-
--- type HalogenIO f o m = { query :: f ~> m, subscribe :: CR.Consumer o m Unit -> m Unit }
-
--- = HalogenIO Query Void (Aff (HalogenEffects (ajax :: AJAX | eff)))
-type N eff = {
-    query :: Query ~> (Aff (HalogenEffects (ajax :: AJAX | eff))),
-    subscribe :: Consumer Void (Aff (HalogenEffects (ajax :: AJAX | eff))) Unit -> (Aff (HalogenEffects (ajax :: AJAX | eff))) Unit
-}
+                                queryToHud driver (SetCursorPosition bi)
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex
 
