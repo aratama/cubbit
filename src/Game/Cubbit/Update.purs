@@ -3,25 +3,32 @@ module Game.Cubbit.Update (update, pickBlock, requestPointerLock, exitPointerLoc
 import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind)
+import Control.Coroutine (Consumer, consumer)
+import Control.Monad.Aff (Aff, Canceler(..), launchAff, runAff)
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (error)
+import Control.Monad.Eff.Console (CONSOLE, error, errorShow, logShow)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, newRef, readRef, writeRef)
+import Control.Monad.Free (liftF)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
-import Data.Maybe (Maybe(Just, Nothing), isNothing)
+import Data.Maybe (Maybe(..), isNothing)
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (abs, min)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
+import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
+import Game.Cubbit.Hud (HudDriver, Query(..))
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
-import Game.Cubbit.Types (Effects, Mode(..), State(State), Materials, ForeachIndex, Options)
+import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex, Options)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -36,8 +43,12 @@ import Graphics.Babylon.Skeleton (beginAnimation)
 import Graphics.Babylon.TargetCamera (TargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3, subtract, length)
+import Halogen (HalogenEffects, eventSource)
+import Halogen.Query (action)
+import Halogen.Query.EventSource (eventSource')
 import Math (atan2, cos, max, pi, round, sin, sqrt)
-import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
+import Network.HTTP.Affjax (AJAX)
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), type (~>))
 
 playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
 playAnimation name ref = do
@@ -119,8 +130,8 @@ pickBlock scene cursor (State state) screenX screenY = do
                 Move -> pure Nothing
 
 
-update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> TargetCamera -> Options -> Mesh -> Eff (Effects eff) Unit
-update ref scene materials shadowMap cursor camera options skybox = do
+update :: forall eff. Ref State -> Scene -> Materials -> ShadowMap -> Mesh -> TargetCamera -> Options -> Mesh -> HudDriver (CoreEffects eff) -> Eff (Effects eff) Unit
+update ref scene materials shadowMap cursor camera options skybox driver = do
 
         State state@{ terrain: Terrain terrain } <- readRef ref
 
@@ -359,6 +370,31 @@ update ref scene materials shadowMap cursor camera options skybox = do
 
                                 setTextContent "cursor-position" (show rbi.x <> ", " <> show rbi.y <> ", " <> show rbi.z)
 
+                                let e = eventSource
+
+                                --let v = driver :: N eff2
+                                --let t = driver.query :: Query ~> (Aff (HalogenEffects (ajax :: AJAX | eff2)))
+                                --let u = driver.query (SetCursorPosition bi unit) :: (Aff (HalogenEffects (ajax :: AJAX | eff2))) Unit
+
+                                --let p = runAff errorShow pure :: Aff (console :: CONSOLE | eff2) Unit -> Eff (console :: CONSOLE | eff2) (Canceler (console :: CONSOLE | eff2))
+
+
+
+                                --let v = (driver.query (SetCursorPosition bi unit)) :: Aff (avar :: AVAR, ref :: REF, err :: EXCEPTION, dom :: DOM, ajax :: AJAX | eff)  Unit
+                                --let s = launchAff (driver.query (SetCursorPosition bi unit)) -- :: forall eff. v Unit
+                                -- let s = runAff logShow (\_ -> pure unit) (driver.query (SetCursorPosition bi unit))
+
+
+                                pure unit
+
+
+-- type HalogenIO f o m = { query :: f ~> m, subscribe :: CR.Consumer o m Unit -> m Unit }
+
+-- = HalogenIO Query Void (Aff (HalogenEffects (ajax :: AJAX | eff)))
+type N eff = {
+    query :: Query ~> (Aff (HalogenEffects (ajax :: AJAX | eff))),
+    subscribe :: Consumer Void (Aff (HalogenEffects (ajax :: AJAX | eff))) Unit -> (Aff (HalogenEffects (ajax :: AJAX | eff))) Unit
+}
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex
 

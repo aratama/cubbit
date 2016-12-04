@@ -1,14 +1,13 @@
-module Game.Cubbit.Hud (Query(..), initializeHud) where
+module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud) where
 
+import Control.Alternative (when)
 import Control.Monad.Aff (Aff)
-import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff.Ref (Ref)
-import DOM (DOM)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
 import DOM.Event.Types (mouseEventToEvent)
 import Data.Maybe (Maybe(..))
 import Data.Void (Void)
-import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
+import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.Types (State)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
 import Halogen.Aff.Util (awaitBody)
@@ -16,10 +15,10 @@ import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), button, div
 import Halogen.HTML.Elements (canvas)
 import Halogen.HTML.Events (onContextMenu)
 import Halogen.HTML.Properties (LengthLiteral(..), I, IProp, class_, height, id_, src, width)
-import Halogen.Query (action)
+import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
 import Network.HTTP.Affjax (AJAX)
-import Prelude (type (~>), bind, pure, ($))
+import Prelude (type (~>), bind, pure, ($), (<>), show, (/=))
 import Unsafe.Coerce (unsafeCoerce)
 
 type HudState = { cursorPosition :: BlockIndex }
@@ -30,7 +29,7 @@ initialState = { cursorPosition: blockIndex 0 0 0 }
 data Query a = SetCursorPosition BlockIndex a
              | PreventDefault Event a
 
-type Effects eff = (dom :: DOM, avar :: AVAR, ajax :: AJAX | eff)
+type HudEffects eff = HalogenEffects (ajax :: AJAX | eff)
 
 render :: HudState -> ComponentHTML Query
 render state = div [id_ "content", class_ (ClassName "content-layer"), onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))) ] [
@@ -49,29 +48,38 @@ render state = div [id_ "content", class_ (ClassName "content-layer"), onContext
         button [id_ "first-person-view"] [text "Fst Person View"],
         button [id_ "debuglayer"] [text "DebugLayer"]
     ],
-    div [id_ "cursor-position"] []
+    div [id_ "cursor-position"] [text $ show index.x <> ", " <> show index.y <> ", " <> show index.z]
 ]
+
+  where
+
+    index = runBlockIndex state.cursorPosition
 
 styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
 
-eval :: forall eff. Query ~> ComponentDSL HudState Query Void (Aff (Effects eff))
+eval :: forall eff. Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff))
 eval = case _ of
+
     (PreventDefault e next) -> do
         liftEff (preventDefault e)
         liftEff (stopPropagation e)
         pure next
 
     (SetCursorPosition position next) -> do
-        modify (\state -> state { cursorPosition = position })
+        state <- get
+        when (position /= state.cursorPosition) do
+            modify (_ { cursorPosition = position })
         pure next
 
-ui :: forall eff. Component HTML Query Void (Aff (Effects eff))
+ui :: forall eff. Component HTML Query Void (Aff (HudEffects eff))
 ui = component { render, eval, initialState }
 
-type E eff = HalogenEffects (ajax :: AJAX | eff)
 
-initializeHud :: forall eff. Ref State -> Aff (E eff) (HalogenIO Query Void (Aff (E eff)))
+
+type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
+
+initializeHud :: forall eff. Ref State -> Aff (HudEffects eff) (HudDriver eff)
 initializeHud ref = do
     body <- awaitBody
     runUI ui body

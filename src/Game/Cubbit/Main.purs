@@ -19,12 +19,12 @@ import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (onKeyDown, onKeyUp, focus)
-import Game.Cubbit.Hud (initializeHud)
+import Game.Cubbit.Hud (HudDriver, initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(Move), State(State))
+import Game.Cubbit.Types (Effects, CoreEffects, Mode(Move), State(State))
 import Game.Cubbit.UI (initializeUI)
 import Game.Cubbit.Update (update)
 import Graphics.Babylon (Canvas, onDOMContentLoaded, querySelectorCanvas)
@@ -55,8 +55,8 @@ import Network.HTTP.Affjax (get)
 import Prelude (negate, (#), ($), (+), (/), (<$>), (==), void)
 
 
-runApp :: forall eff. Canvas -> CanvasElement -> Ref State -> Eff (Effects eff) Unit
-runApp canvasGL canvas2d ref = void $ runAff errorShow pure do
+runApp :: forall eff. Canvas -> CanvasElement -> Ref State -> HudDriver (CoreEffects eff) -> Eff (Effects eff) Unit
+runApp canvasGL canvas2d ref driver = void $ runAff errorShow pure do
 
     -- load options
     response <- get "options.json"
@@ -258,7 +258,7 @@ runApp canvasGL canvas2d ref = void $ runAff errorShow pure do
 
         -- start game loop
         engine # runRenderLoop do
-            update ref scene materials shadowMap cursor targetCamera options skybox
+            update ref scene materials shadowMap cursor targetCamera options skybox driver
             render scene
 
         hideLoading
@@ -313,7 +313,7 @@ main = runHalogenAff do
         canvasM <- toMaybe <$> querySelectorCanvas "#renderCanvas"
         canvas2dM <- getCanvasElementById "canvas2d"
         case canvasM, canvas2dM of
-            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref
+            Just canvasGL, Just canvas2d -> runApp canvasGL canvas2d ref driver
             _, _ -> error "canvasGL not found"
 
 

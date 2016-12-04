@@ -14,16 +14,19 @@ import Graphics.Babylon.Material (Material)
 import Graphics.Babylon.Types (AbstractMesh)
 import Graphics.Babylon.Vector3 (Vector3)
 import Graphics.Canvas (CANVAS)
+import Halogen (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 
-type Effects eff = (
+type CoreEffects eff = (
     canvas :: CANVAS,
     now :: NOW,
     console :: CONSOLE,
-    dom :: DOM,
     babylon :: BABYLON,
     ref :: REF,
-    ajax :: AJAX,
+    ajax :: AJAX | eff)
+
+type Effects eff =  CoreEffects (
+    dom :: DOM,
     err :: EXCEPTION,
     avar :: AVAR | eff)
 
