@@ -38,8 +38,10 @@ html, body {
     margin: auto;
 }
 
-#content {
-
+#content:focus {
+    outline: none !important;
+    border-color: white;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 #renderCanvas, #canvas2d {
