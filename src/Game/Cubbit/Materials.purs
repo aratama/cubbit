@@ -41,6 +41,26 @@ initializeMaterials scene skybox texture alphaTexture options = do
         setColor3 "vLightColor" lightColor mat
         pure mat
 
+    outlineMaterial <- do
+        mat <- createShaderMaterial "outlineShaderMaterial" scene "./alice/outline" {
+            needAlphaBlending: false,
+            needAlphaTesting: false,
+            attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
+            uniforms: ["world", "viewProjection", "mBones"],
+            samplers: ["textureSampler"],
+            defines: []
+        }
+        lightPosition <- createVector3 0.0 20.0 (-10.0)
+        lightColor <- createColor3 1.0 1.0 1.0
+        cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene defaultCreateTextureOptions
+        setTexture "textureSampler" cellShadingMaterialTexture mat
+        setVector3 "vLightPosition" lightPosition mat
+        setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] mat
+        setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] mat
+        setColor3 "vLightColor" lightColor mat
+        pure mat
+
+
     solidBlockMaterial <- do
         mat <- createStandardMaterial "grass-block" scene
         grassSpecular <- createColor3 0.0 0.0 0.0
@@ -75,9 +95,11 @@ initializeMaterials scene skybox texture alphaTexture options = do
         setUseAlphaFromDiffuseTexture true mat
         pure mat
 
+
     pure {
         blockMaterial: standardMaterialToMaterial solidBlockMaterial,
         waterMaterial: waterMaterial,
         cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial,
-        bushMaterial: standardMaterialToMaterial bushMaterial
+        bushMaterial: standardMaterialToMaterial bushMaterial,
+        outlineMaterial: shaderMaterialToMaterial outlineMaterial
     }

@@ -9,14 +9,19 @@ import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (modifyRef, newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
+import Control.Monad.ST (pureST)
+import Data.Array.ST (emptySTArray, runSTArray)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
+import Data.Foreign (Foreign)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
+import Data.String (Pattern(..), contains)
+import Data.Traversable (for)
 import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
-import Game.Cubbit.Constants (skyBoxRenderingGruop)
+import Game.Cubbit.Constants (skyBoxRenderingGruop, terrainRenderingGroup)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud (initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
@@ -35,7 +40,8 @@ import Graphics.Babylon.Engine (createEngine, runRenderLoop)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
 import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
-import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
+import Graphics.Babylon.Mesh (createBox, createMesh, meshToAbstractMesh, setInfiniteDistance)
+import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.Scene (createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
 import Graphics.Babylon.SceneLoader.Aff (loadMesh)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
@@ -46,10 +52,13 @@ import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCamer
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Texture.Aff (loadTexture)
 import Graphics.Babylon.Vector3 (createVector3)
+import Graphics.Babylon.VertexData (VertexData, VertexDataProps(..), applyToMesh, createVertexData)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
-import Prelude (negate, void, (#), ($), (/), (<$>), (>>=))
+import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (<>))
+import Unsafe.Coerce (unsafeCoerce)
+
 
 main :: forall eff. Eff (Effects eff) Unit
 main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
@@ -76,50 +85,15 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setCollisionsEnabled true sce
             pure sce
 
-        -- initialize game state
-        initialTerrain <- liftEff $ emptyTerrain 0
-        ref <- liftEff $ newRef $ State {
-            mode: Move,
-            terrain: initialTerrain,
-            mousePosition: { x: 0, y: 0 },
-            debugLayer: false,
 
-            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
-            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
-            cameraYaw: 0.0,
-            cameraPitch: 0.7,
-            cameraRange: 5.0,
-            firstPersonView: false,
-            firstPersonViewPitch: 0.0,
-
-            position: { x: 0.5, y: 10.0, z: 0.5 },
-            velocity: { x: 0.0, y: 0.0, z: 0.0 },
-            playerRotation: 0.5,
-            playerPitch: 0.0,
-            minimap: false,
-            totalFrames: 0,
-            playerMeshes: [],
-            updateIndex: toNullable Nothing,
-
-            wKey: false,
-            sKey: false,
-            aKey: false,
-            dKey: false,
-            qKey: false,
-            eKey: false,
-            rKey: false,
-            fKey: false,
-            tKey: false,
-            gKey: false,
-
-            animation: ""
-        }
 
         texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
         alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
         loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
         playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
         forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
+
+
 
         cursor <- liftEff do
             cursorbox <- createBox "cursor" 1.0 scene
@@ -158,12 +132,64 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         materials <- liftEff $ initializeMaterials scene skybox texture alphaTexture options
 
 
+        res <- get "./alice/alice.babylon"
+        let vertexDataArray = flipFaces res.response
+
+
+{-
+        outlineMeshes <- for vertexDataArray \vertexData -> liftEff do
+            mesh <- createMesh "outline" scene
+            vdata <- createVertexData vertexData
+            applyToMesh mesh false vdata
+            setRenderingGroupId terrainRenderingGroup (meshToAbstractMesh mesh)
+            setMaterial materials.outlineMaterial (meshToAbstractMesh mesh)
+            pure (meshToAbstractMesh mesh)
+-}
+
+        -- initialize game state
+        initialTerrain <- liftEff $ emptyTerrain 0
+        ref <- liftEff $ newRef $ State {
+            mode: Move,
+            terrain: initialTerrain,
+            mousePosition: { x: 0, y: 0 },
+            debugLayer: false,
+
+            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
+            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
+            cameraYaw: 0.0,
+            cameraPitch: 0.7,
+            cameraRange: 5.0,
+            firstPersonView: false,
+            firstPersonViewPitch: 0.0,
+
+            position: { x: 0.5, y: 10.0, z: 0.5 },
+            velocity: { x: 0.0, y: 0.0, z: 0.0 },
+            playerRotation: 0.5,
+            playerPitch: 0.0,
+            minimap: false,
+            totalFrames: 0,
+            -- playerMeshes: playerMeshes <> outlineMeshes,
+            playerMeshes: playerMeshes,
+            updateIndex: toNullable Nothing,
+
+            wKey: false,
+            sKey: false,
+            aKey: false,
+            dKey: false,
+            qKey: false,
+            eKey: false,
+            rKey: false,
+            fKey: false,
+            tKey: false,
+            gKey: false,
+
+            animation: ""
+        }
+
         -- initialize hud
         driver <- initializeHud ref options body scene cursor materials
 
         liftEff do
-
-            modifyRef ref (\(State state) -> State state { playerMeshes = playerMeshes })
 
             -- initialize scene
             targetCamera <- do
@@ -206,7 +232,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 setRenderingGroupId 1 mesh
                 setReceiveShadows true mesh
                 skeleton <- getSkeleton mesh
-                setMaterial materials.cellShadingMaterial mesh
+                let name = getName (unsafeCoerce mesh)
+                setMaterial (if contains (Pattern "-outline") name then materials.outlineMaterial else materials.cellShadingMaterial) mesh
 
             -- load initial chunks
             do
@@ -227,3 +254,5 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             hideLoading
 
 foreign import hideLoading :: forall eff. Eff eff Unit
+
+foreign import flipFaces :: Foreign -> Array VertexDataProps

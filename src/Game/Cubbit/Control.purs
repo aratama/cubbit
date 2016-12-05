@@ -11,7 +11,7 @@ import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Ord (abs, min)
-import Data.Unit (Unit)
+import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Terrain (globalPositionToGlobalIndex, lookupSolidBlockByVec)
 import Game.Cubbit.Types (Effects, Mode(Move, Remove, Put), State(State))
@@ -31,10 +31,13 @@ playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
 playAnimation name ref = do
     State state <- readRef ref
     for_ state.playerMeshes \mesh -> void do
-        skeleton <- getSkeleton mesh
-        animatable <- beginAnimation name true 1.0 pure skeleton
-        when (isNothing animatable) do
-            error ("playAnimation: animation named \"" <> name <> "\" not found.")
+        skeletonMaybe <- getSkeleton mesh
+        case skeletonMaybe of
+            Nothing -> pure unit
+            Just skeleton -> do
+                animatable <- beginAnimation name true 1.0 pure skeleton
+                when (isNothing animatable) do
+                    error ("playAnimation: animation named \"" <> name <> "\" not found.")
 
 pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor (State state) screenX screenY = do

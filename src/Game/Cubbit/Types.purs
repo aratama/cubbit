@@ -79,7 +79,8 @@ type Materials = {
     blockMaterial :: Material,
     waterMaterial :: Material,
     cellShadingMaterial :: Material,
-    bushMaterial :: Material
+    bushMaterial :: Material,
+    outlineMaterial :: Material
 }
 
 type Options = {
