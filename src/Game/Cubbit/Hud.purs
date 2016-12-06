@@ -25,6 +25,7 @@ import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, wate
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
+import Game.Cubbit.Terrain (Terrain(..), globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec)
 import Game.Cubbit.Types (Materials, Mode(..), Options, State(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
@@ -263,10 +264,7 @@ eval scene cursor materials options ref sound = case _ of
     (OnKeyDown e next) -> do
         liftEff do
             case key e of
-                " " -> void do
-                    modifyRef ref \(State state) -> State state {
-                            velocity = state.velocity { y = state.velocity.y + options.jumpVelocity }
-                        }
+                " " -> void do modifyRef ref \(State state) -> State state { spaceKey = true }
                 "w" -> void do modifyRef ref \(State state) -> State state { wKey = true }
                 "s" -> void do modifyRef ref \(State state) -> State state { sKey = true }
                 "a" -> void do modifyRef ref \(State state) -> State state { aKey = true }
@@ -286,6 +284,7 @@ eval scene cursor materials options ref sound = case _ of
     (OnKeyUp e next) -> do
         liftEff do
             case key e of
+                " " -> void do modifyRef ref \(State state) -> State state { spaceKey = false }
                 "w" -> void do modifyRef ref \(State state) -> State state { wKey = false }
                 "s" -> void do modifyRef ref \(State state) -> State state { sKey = false }
                 "a" -> void do modifyRef ref \(State state) -> State state { aKey = false }

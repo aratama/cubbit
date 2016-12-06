@@ -76,13 +76,21 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
             let stopped = rotatedKeyVector.x == 0.0 && rotatedKeyVector.z == 0.0
 
+            let position = state.position
+            footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - 0.01, z: position.z } state.terrain
+            let jump = case footHoldBlockMaybe of
+                    Just block | isSolidBlock block && state.spaceKey -> options.jumpVelocity
+                    _ -> 0.0
+
             let velocity = if stopped
                         then state.velocity {
                             x = state.velocity.x * 0.5,
+                            y = state.velocity.y + jump,
                             z = state.velocity.z * 0.5
                         }
                         else let len = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z) in state.velocity {
                             x = rotatedKeyVector.x / len * speed,
+                            y = state.velocity.y + jump,
                             z = rotatedKeyVector.z / len * speed
                         }
 
@@ -94,6 +102,8 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
                         y: state.position.y + velocity.y,
                         z: state.position.z + velocity.z
                     }
+
+
 
             let animation' = if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle"
 
@@ -180,9 +190,9 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
                 playAnimation animation' ref
 
             playerRotationVector <- createVector3 0.0 playerRotation' 0.0
-            position <- createVector3 state'.position.x state'.position.y state'.position.z
+            positionVector <- createVector3 state'.position.x state'.position.y state'.position.z
             for_ state.playerMeshes \mesh -> void do
-                AbstractMesh.setPosition position mesh
+                AbstractMesh.setPosition positionVector mesh
                 setRotation playerRotationVector mesh
                 setVisibility (if state.firstPersonView then 0.0 else 1.0) mesh
 

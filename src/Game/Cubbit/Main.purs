@@ -169,6 +169,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             playerMeshes: playerMeshes,
             updateIndex: toNullable Nothing,
 
+            spaceKey: false,
             wKey: false,
             sKey: false,
             aKey: false,

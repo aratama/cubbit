@@ -60,6 +60,7 @@ newtype State = State {
 
     updateIndex :: Nullable ForeachIndex,
 
+    spaceKey :: Boolean,
     wKey :: Boolean,
     sKey :: Boolean,
     aKey :: Boolean,
