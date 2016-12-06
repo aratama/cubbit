@@ -6,6 +6,7 @@ import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
+import Data.Eq (class Eq)
 import Data.Nullable (Nullable)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
@@ -109,3 +110,6 @@ type Options = {
 }
 
 foreign import data ForeachIndex :: *
+
+
+derive instance eqMode :: Eq Mode 

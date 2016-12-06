@@ -13,6 +13,7 @@ import DOM.Event.MouseEvent (MouseEvent, buttons)
 import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import DOM.HTML.Types (HTMLElement)
 import Data.BooleanAlgebra (not)
+import Data.Functor (map)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Ord (max, min)
@@ -23,7 +24,7 @@ import Game.Cubbit.BlockType (airBlock, dirtBlock)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Types (Mode(..), Options, State(..), Materials)
+import Game.Cubbit.Types (Materials, Mode(..), Options, State(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
@@ -42,11 +43,12 @@ import Prelude (type (~>), bind, pure, ($), (<>), show, (/=), (+), (*), negate, 
 import Unsafe.Coerce (unsafeCoerce)
 
 type HudState = {
-    cursorPosition :: BlockIndex
+    cursorPosition :: BlockIndex,
+    mode :: Mode
 }
 
 initialState :: HudState
-initialState = { cursorPosition: blockIndex 0 0 0 }
+initialState = { cursorPosition: blockIndex 0 0 0, mode : Move }
 
 data Query a = SetCursorPosition BlockIndex a
              | PreventDefault Event a
@@ -62,8 +64,8 @@ data Query a = SetCursorPosition BlockIndex a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
 
-slotClass :: forall r i. IProp (class :: I | r) i
-slotClass = class_ (ClassName "slot")
+slotClass :: forall r i. Boolean -> IProp (class :: I | r) i
+slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""))
 
 icon :: forall p i. String -> HTML p i
 icon name = i [class_ (ClassName ("fa fa-" <> name))] []
@@ -96,20 +98,19 @@ render state = div [
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
     ],
-    div [id_ "hotbar"] [
-        div [slotClass, onClick \e -> Just (SetMode Move unit)] [],
-        div [slotClass, onClick \e -> Just (SetMode Put unit)] [],
-        div [slotClass, onClick \e -> Just (SetMode Remove unit)] [],
-        div [slotClass] [],
-        div [slotClass] [],
-        div [slotClass] [],
-        div [slotClass] [],
-        div [slotClass] []
-    ],
+    div [id_ "hotbar"] hotbuttons,
     div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"]
 ]
 
   where
+    hotbuttons = map slot [Just Move, Just Put, Just Remove, Nothing, Nothing, Nothing, Nothing, Nothing]
+
+    tool Move = "bow.svg"
+    tool Put = "cube.svg"
+    tool Remove = "pickaxe.svg"
+
+    slot (Just mode) = div [slotClass (state.mode == mode), onClick \e -> Just (SetMode mode unit)] [img [src (tool mode)]]
+    slot Nothing = div [slotClass false] []
 
     index = runBlockIndex state.cursorPosition
 
@@ -132,6 +133,7 @@ eval scene cursor materials options ref = case _ of
 
     (SetMode mode next) -> do
         liftEff (modifyRef ref (\(State s) -> State s { mode = mode }))
+        modify _ { mode = mode }
         pure next
 
     (SetPosition position next) -> do
