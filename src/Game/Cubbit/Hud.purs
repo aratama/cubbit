@@ -13,6 +13,7 @@ import DOM.Event.KeyboardEvent (KeyboardEvent, key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
 import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import DOM.HTML.Types (HTMLElement)
+import Data.Array (replicate)
 import Data.BooleanAlgebra (not)
 import Data.Functor (map)
 import Data.Int (toNumber)
@@ -104,6 +105,9 @@ render state = div [
     img [id_ "screen-shade", src "screenshade.png"],
 
     div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
+
+    div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
+
 
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],

@@ -1,10 +1,12 @@
 "use strict";
 
+/* global document */
+
 exports.foreachBlocks = function(size){
     return function(cx){
         return function(cy){
             return function(cz){
-                return function(index){
+                return function(currentIndex){
                     return function(f){
                         return function(){
                             var cost = 0;
@@ -12,9 +14,10 @@ exports.foreachBlocks = function(size){
 
                             //console.log(JSON.stringify(index));
 
+                            var index = currentIndex;
                             if( ! index){
                                 index = { size: size, cx: cx, cy: cy, cz: cz, i: 0, n: 0, m: 0 };
-                            }else if(index.size != size || index.cx != cx || index.cy != cy || index.cz != cz){
+                            }else if(index.size !== size || index.cx !== cx || index.cy !== cy || index.cz !== cz){
                                 index.size = size;
                                 index.cx = cx;
                                 index.cy = cy;
@@ -62,21 +65,21 @@ exports.foreachBlocks = function(size){
 
 
 
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+                        };
+                    };
+                };
+            };
+        };
+    };
+};
 
 
 exports.setTextContent = function(id){
     return function(text){
         return function(){
             document.getElementById(id).textContent = text;
-        }
-    }
-}
+        };
+    };
+};
 
 

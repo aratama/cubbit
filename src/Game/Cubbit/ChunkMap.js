@@ -1,22 +1,24 @@
+"use strict";
+
 exports.createChunkMap = function(){
     return { map: {}, list: [] };
-}
+};
 
 exports._lookup = function(index){
     return function(obj){
         return function(){
             return obj.map[index] || null;
-        }
-    }
-}
+        };
+    };
+};
 
 exports._peekAt = function(intIndex){
     return function(obj){
         return function(){
             return obj.list[intIndex % obj.list.length] || null;
-        }
-    }
-}
+        };
+    };
+};
 
 exports.insert = function(index){
     return function(value){
@@ -28,17 +30,18 @@ exports.insert = function(index){
                     });
                     if(i === -1){
                         // never come here
-                        debugger;
+                        //debugger;
+                        throw new Error();
                     }
                     obj.list.splice(i, 1, value);
                 }else{
                     obj.list.push(value);
                 }
                 obj.map[index] = value;
-            }
-        }
-    }
-}
+            };
+        };
+    };
+};
 
 exports.sort = function(cx){
     return function(cy){
@@ -50,11 +53,11 @@ exports.sort = function(cx){
                         var t = Math.max(Math.abs(b.x - cx), Math.abs(b.y - cy), Math.abs(b.z - cz));
                         return r - t;
                     });
-                }
-            }
-        }
-    }
-}
+                };
+            };
+        };
+    };
+};
 
 exports.delete = function(index){
     return function(obj){
@@ -66,25 +69,25 @@ exports.delete = function(index){
                 obj.list.splice(i, 1);
                 delete obj.map[index];
             }
-        }
-    }
-}
+        };
+    };
+};
 
 exports.size = function(obj){
     return function(){
         return obj.list.length;
-    }
-}
+    };
+};
 
 exports.slice = function(begin){
     return function(end){
         return function(obj){
             return function(){
                 return obj.list.slice(begin, end);
-            }
-        }
-    }
-}
+            };
+        };
+    };
+};
 
 
 exports.filterNeighbors = function(range){
@@ -94,14 +97,14 @@ exports.filterNeighbors = function(range){
                 return function(obj){
                     return function(){
                         return obj.list.filter(function(a){
-                            return Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy), Math.abs(a.z - cz)) <= range
+                            return Math.max(Math.abs(a.x - cx), Math.abs(a.y - cy), Math.abs(a.z - cz)) <= range;
                         });
-                    }
-                }
-            }
-        }
-    }
-}
+                    };
+                };
+            };
+        };
+    };
+};
 
 
 exports.getSortedChunks = function(cx){
@@ -116,8 +119,8 @@ exports.getSortedChunks = function(cx){
                         return r - t;
                     });
                     return sorted;
-                }
-            }
-        }
-    }
-}
+                };
+            };
+        };
+    };
+};

@@ -6,12 +6,11 @@
     "pretest": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
     "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
     "posttest": "node public/index.js",
+    "lint": "eslint src",
     "prebuild": "psc bower_components/purescript-*/src/**/*.purs src/**/*.purs",
     "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
-
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico --asar",
     "postelectron": "bestzip ./docs/cubbit-win32-x64.zip ./cubbit-win32-x64",
-
     "server": "start http-server public",
     "publish": "cpx public/**/*.* docs",
     "postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/babylon.custom.js -o docs/babylon.custom.js",
@@ -25,5 +24,8 @@
   "dependencies": {
     "glob": "^7.1.1",
     "virtual-dom": "^2.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.11.1"
   }
 }

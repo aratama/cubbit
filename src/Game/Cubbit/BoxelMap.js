@@ -1,3 +1,7 @@
+"use strict";
+
+/* global Uint8Array */
+
 var CHUNK_SIZE = 16;
 var TOTAL_BLOCKS = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 
@@ -9,17 +13,17 @@ exports.insert = function(key){
             var m = new Uint8Array(map);
             m[key] = value;
             return m;
-        }
-    }
-}
+        };
+    };
+};
 
 exports.delete = function(key){
     return function(map){
         var m = new Uint8Array(map);
         m[key] = 0;
         return m;
-    }
-}
+    };
+};
 
 exports.mapBoxelMap = function(f){
     return function(map){
@@ -28,11 +32,11 @@ exports.mapBoxelMap = function(f){
             m[i] = f[map[i]];
         }
         return m;
-    }
-}
+    };
+};
 
 exports.lookupNullable = function(key){
     return function(map){
         return map[key];
-    }
-}
+    };
+};

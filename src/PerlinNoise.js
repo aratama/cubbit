@@ -14,6 +14,8 @@
  *
  */
 
+"use strict";
+
 function Grad(x, y, z) {
     this.x = x;
     this.y = y;
@@ -56,7 +58,7 @@ var G2 = (3 - Math.sqrt(3)) / 6;
 var F3 = 1 / 3;
 var G3 = 1 / 6;
 
-exports.createNoise = function(seed) {
+exports.createNoise = function(_seed) {
     // This isn't a very good seeding function, but it works ok. It supports 2^16
     // different seed values. Write something better if you need more seeds.
 
@@ -64,6 +66,7 @@ exports.createNoise = function(seed) {
     var perm = new Array(512);
     var gradP = new Array(512);
 
+    var seed = _seed;
     if (seed > 0 && seed < 1) {
         // Scale the seed out
         seed *= 65536;
@@ -89,8 +92,8 @@ exports.createNoise = function(seed) {
     return {
         perm: perm,
         gradP: gradP
-    }
-}
+    };
+};
 
 exports.simplex2 = function(xin) {
     return function(yin) {
@@ -151,9 +154,9 @@ exports.simplex2 = function(xin) {
             // Add contributions from each corner to get the final noise value.
             // The result is scaled to return values in the interval [-1,1].
             return 70 * (n0 + n1 + n2);
-        }
-    }
-}
+        };
+    };
+};
 
 // 3D simplex noise
 exports.simplex3 = function(xin) {
@@ -283,6 +286,6 @@ exports.simplex3 = function(xin) {
                 return 32 * (n0 + n1 + n2 + n3);
 
             };
-        }
-    }
-}
+        };
+    };
+};

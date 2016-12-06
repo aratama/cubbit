@@ -1,6 +1,10 @@
+"use strict";
+
+/* global document */
+
 exports.hideLoading = function(){
     document.getElementById("loading").style["opacity"] = "0";
-}
+};
 
 exports.flipFaces = function(vertexData){
     return vertexData.meshes.map(function(mesh){
@@ -16,4 +20,4 @@ exports.flipFaces = function(vertexData){
         //return obj;
         return mesh;
     });
-}
+};

@@ -1,3 +1,7 @@
+"use strict";
+
+/* global document */
+
 exports.requestPointerLock = function(callback){
     return function(onExit){
         return function(){
@@ -7,12 +11,12 @@ exports.requestPointerLock = function(callback){
             var pointerlockchangeListener = function(){
                 if( ! document.pointerLockElement){
                     document.body.removeEventListener("mousemove", mousemoveListener);
-                    document.removeEventListener('pointerlockchange', pointerlockchangeListener);
+                    document.removeEventListener("pointerlockchange", pointerlockchangeListener);
                     onExit();
                 }
             };
             document.body.addEventListener("mousemove", mousemoveListener);
-            document.addEventListener('pointerlockchange', pointerlockchangeListener);
+            document.addEventListener("pointerlockchange", pointerlockchangeListener);
 
             if(document.body.requestPointerLock){
                 document.body.requestPointerLock();
@@ -23,10 +27,10 @@ exports.requestPointerLock = function(callback){
             }else if(document.body.msRequestPointerLock){
                 document.body.msRequestPointerLock();
             }
-        }
-    }
-}
+        };
+    };
+};
 
 exports.exitPointerLock = function(){
     document.exitPointerLock();
-}
+};

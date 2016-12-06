@@ -73,6 +73,26 @@ html, body {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
+#life {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    margin: 8px;
+    display: flex;
+    flex-direction: row;
+    text-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
+}
+
+#life > i {
+    margin: 2px;
+    color: grey;
+}
+
+#life > div.active {
+    color: red;
+}
+
+
 #hotbar {
     position: absolute;
     width: 100%;
@@ -192,9 +212,9 @@ html, body {
 #cursor-position {
     color: white;
     position: absolute;
-    top: 0px;
-    left: 0px;
-    font-size: 10px;
+    bottom: 0px;
+    right: 0px;
+    font-size: 12px;
 }
 
 
