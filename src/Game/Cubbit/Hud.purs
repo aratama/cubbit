@@ -30,8 +30,8 @@ import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), button, div, img, p, prop, text)
-import Halogen.HTML.Elements (canvas)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
+import Halogen.HTML.Elements (canvas, i)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
 import Halogen.Query (action, get)
@@ -62,6 +62,13 @@ data Query a = SetCursorPosition BlockIndex a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
 
+slotClass :: forall r i. IProp (class :: I | r) i
+slotClass = class_ (ClassName "slot")
+
+icon :: forall p i. String -> HTML p i
+icon name = i [class_ (ClassName ("fa fa-" <> name))] []
+
+
 render :: HudState -> ComponentHTML Query
 render state = div [
     id_ "content",
@@ -84,13 +91,20 @@ render state = div [
 
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
-    div [id_ "buttons"] [
-        button [id_ "move", onClick \e -> Just (SetMode Move unit)] [text "Move"],
-        button [id_ "add", onClick \e -> Just (SetMode Put unit)] [text "Add"],
-        button [id_ "remove", onClick \e -> Just (SetMode Remove unit)] [text "Remove"],
-        button [id_ "position", onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [text "Init Pos"],
-        button [id_ "first-person-view", onClick \e -> Just (TogglePointerLock unit)] [text "Fst Person View"],
-        button [id_ "debuglayer", onClick \e -> Just (ToggleDebugLayer unit)] [text "DebugLayer"]
+    div [id_ "right-panel"] [
+        div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
+        div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
+        div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
+    ],
+    div [id_ "hotbar"] [
+        div [slotClass, onClick \e -> Just (SetMode Move unit)] [],
+        div [slotClass, onClick \e -> Just (SetMode Put unit)] [],
+        div [slotClass, onClick \e -> Just (SetMode Remove unit)] [],
+        div [slotClass] [],
+        div [slotClass] [],
+        div [slotClass] [],
+        div [slotClass] [],
+        div [slotClass] []
     ],
     div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"]
 ]
