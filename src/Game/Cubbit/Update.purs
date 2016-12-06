@@ -29,6 +29,7 @@ import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
+import Graphics.Babylon.Engine (Engine, getDeltaTime)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getPickedPoint)
@@ -44,6 +45,7 @@ import Math (atan2, cos, max, pi, round, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
 update :: forall eff. Ref State
+                   -> Engine
                    -> Scene
                    -> Materials
                    -> ShadowMap
@@ -53,14 +55,15 @@ update :: forall eff. Ref State
                    -> Mesh
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> Eff (Effects eff) Unit
-update ref scene materials shadowMap cursor camera options skybox driver = do
+update ref engine scene materials shadowMap cursor camera options skybox driver = do
 
         State state@{ terrain: Terrain terrain } <- readRef ref
 
         -- calculate next state
         do
             -- calculate player velocity
-            let speed = options.moveSpeed
+            deltaTime <- getDeltaTime engine
+            let speed = options.moveSpeed * deltaTime
 
             let rot =  negate if state.firstPersonView then (state.playerRotation + pi) else  state.cameraYaw
 

@@ -245,7 +245,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             -- start game loop
             engine # runRenderLoop do
-                update ref scene materials shadowMap cursor targetCamera options skybox driver
+                update ref engine scene materials shadowMap cursor targetCamera options skybox driver
                 render scene
 
             -- focus

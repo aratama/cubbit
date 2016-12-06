@@ -26,14 +26,26 @@ varying vec2 vUV;
     #endif
 #endif
 
-uniform mat4 world;
+#ifdef INSTANCES
+    attribute vec4 world0;
+    attribute vec4 world1;
+    attribute vec4 world2;
+    attribute vec4 world3;
+#else
+    uniform mat4 world;
+#endif
 
 varying vec4 vPosition;
 
 void main(void) {
 
-    mat4 finalWorld=world;
 
+
+#ifdef INSTANCES
+    mat4 finalWorld=mat4(world0,world1,world2,world3);
+#else
+    mat4 finalWorld=world;
+#endif
 
 #if NUM_BONE_INFLUENCERS>0
     mat4 influence;
@@ -63,8 +75,15 @@ void main(void) {
     finalWorld = finalWorld * influence;
 #endif
 
+
+
+#ifdef CUBEMAP
+    vPosition=finalWorld*vec4(position,1.0);
+    gl_Position=viewProjection*finalWorld*vec4(position,1.0);
+#else
     vPosition = viewProjection * finalWorld * vec4(position,1.0);
     gl_Position = vPosition;
+#endif
 
 	vPositionW = vec3(world * vec4(position, 1.0));
 	vNormalW = normalize(vec3(world * vec4(normal, 0.0)));
