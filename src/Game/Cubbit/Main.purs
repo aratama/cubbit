@@ -184,7 +184,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         }
 
         -- initialize hud
-        driver <- initializeHud ref options body scene cursor materials
+        driver <- initializeHud ref options body scene cursor materials forestSound
 
         liftEff do
 

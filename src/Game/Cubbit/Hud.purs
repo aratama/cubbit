@@ -3,6 +3,7 @@ module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud, queryTo
 import Control.Alt (void)
 import Control.Alternative (when)
 import Control.Monad.Aff (Aff, runAff)
+import Control.Monad.Aff.AVar (modifyVar)
 import Control.Monad.Aff.Console (CONSOLE)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (logShow)
@@ -28,9 +29,10 @@ import Game.Cubbit.Types (Materials, Mode(..), Options, State(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Types (BABYLON, Mesh, Scene)
+import Graphics.Babylon.Sound (setVolume)
+import Graphics.Babylon.Types (BABYLON, Mesh, Scene, Sound)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, div_, img, p, prop, text)
 import Halogen.HTML.Elements (canvas, i)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
@@ -43,11 +45,13 @@ import Unsafe.Coerce (unsafeCoerce)
 
 type HudState = {
     cursorPosition :: BlockIndex,
-    mode :: Mode
+    mode :: Mode,
+    mute :: Boolean,
+    centerPanelVisible :: Boolean
 }
 
 initialState :: HudState
-initialState = { cursorPosition: blockIndex 0 0 0, mode : Move }
+initialState = { cursorPosition: blockIndex 0 0 0, mode : Move, mute: false, centerPanelVisible: false }
 
 data Query a = SetCursorPosition BlockIndex a
              | PreventDefault Event a
@@ -60,6 +64,7 @@ data Query a = SetCursorPosition BlockIndex a
              | Zoom MouseEvent a
              | OnKeyDown KeyboardEvent a
              | OnKeyUp KeyboardEvent a
+             | ToggleMute a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
 
@@ -90,11 +95,14 @@ render state = div [
     ],
     img [id_ "screen-shade", src "screenshade.png"],
 
+    if state.centerPanelVisible then div [id_ "center-panel"] [] else text "",
+
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
     div [id_ "right-panel"] [
         div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
+        div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
     ],
     div [id_ "hotbar"] hotbuttons,
@@ -116,8 +124,8 @@ render state = div [
 styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
 
-eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
-eval scene cursor materials options ref = case _ of
+eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sound -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
+eval scene cursor materials options ref sound = case _ of
 
     (PreventDefault e next) -> do
         liftEff (preventDefault e)
@@ -259,13 +267,19 @@ eval scene cursor materials options ref = case _ of
             stopPropagation (keyboardEventToEvent e)
         pure next
 
-ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Component HTML Query Void (Aff (HudEffects eff))
-ui ref options scene cursor materials = component { render, eval: eval scene cursor materials options ref, initialState: initialState }
+    (ToggleMute next) -> do
+        modify \state -> state { mute = not state.mute }
+        state <- get
+        liftEff $ setVolume (if state.mute then 0.0 else 1.0) sound
+        pure next
+
+ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sound -> Component HTML Query Void (Aff (HudEffects eff))
+ui ref options scene cursor materials sound = component { render, eval: eval scene cursor materials options ref sound, initialState: initialState }
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
-initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud ref options body scene cursor materials = runUI (ui ref options scene cursor materials) body
+initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sound -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud ref options body scene cursor materials sound = runUI (ui ref options scene cursor materials sound) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

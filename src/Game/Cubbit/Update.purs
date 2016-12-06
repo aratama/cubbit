@@ -140,7 +140,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
             let theta = negate state.cameraYaw - pi * 0.5
             let thirdPersonCameraPositionX = position'.x + cos theta * cos state.cameraPitch * state.cameraRange
-            let thirdPersonCameraPositionY = position'.y + sin state.cameraPitch * state.cameraRange
+            let thirdPersonCameraPositionY = position'.y + eyeHeight + sin state.cameraPitch * state.cameraRange
             let thirdPersonCameraPositionZ = position'.z + sin theta * cos state.cameraPitch * state.cameraRange
 
             let firstPersonCameraPositionX = position'.x
