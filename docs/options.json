@@ -7,7 +7,7 @@
     "shadowMapSize": 4096,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
-    "jumpVelocity": 0.15,
+    "jumpVelocity": 0.18,
     "initialWorldSize": 3,
     "moveSpeed": 0.004,
     "cameraTargetSpeed": 0.1,
