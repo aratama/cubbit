@@ -10,12 +10,8 @@ import Data.Eq (class Eq)
 import Data.Nullable (Nullable)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon (BABYLON)
-import Graphics.Babylon.Material (Material)
-import Graphics.Babylon.Types (AbstractMesh)
-import Graphics.Babylon.Vector3 (Vector3)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material)
 import Graphics.Canvas (CANVAS)
-import Halogen (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 
 type CoreEffects eff = (
@@ -112,4 +108,4 @@ type Options = {
 foreign import data ForeachIndex :: *
 
 
-derive instance eqMode :: Eq Mode 
+derive instance eqMode :: Eq Mode

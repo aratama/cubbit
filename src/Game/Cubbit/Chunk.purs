@@ -7,11 +7,9 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockType (BlockType)
 import Game.Cubbit.BoxelMap (BoxelMap) as Boxel
 import Game.Cubbit.ChunkIndex (ChunkIndex)
-import Graphics.Babylon (BABYLON)
 import Graphics.Babylon.AbstractMesh (dispose)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
-import Graphics.Babylon.Types (Mesh)
-import Graphics.Babylon.VertexData (VertexDataProps)
+import Graphics.Babylon.Types (BABYLON, Mesh, VertexDataProps)
 import Prelude (pure, bind)
 
 newtype Chunk = Chunk {

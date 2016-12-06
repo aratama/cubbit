@@ -6,7 +6,7 @@ import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (blockIndex, runBlockIndex)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Terrain (globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex)
-import Graphics.Babylon (BABYLON)
+import Graphics.Babylon.Types (BABYLON)
 import Prelude (mod, negate, ($), (&&), (<), (==), (/=))
 import Test.StrongCheck (SC, assert, assertEq, quickCheck, (<?>))
 
