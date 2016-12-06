@@ -15,7 +15,7 @@
    id="svg8098"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="cube.svg">
+   sodipodi:docname="leaves.svg">
   <defs
      id="defs8100">
     <inkscape:perspective
@@ -34,8 +34,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="5.6"
-     inkscape:cx="-3.8586699"
-     inkscape:cy="5.7861391"
+     inkscape:cx="-23.590813"
+     inkscape:cy="14.357568"
      inkscape:document-units="px"
      inkscape:current-layer="g12580"
      showgrid="false"
@@ -54,7 +54,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -69,19 +69,19 @@
        transform="matrix(0.02474809,0,0,0.07332077,8.8595616,1010.175)">
       <path
          d="M -275.60397,266.51907 L 319.14841,366.60178 L 856.88861,268.91331 L 272.22029,183.17835 Z"
-         style="fill:#4d4d9f;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         style="fill:#37713a;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;fill-opacity:1"
          id="path12616"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccc" />
       <path
          d="M 278.33101,356.26891 L 275.77993,560.19813 L 828.82664,467.82785 L 867.09295,268.91331 Z"
-         style="fill:#d7d7ff;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         style="fill:#3e5c3a;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;fill-opacity:1"
          id="path12618"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccc" />
       <path
          d="M -278.15506,267.38014 L 275.77993,354.54676 L 275.77993,565.36457 L -239.88875,466.30195 Z"
-         style="fill:#8686bf;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1"
+         style="fill:#1e2f1d;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1;fill-opacity:1"
          id="path12620"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="ccccc" />

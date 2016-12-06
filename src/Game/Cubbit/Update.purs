@@ -293,7 +293,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
             do
                 setIsVisible (case state.mode of
-                    Put -> true
+                    Put _ -> true
                     Remove -> true
                     Move -> false) (meshToAbstractMesh cursor)
 

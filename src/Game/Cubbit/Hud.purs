@@ -21,7 +21,7 @@ import Data.Ord (max, min)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Game.Cubbit.BlockType (airBlock, dirtBlock)
+import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
@@ -40,7 +40,7 @@ import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
 import Math (pi)
 import Network.HTTP.Affjax (AJAX)
-import Prelude (type (~>), bind, pure, ($), (<>), show, (/=), (+), (*), negate, (-), (>>=), (<<<), (==))
+import Prelude (type (~>), bind, negate, otherwise, pure, show, ($), (*), (+), (-), (/=), (<<<), (<>), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
 type HudState = {
@@ -51,7 +51,12 @@ type HudState = {
 }
 
 initialState :: HudState
-initialState = { cursorPosition: blockIndex 0 0 0, mode : Move, mute: false, centerPanelVisible: false }
+initialState = {
+    cursorPosition: blockIndex 0 0 0,
+    mode : Move,
+    mute: false,
+    centerPanelVisible: false
+}
 
 data Query a = SetCursorPosition BlockIndex a
              | PreventDefault Event a
@@ -65,6 +70,8 @@ data Query a = SetCursorPosition BlockIndex a
              | OnKeyDown KeyboardEvent a
              | OnKeyUp KeyboardEvent a
              | ToggleMute a
+             | SetCenterPanelVisible Boolean a
+             | Nop Event a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
 
@@ -95,7 +102,7 @@ render state = div [
     ],
     img [id_ "screen-shade", src "screenshade.png"],
 
-    if state.centerPanelVisible then div [id_ "center-panel"] [] else text "",
+    div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
@@ -105,16 +112,42 @@ render state = div [
         div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
     ],
-    div [id_ "hotbar"] hotbuttons,
-    div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"]
+
+
+    div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"],
+
+    if state.centerPanelVisible
+        then div [
+                id_ "center-panel-outer",
+                onClick \e -> Just (SetCenterPanelVisible false unit),
+                onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit),
+                onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
+            ] [div [id_ "center-panel"] []]
+        else text "",
+
+    div [id_ "hotbar"] hotbuttons
 ]
 
   where
-    hotbuttons = map slot [Just Move, Just Put, Just Remove, Nothing, Nothing, Nothing, Nothing, Nothing]
+    hotbuttons = map slot [
+        Just Move,
+        Just (Put grassBlock),
+        Just (Put woodBlock),
+        Just (Put waterBlock),
+        Just (Put leavesBlock),
+        Just (Put dirtBlock),
+        Nothing,
+        Just Remove
+    ]
 
-    tool Move = "bow.svg"
-    tool Put = "cube.svg"
-    tool Remove = "pickaxe.svg"
+    tool Move = "toolicon/bow.svg"
+    tool (Put t) | t == grassBlock = "toolicon/grass.svg"
+                 | t == woodBlock = "toolicon/wood.svg"
+                 | t == waterBlock = "toolicon/water.svg"
+                 | t == leavesBlock = "toolicon/leaves.svg"
+                 | t == dirtBlock = "toolicon/dirt.svg"
+                 | otherwise = "toolicon/grass.svg"
+    tool Remove = "toolicon/pickaxe.svg"
 
     slot (Just mode) = div [slotClass (state.mode == mode), onClick \e -> Just (SetMode mode unit)] [img [src (tool mode)]]
     slot Nothing = div [slotClass false] []
@@ -204,17 +237,18 @@ eval scene cursor materials options ref sound = case _ of
                 }
             }
 
+            when (buttons e == 1) do
 
-            let put block = do
-                    picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
-                    case picked of
-                        Nothing -> pure unit
-                        Just blockIndex -> editBlock ref materials scene blockIndex block
+                let put block = do
+                        picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
+                        case picked of
+                            Nothing -> pure unit
+                            Just blockIndex -> editBlock ref materials scene blockIndex block
 
-            case state.mode of
-                Put -> put dirtBlock
-                Remove -> put airBlock
-                Move -> pure unit
+                case state.mode of
+                    Put blockType -> put blockType
+                    Remove -> put airBlock
+                    Move -> pure unit
 
         pure next
 
@@ -271,6 +305,16 @@ eval scene cursor materials options ref sound = case _ of
         modify \state -> state { mute = not state.mute }
         state <- get
         liftEff $ setVolume (if state.mute then 0.0 else 1.0) sound
+        pure next
+
+    (SetCenterPanelVisible visible next) -> do
+        modify \state -> state { centerPanelVisible = visible }
+        pure next
+
+    (Nop e next) -> do
+        liftEff do
+            preventDefault e
+            stopPropagation e
         pure next
 
 ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sound -> Component HTML Query Void (Aff (HudEffects eff))

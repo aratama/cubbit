@@ -8,6 +8,7 @@ import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
 import Data.Eq (class Eq)
 import Data.Nullable (Nullable)
+import Game.Cubbit.BlockType (BlockType(..))
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material)
@@ -27,7 +28,7 @@ type Effects eff =  CoreEffects (
     err :: EXCEPTION,
     avar :: AVAR | eff)
 
-data Mode = Move | Put | Remove
+data Mode = Move | Put BlockType | Remove
 
 newtype State = State {
     mode :: Mode,

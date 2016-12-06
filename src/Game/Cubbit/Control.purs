@@ -62,7 +62,7 @@ pickBlock scene cursor (State state) screenX screenY = do
                     setPosition r cursor
 
             case state.mode of
-                Put -> if minDelta == dx then do
+                Put _ -> if minDelta == dx then do
                         l <- lookupBlock' (p.x + 0.5) p.y p.z
                         r <- lookupBlock' (p.x - 0.5) p.y p.z
                         case l, r of
