@@ -3,11 +3,10 @@ module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud, queryTo
 import Control.Alt (void)
 import Control.Alternative (when)
 import Control.Monad.Aff (Aff, runAff)
-import Control.Monad.Aff.AVar (modifyVar)
 import Control.Monad.Aff.Console (CONSOLE)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Eff.Ref (Ref, modifyRef, readRef)
+import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
 import DOM.Event.KeyboardEvent (KeyboardEvent, key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
@@ -26,15 +25,14 @@ import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, wate
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Terrain (Terrain(..), globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec)
-import Game.Cubbit.Types (Materials, Mode(..), Options, State(..))
+import Game.Cubbit.Types (Materials, Mode(..), Options, State(..), Sounds)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Sound (setVolume)
+import Graphics.Babylon.Sound (play, setVolume)
 import Graphics.Babylon.Types (BABYLON, Mesh, Scene, Sound)
 import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, div_, img, p, prop, text)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
 import Halogen.HTML.Elements (canvas, i)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
@@ -111,7 +109,11 @@ render state = div [
 
     p [id_ "message-box-top"] [],
     p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
-    div [id_ "right-panel"] [
+    div [
+        id_ "right-panel",
+        suppressMouseMove,
+        suppressMouseDown
+    ] [
         div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
         div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
         div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
@@ -125,15 +127,22 @@ render state = div [
         then div [
                 id_ "center-panel-outer",
                 onClick \e -> Just (SetCenterPanelVisible false unit),
-                onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit),
-                onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
+                suppressMouseMove,
+                suppressMouseDown
             ] [div [id_ "center-panel"] []]
         else text "",
 
-    div [id_ "hotbar"] hotbuttons
+    div [
+        id_ "hotbar",
+        suppressMouseMove,
+        suppressMouseDown
+    ] hotbuttons
 ]
 
   where
+    suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
+    suppressMouseDown = onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
+
     hotbuttons = map slot [
         Just Move,
         Just (Put grassBlock),
@@ -154,7 +163,10 @@ render state = div [
                  | otherwise = "toolicon/grass.svg"
     tool Remove = "toolicon/pickaxe.svg"
 
-    slot (Just mode) = div [slotClass (state.mode == mode), onClick \e -> Just (SetMode mode unit)] [img [src (tool mode)]]
+    slot (Just mode) = div [
+        slotClass (state.mode == mode),
+        onClick \e -> Just (SetMode mode unit)
+    ] [img [src (tool mode)]]
     slot Nothing = div [slotClass false] []
 
     index = runBlockIndex state.cursorPosition
@@ -162,8 +174,8 @@ render state = div [
 styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
 
-eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sound -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
-eval scene cursor materials options ref sound = case _ of
+eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
+eval scene cursor materials options ref sounds = case _ of
 
     (PreventDefault e next) -> do
         liftEff (preventDefault e)
@@ -177,7 +189,11 @@ eval scene cursor materials options ref sound = case _ of
         pure next
 
     (SetMode mode next) -> do
-        liftEff (modifyRef ref (\(State s) -> State s { mode = mode }))
+        liftEff do
+            State s <- readRef ref
+            when (s.mode /= mode) do
+                writeRef ref (State s { mode = mode })
+                play sounds.switchSound
         modify _ { mode = mode }
         pure next
 
@@ -251,8 +267,12 @@ eval scene cursor materials options ref sound = case _ of
                             Just blockIndex -> editBlock ref materials scene blockIndex block
 
                 case state.mode of
-                    Put blockType -> put blockType
-                    Remove -> put airBlock
+                    Put blockType -> do
+                        put blockType
+                        play sounds.putSound
+                    Remove -> do
+                        put airBlock
+                        play sounds.pickSound
                     Move -> pure unit
 
         pure next
@@ -307,7 +327,11 @@ eval scene cursor materials options ref sound = case _ of
     (ToggleMute next) -> do
         modify \state -> state { mute = not state.mute }
         state <- get
-        liftEff $ setVolume (if state.mute then 0.0 else 1.0) sound
+        liftEff do
+            let go = setVolume (if state.mute then 0.0 else 1.0)
+            go sounds.forestSound
+            go sounds.switchSound
+            go sounds.pickSound
         pure next
 
     (SetCenterPanelVisible visible next) -> do
@@ -320,13 +344,13 @@ eval scene cursor materials options ref sound = case _ of
             stopPropagation e
         pure next
 
-ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sound -> Component HTML Query Void (Aff (HudEffects eff))
-ui ref options scene cursor materials sound = component { render, eval: eval scene cursor materials options ref sound, initialState: initialState }
+ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Component HTML Query Void (Aff (HudEffects eff))
+ui ref options scene cursor materials sounds = component { render, eval: eval scene cursor materials options ref sounds, initialState: initialState }
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
-initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sound -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud ref options body scene cursor materials sound = runUI (ui ref options scene cursor materials sound) body
+initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud ref options body scene cursor materials sounds = runUI (ui ref options scene cursor materials sounds) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

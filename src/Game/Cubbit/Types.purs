@@ -11,7 +11,7 @@ import Data.Nullable (Nullable)
 import Game.Cubbit.BlockType (BlockType(..))
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material, Sound)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -80,6 +80,13 @@ type Materials = {
     cellShadingMaterial :: Material,
     bushMaterial :: Material,
     outlineMaterial :: Material
+}
+
+type Sounds = {
+    forestSound :: Sound,
+    switchSound :: Sound,
+    pickSound :: Sound,
+    putSound :: Sound
 }
 
 type Options = {

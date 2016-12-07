@@ -27,29 +27,29 @@ import Game.Cubbit.Option (readOptions)
 import Game.Cubbit.Terrain (emptyTerrain)
 import Game.Cubbit.Types (Effects, Mode(Move), State(State))
 import Game.Cubbit.Update (update)
-import Graphics.Babylon.Util (querySelectorCanvas)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
+import Graphics.Babylon.Aff.SceneLoader (loadMesh)
+import Graphics.Babylon.Aff.Sound (loadSound)
+import Graphics.Babylon.Aff.Texture (loadTexture)
 import Graphics.Babylon.Camera (setFOV, setMaxZ, setMinZ)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.CubeTexture (createCubeTexture, cubeTextureToTexture)
 import Graphics.Babylon.DirectionalLight (createDirectionalLight, directionalLightToLight)
-import Graphics.Babylon.Engine (createEngine, runRenderLoop)
+import Graphics.Babylon.Engine (createEngine, runRenderLoop, switchFullscreen)
 import Graphics.Babylon.HemisphericLight (createHemisphericLight, hemisphericLightToLight)
 import Graphics.Babylon.Light (setDiffuse)
 import Graphics.Babylon.Material (setFogEnabled, setWireframe, setZOffset)
 import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.Scene (createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
-import Graphics.Babylon.SceneLoader.Aff (loadMesh)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
 import Graphics.Babylon.Sound (defaultCreateSoundOptions)
-import Graphics.Babylon.Sound.Aff (loadSound)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
-import Graphics.Babylon.Texture.Aff (loadTexture)
-import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.Types (VertexDataProps)
+import Graphics.Babylon.Util (querySelectorCanvas)
+import Graphics.Babylon.Vector3 (createVector3)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Network.HTTP.Affjax (get)
@@ -88,9 +88,12 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
         loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
         playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
-        forestSound <- loadSound "forest.mp3" "forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
+        forestSound <- loadSound "forest.mp3" "sound/forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
+        switchSound <- loadSound "tm2_switch001.mp3" "sound/tm2_switch001.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
+        pickSound <- loadSound "bosu06.mp3" "sound/bosu06.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
+        putSound <- loadSound "bosu28_c.mp3" "sound/bosu28_c.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
 
-
+        let sounds = { forestSound, switchSound, pickSound, putSound }
 
         cursor <- liftEff do
             cursorbox <- createBox "cursor" 1.0 scene
@@ -185,7 +188,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         }
 
         -- initialize hud
-        driver <- initializeHud ref options body scene cursor materials forestSound
+        driver <- initializeHud ref options body scene cursor materials sounds
 
         liftEff do
 
