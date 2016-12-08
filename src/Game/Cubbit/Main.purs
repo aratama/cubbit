@@ -43,7 +43,7 @@ import Graphics.Babylon.Mesh (createBox, meshToAbstractMesh, setInfiniteDistance
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.Scene (createScene, fOGMODE_EXP, render, setActiveCamera, setActiveCameras, setCollisionsEnabled, setFogColor, setFogDensity, setFogMode)
 import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, setBias, setUsePoissonSampling)
-import Graphics.Babylon.Sound (defaultCreateSoundOptions, play)
+import Graphics.Babylon.Sound (defaultCreateSoundOptions)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
@@ -88,7 +88,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
         loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
         playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
-        forestSound <- loadSound "forest.mp3" "sound/forest.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = true }
+        forestSound <- loadSound "forest.mp3" "sound/forest.mp3" scene defaultCreateSoundOptions { autoplay = true, loop = true }
         switchSound <- loadSound "tm2_switch001.mp3" "sound/tm2_switch001.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
         pickSound <- loadSound "bosu06.mp3" "sound/bosu06.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
         putSound <- loadSound "bosu28_c.mp3" "sound/bosu28_c.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
@@ -131,8 +131,20 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         -- prepare materials
         materials <- liftEff $ initializeMaterials scene skybox texture alphaTexture options
 
+
         res <- get "./alice/alice.babylon"
         let vertexDataArray = flipFaces res.response
+
+
+{-
+        outlineMeshes <- for vertexDataArray \vertexData -> liftEff do
+            mesh <- createMesh "outline" scene
+            vdata <- createVertexData vertexData
+            applyToMesh mesh false vdata
+            setRenderingGroupId terrainRenderingGroup (meshToAbstractMesh mesh)
+            setMaterial materials.outlineMaterial (meshToAbstractMesh mesh)
+            pure (meshToAbstractMesh mesh)
+-}
 
         -- initialize game state
         initialTerrain <- liftEff $ emptyTerrain 0
@@ -237,10 +249,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             engine # runRenderLoop do
                 update ref engine scene materials shadowMap cursor targetCamera options skybox driver
                 render scene
-
-
-            -- bgm
-            play forestSound
 
             -- focus
             focus "content"

@@ -14,7 +14,6 @@ import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material, Sound)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
-import DOM.WebStorage (STORAGE)
 
 type CoreEffects eff = (
     canvas :: CANVAS,
@@ -27,7 +26,6 @@ type CoreEffects eff = (
 type Effects eff =  CoreEffects (
     dom :: DOM,
     err :: EXCEPTION,
-    storage :: STORAGE,
     avar :: AVAR | eff)
 
 data Mode = Move | Put BlockType | Remove
@@ -91,6 +89,33 @@ type Sounds = {
     switchSound :: Sound,
     pickSound :: Sound,
     putSound :: Sound
+}
+
+type Options = {
+    loadDistance :: Int,
+    fogDensity :: Number,
+    maximumLoadedChunks :: Int,
+    shadowDisplayRange :: Int,
+    shadowMapSize :: Int,
+    enableWaterMaterial :: Boolean,
+    chunkUnloadSpeed :: Int,
+    jumpVelocity :: Number,
+    initialWorldSize :: Int,
+    moveSpeed :: Number,
+    cameraTargetSpeed :: Number,
+    cameraRotationSpeed :: Number,
+    cameraZoomSpeed :: Number,
+    cameraMaxZ :: Number,
+    cameraMinZ :: Number,
+    cameraFOV :: Number,
+    cameraMinimumRange :: Number,
+    cameraMaximumRange :: Number,
+    cameraHorizontalSensitivity :: Number,
+    cameraVertialSensitivity :: Number,
+    pointerHorizontalSensitivity :: Number,
+    pointerVerticalSensitivity :: Number,
+    landingVelocityLimit :: Number,
+    landingDuration :: Int
 }
 
 foreign import data ForeachIndex :: *
