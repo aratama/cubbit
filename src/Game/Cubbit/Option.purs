@@ -1,10 +1,36 @@
-module Game.Cubbit.Option (readOptions) where
+module Game.Cubbit.Option (Options, readOptions) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Data.Foreign (F, Foreign)
 import Data.Foreign.Class (readProp)
-import Game.Cubbit.Types (Options)
+
+type Options = {
+    loadDistance :: Int,
+    fogDensity :: Number,
+    maximumLoadedChunks :: Int,
+    shadowDisplayRange :: Int,
+    shadowMapSize :: Int,
+    enableWaterMaterial :: Boolean,
+    chunkUnloadSpeed :: Int,
+    jumpVelocity :: Number,
+    initialWorldSize :: Int,
+    moveSpeed :: Number,
+    cameraTargetSpeed :: Number,
+    cameraRotationSpeed :: Number,
+    cameraZoomSpeed :: Number,
+    cameraMaxZ :: Number,
+    cameraMinZ :: Number,
+    cameraFOV :: Number,
+    cameraMinimumRange :: Number,
+    cameraMaximumRange :: Number,
+    cameraHorizontalSensitivity :: Number,
+    cameraVertialSensitivity :: Number,
+    pointerHorizontalSensitivity :: Number,
+    pointerVerticalSensitivity :: Number,
+    landingVelocityLimit :: Number,
+    landingDuration :: Int
+}
 
 readOptions :: Foreign -> F Options
 readOptions value = do

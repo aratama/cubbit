@@ -28,7 +28,8 @@ import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk, lookupSolidBlockByVec)
-import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex, Options)
+import Game.Cubbit.Option (Options)
+import Game.Cubbit.Types (Effects, CoreEffects, Mode(..), State(State), Materials, ForeachIndex)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
