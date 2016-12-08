@@ -21,5 +21,7 @@
     "cameraHorizontalSensitivity": 0.004,
     "cameraVertialSensitivity": 0.004,
     "pointerHorizontalSensitivity": 0.002,
-    "pointerVerticalSensitivity": 0.002
+    "pointerVerticalSensitivity": 0.002,
+    "landingVelocityLimit": -0.5,
+    "landingDuration": 40
 }

@@ -5,6 +5,7 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
@@ -12,7 +13,7 @@ import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (Nullable, toNullable)
-import Data.Ord (min)
+import Data.Ord (min, max)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (runBlockIndex)
@@ -38,7 +39,7 @@ import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
-import Math (atan2, cos, max, pi, sin, sqrt)
+import Math (atan2, cos, pi, sin, sqrt)
 import Prelude (negate, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
 update :: forall eff. Ref State
@@ -78,24 +79,31 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
             let position = state.position
             footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - 0.01, z: position.z } state.terrain
-            let jump = case footHoldBlockMaybe of
-                    Just block | isSolidBlock block && state.spaceKey -> options.jumpVelocity
-                    _ -> 0.0
 
-            let velocity = if stopped
+            let isLanding = case footHoldBlockMaybe of
+                    Just block | isSolidBlock block -> true
+                    _ -> false
+
+            let jumpVelocity = if isLanding && state.spaceKey && state.landing == 0 then options.jumpVelocity else 0.0
+
+            let velocity = if 0 < state.landing then { x: 0.0, y: 0.0, z: 0.0 } else if stopped
                         then state.velocity {
                             x = state.velocity.x * 0.5,
-                            y = state.velocity.y + jump,
+                            y = state.velocity.y + jumpVelocity,
                             z = state.velocity.z * 0.5
                         }
                         else let len = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z) in state.velocity {
                             x = rotatedKeyVector.x / len * speed,
-                            y = state.velocity.y + jump,
+                            y = state.velocity.y + jumpVelocity,
                             z = rotatedKeyVector.z / len * speed
                         }
 
             -- playerRotation == 0   =>    -z direction
-            let playerRotation' = if stopped || state.firstPersonView then state.playerRotation else (atan2 velocity.x velocity.z) - pi
+            let playerRotation' = if 0 < state.landing
+                    then state.playerRotation
+                    else if stopped || state.firstPersonView
+                        then state.playerRotation
+                        else (atan2 velocity.x velocity.z) - pi
 
             let playerPosition = {
                         x: state.position.x + velocity.x,
@@ -105,7 +113,11 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
 
 
-            let animation' = if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle"
+            let animation' = if 0 < state.landing
+                    then "land"
+                    else if isLanding
+                        then (if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle")
+                        else "jump"
 
             let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
             blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
@@ -119,6 +131,16 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
             let velocity' = case blockMaybe of
                                 Just block | isSolidBlock block -> velocity { y = 0.0 }
                                 _ -> velocity { y = velocity.y - 0.01 }
+
+
+
+
+            footHoldBlockMaybe' <- lookupBlockByVec { x: position'.x, y: position'.y - 0.01, z: position'.z } state.terrain
+            let isLanding' = case footHoldBlockMaybe' of
+                    Just block | isSolidBlock block -> true
+                    _ -> false
+
+            let landingCount = if isLanding' && state.velocity.y < options.landingVelocityLimit then options.landingDuration else state.landing
 
             -- camera view target
             let cameraSpeed = if state.firstPersonView then 0.5 else options.cameraTargetSpeed
@@ -180,7 +202,9 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
                         animation = animation',
                         playerRotation = playerRotation',
 
-                        totalFrames = state.totalFrames + 1
+                        totalFrames = state.totalFrames + 1,
+
+                        landing = max 0 (landingCount - 1)
                     }
 
             -- update states

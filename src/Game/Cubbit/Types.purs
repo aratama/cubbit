@@ -71,7 +71,9 @@ newtype State = State {
     fKey :: Boolean,
     tKey :: Boolean,
     gKey :: Boolean,
-    animation :: String
+
+    animation :: String,
+    landing :: Int
 }
 
 type Materials = {
@@ -111,7 +113,9 @@ type Options = {
     cameraHorizontalSensitivity :: Number,
     cameraVertialSensitivity :: Number,
     pointerHorizontalSensitivity :: Number,
-    pointerVerticalSensitivity :: Number
+    pointerVerticalSensitivity :: Number,
+    landingVelocityLimit :: Number,
+    landingDuration :: Int
 }
 
 foreign import data ForeachIndex :: *

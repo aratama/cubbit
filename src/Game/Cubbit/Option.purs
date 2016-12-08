@@ -30,6 +30,8 @@ readOptions value = do
     cameraVertialSensitivity <- readProp "cameraVertialSensitivity" value
     pointerHorizontalSensitivity <- readProp "pointerHorizontalSensitivity" value
     pointerVerticalSensitivity <- readProp "pointerVerticalSensitivity" value
+    landingVelocityLimit <- readProp "landingVelocityLimit" value
+    landingDuration <- readProp "landingDuration" value
     pure {
         loadDistance,
         fogDensity,
@@ -52,6 +54,8 @@ readOptions value = do
         cameraHorizontalSensitivity,
         cameraVertialSensitivity,
         pointerHorizontalSensitivity,
-        pointerVerticalSensitivity
+        pointerVerticalSensitivity,
+        landingVelocityLimit,
+        landingDuration
     }
 

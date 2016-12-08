@@ -184,7 +184,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             tKey: false,
             gKey: false,
 
-            animation: ""
+            animation: "",
+            landing: 0
         }
 
         -- initialize hud

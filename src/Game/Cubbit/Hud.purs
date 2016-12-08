@@ -332,6 +332,7 @@ eval scene cursor materials options ref sounds = case _ of
             go sounds.forestSound
             go sounds.switchSound
             go sounds.pickSound
+            go sounds.putSound            
         pure next
 
     (SetCenterPanelVisible visible next) -> do
