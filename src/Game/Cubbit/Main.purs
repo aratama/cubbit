@@ -184,6 +184,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             tKey: false,
             gKey: false,
 
+            skyboxRotation: 0.0,
+
             animation: "",
             landing: 0
         }

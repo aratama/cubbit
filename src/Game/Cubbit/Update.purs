@@ -131,7 +131,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
             let velocity' = case blockMaybe of
                                 Just block | isSolidBlock block -> velocity { y = 0.0 }
-                                _ -> velocity { y = velocity.y - 0.01 }
+                                _ -> velocity { y = velocity.y + options.gravity * deltaTime }
 
 
 
@@ -146,7 +146,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
             -- camera view target
             let cameraSpeed = if state.firstPersonView then 0.5 else options.cameraTargetSpeed
 
-            let eyeHeight = 1.4
+            let eyeHeight = options.eyeHeight
 
             let thirdPersonCameraTargetX = position'.x
             let thirdPersonCameraTargetY = position'.y + eyeHeight
@@ -205,6 +205,8 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
                         totalFrames = state.totalFrames + 1,
 
+                        skyboxRotation = state.skyboxRotation + options.skyboxRotationSpeed * deltaTime,
+
                         landing = max 0 (landingCount - 1)
                     }
 
@@ -243,7 +245,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
             Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
             setTarget cameraTargetVector camera
 
-            skyboxRotationVector <- createVector3 0.0 (Int.toNumber state.totalFrames * options.skyboxRotationSpeed) 0.0
+            skyboxRotationVector <- createVector3 0.0 state'.skyboxRotation 0.0
             setRotation skyboxRotationVector (meshToAbstractMesh skybox)
 
 

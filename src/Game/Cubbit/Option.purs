@@ -6,6 +6,8 @@ import Data.Foreign (F, Foreign)
 import Data.Foreign.Class (readProp)
 
 type Options = {
+    eyeHeight :: Number,
+    gravity :: Number,
     loadDistance :: Int,
     fogDensity :: Number,
     maximumLoadedChunks :: Int,
@@ -37,6 +39,8 @@ type Options = {
 
 readOptions :: Foreign -> F Options
 readOptions value = do
+    eyeHeight <- readProp "eyeHeight" value
+    gravity <- readProp "gravity" value
     loadDistance <- readProp "loadDistance" value
     fogDensity <- readProp "fogDensity" value
     maximumLoadedChunks <- readProp "maximumLoadedChunks" value
@@ -65,6 +69,8 @@ readOptions value = do
     landingVelocityLimit <- readProp "landingVelocityLimit" value
     landingDuration <- readProp "landingDuration" value
     pure {
+        eyeHeight,
+        gravity,
         loadDistance,
         fogDensity,
         maximumLoadedChunks,

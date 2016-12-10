@@ -74,6 +74,8 @@ newtype State = State {
     tKey :: Boolean,
     gKey :: Boolean,
 
+    skyboxRotation :: Number,
+
     animation :: String,
     landing :: Int
 }

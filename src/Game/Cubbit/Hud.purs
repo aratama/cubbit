@@ -50,15 +50,19 @@ type HudState = {
     cursorPosition :: BlockIndex,
     mode :: Mode,
     mute :: Boolean,
-    centerPanelVisible :: Boolean
+    centerPanelVisible :: Boolean,
+    gameScene :: GameScene
 }
+
+data GameScene = TitleScene | PlayingScene
 
 initialState :: Boolean -> HudState
 initialState mute = {
     cursorPosition: blockIndex 0 0 0,
     mode : Move,
     mute: mute,
-    centerPanelVisible: false
+    centerPanelVisible: false,
+    gameScene: TitleScene
 }
 
 data Query a = SetCursorPosition BlockIndex a
@@ -75,6 +79,7 @@ data Query a = SetCursorPosition BlockIndex a
              | ToggleMute a
              | SetCenterPanelVisible Boolean a
              | Nop Event a
+             | Start a
 
 type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON, storage :: STORAGE | eff)
 
@@ -87,63 +92,67 @@ icon name = i [class_ (ClassName ("fa fa-" <> name))] []
 
 render :: HudState -> ComponentHTML Query
 render state = div [
-    id_ "content",
-    class_ (ClassName "content-layer"),
-    onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
-    tabIndex 0,
-    unsafeCoerce (autofocus true),
-    onKeyDown \e -> Just (OnKeyDown e unit),
-    onKeyUp \e -> Just (OnKeyUp e unit),
-    onMouseMove \e -> Just (SetMousePosition e unit),
-    onMouseDown \e -> Just (OnMouseClick e unit),
-    onWheel \e -> Just (Zoom e unit)
-] [
-    canvas [
-        id_ "canvas2d",
-        width $ Pixels 1280,
-        height $ Pixels 720
-    ],
-    img [id_ "screen-shade", src "screenshade.png"],
+        id_ "content",
+        class_ (ClassName "content-layer"),
+        onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
+        tabIndex 0,
+        unsafeCoerce (autofocus true),
+        onKeyDown \e -> Just (OnKeyDown e unit),
+        onKeyUp \e -> Just (OnKeyUp e unit),
+        onMouseMove \e -> Just (SetMousePosition e unit),
+        onMouseDown \e -> Just (OnMouseClick e unit),
+        onWheel \e -> Just (Zoom e unit)
+    ] case state.gameScene of
 
-    div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
+        TitleScene -> [
+            img [
+                class_ (ClassName "content-layer"),
+                src "title.png",
+                onClick \e -> Just (Start unit)
+            ]
+        ]
 
-    div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
+        PlayingScene -> [
+            img [id_ "screen-shade", class_ (ClassName "content-layer"), src "screenshade.png"],
 
+            div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 
-    p [id_ "message-box-top"] [],
-    p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
-    div [
-        id_ "right-panel",
-        suppressMouseMove,
-        suppressMouseDown
-    ] [
-        div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
-        div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
-        div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
-        div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
-    ],
+            div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
 
 
-    div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"],
-
-    if state.centerPanelVisible
-        then div [
-                id_ "center-panel-outer",
-                onClick \e -> Just (SetCenterPanelVisible false unit),
+            p [id_ "message-box-top"] [],
+            p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
+            div [
+                id_ "right-panel",
                 suppressMouseMove,
                 suppressMouseDown
-            ] [div [id_ "center-panel"] []]
-        else text "",
+            ] [
+                div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
+                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
+                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
+                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
+            ],
 
-    div [
-        id_ "hotbar",
-        suppressMouseMove,
-        suppressMouseDown
-    ] [
-        div [id_ "hotbar-lower"] [],
-        div [id_ "hotbar-upper"] hotbuttons
-    ]
-]
+            if state.centerPanelVisible
+                then div [
+                        id_ "center-panel-outer",
+                        onClick \e -> Just (SetCenterPanelVisible false unit),
+                        suppressMouseMove,
+                        suppressMouseDown
+                    ] [div [id_ "center-panel"] []]
+                else text "",
+
+            div [
+                id_ "hotbar",
+                suppressMouseMove,
+                suppressMouseDown
+            ] [
+                div [id_ "hotbar-lower"] [],
+                div [id_ "hotbar-upper"] hotbuttons
+            ],
+
+            div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"]
+        ]
 
   where
     suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
@@ -349,6 +358,11 @@ eval scene cursor materials options ref sounds = case _ of
             preventDefault e
             stopPropagation e
         pure next
+
+    (Start next) -> do
+        modify (_ { gameScene = PlayingScene })
+        pure next
+
 
 setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setMute mute sounds = do

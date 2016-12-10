@@ -7,10 +7,14 @@ import Data.Maybe (fromMaybe)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
 
-newtype Config = Config { mute :: Boolean }
+newtype Config = Config {
+    mute :: Boolean
+}
 
 defaultConfig :: Config
-defaultConfig = Config { mute: false }
+defaultConfig = Config {
+    mute: false
+}
 
 derive instance genericConfig :: Generic Config
 
