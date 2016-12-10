@@ -2,11 +2,13 @@ module Game.Cubbit.Hud (Query(..), HudDriver, HudEffects, initializeHud, queryTo
 
 import Control.Alt (void)
 import Control.Alternative (when)
-import Control.Monad.Aff (Aff, runAff)
+import Control.Monad.Aff (Aff, makeAff, runAff)
+import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Aff.Console (CONSOLE)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
+import Control.Monad.Eff.Timer (TIMER, setTimeout)
 import DOM.Event.Event (Event, preventDefault, stopPropagation)
 import DOM.Event.KeyboardEvent (KeyboardEvent, key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
@@ -17,16 +19,16 @@ import Data.Array (replicate)
 import Data.BooleanAlgebra (not)
 import Data.Functor (map)
 import Data.Int (toNumber)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isNothing)
 import Data.Ord (max, min)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
 import Game.Cubbit.Config (Config(..), readConfig, writeConfig)
-import Game.Cubbit.Option (Options)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
+import Game.Cubbit.Option (Options)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Types (Materials, Mode(..), Sounds, State(..))
 import Game.Cubbit.Vec (Vec)
@@ -34,11 +36,12 @@ import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, setVolume)
 import Graphics.Babylon.Types (BABYLON, Mesh, Scene, Sound)
-import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftEff, modify)
+import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenF, HalogenIO, component, liftAff, liftEff, modify)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
 import Halogen.HTML.Elements (canvas, i)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
+import Halogen.HTML.Properties (key) as Properties
 import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
 import Math (pi)
@@ -51,6 +54,7 @@ type HudState = {
     mode :: Mode,
     mute :: Boolean,
     centerPanelVisible :: Boolean,
+    nextScene :: Maybe GameScene,
     gameScene :: GameScene
 }
 
@@ -62,6 +66,7 @@ initialState mute = {
     mode : Move,
     mute: mute,
     centerPanelVisible: false,
+    nextScene: Nothing,
     gameScene: TitleScene
 }
 
@@ -80,8 +85,13 @@ data Query a = SetCursorPosition BlockIndex a
              | SetCenterPanelVisible Boolean a
              | Nop Event a
              | Start a
+             | Home a
 
-type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON, storage :: STORAGE | eff)
+type HudEffects eff = HalogenEffects (
+    ajax :: AJAX,
+    babylon :: BABYLON,
+    storage :: STORAGE,
+    timer :: TIMER | eff)
 
 slotClass :: forall r i. Boolean -> IProp (class :: I | r) i
 slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""))
@@ -93,6 +103,7 @@ icon name = i [class_ (ClassName ("fa fa-" <> name))] []
 render :: HudState -> ComponentHTML Query
 render state = div [
         id_ "content",
+        Properties.key "root-content",
         class_ (ClassName "content-layer"),
         onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
         tabIndex 0,
@@ -102,57 +113,66 @@ render state = div [
         onMouseMove \e -> Just (SetMousePosition e unit),
         onMouseDown \e -> Just (OnMouseClick e unit),
         onWheel \e -> Just (Zoom e unit)
-    ] case state.gameScene of
+    ] [
+        div [Properties.key "content-inner"] case state.gameScene of
 
-        TitleScene -> [
-            img [
-                class_ (ClassName "content-layer"),
-                src "title.png",
-                onClick \e -> Just (Start unit)
+            TitleScene -> [
+                img [
+                    class_ (ClassName "content-layer"),
+                    src "title.png",
+                    onClick \e -> Just (Start unit)
+                ]
             ]
-        ]
 
-        PlayingScene -> [
-            img [id_ "screen-shade", class_ (ClassName "content-layer"), src "screenshade.png"],
+            PlayingScene -> [
+                img [id_ "screen-shade", class_ (ClassName "content-layer"), src "screenshade.png"],
 
-            div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
+                div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 
-            div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
+                div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
 
 
-            p [id_ "message-box-top"] [],
-            p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
-            div [
-                id_ "right-panel",
-                suppressMouseMove,
-                suppressMouseDown
-            ] [
-                div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
-                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"]
+                p [id_ "message-box-top"] [],
+                p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
+                div [
+                    id_ "right-panel",
+                    suppressMouseMove,
+                    suppressMouseDown
+                ] [
+                    div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
+                    div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
+                    div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
+                    div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"],
+                    div [class_ (ClassName "button home"), onClick \e -> Just (Home unit)] [icon "home"]
+                ],
+
+                if state.centerPanelVisible
+                    then div [
+                            id_ "center-panel-outer",
+                            onClick \e -> Just (SetCenterPanelVisible false unit),
+                            suppressMouseMove,
+                            suppressMouseDown
+                        ] [div [id_ "center-panel"] []]
+                    else text "",
+
+                div [
+                    id_ "hotbar",
+                    suppressMouseMove,
+                    suppressMouseDown
+                ] [
+                    div [id_ "hotbar-lower"] [],
+                    div [id_ "hotbar-upper"] hotbuttons
+                ],
+
+                div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"]
             ],
-
-            if state.centerPanelVisible
-                then div [
-                        id_ "center-panel-outer",
-                        onClick \e -> Just (SetCenterPanelVisible false unit),
-                        suppressMouseMove,
-                        suppressMouseDown
-                    ] [div [id_ "center-panel"] []]
-                else text "",
-
-            div [
-                id_ "hotbar",
-                suppressMouseMove,
-                suppressMouseDown
-            ] [
-                div [id_ "hotbar-lower"] [],
-                div [id_ "hotbar-upper"] hotbuttons
-            ],
-
-            div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"]
-        ]
+        div [
+            id_ "shadow",
+            class_ (ClassName "content-layer"),
+            Properties.key "shadow",
+            styleStr ("opacity: " <> if isNothing state.nextScene then "0.0" else "1.0")
+        ] []
+    ]
 
   where
     suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
@@ -360,9 +380,23 @@ eval scene cursor materials options ref sounds = case _ of
         pure next
 
     (Start next) -> do
+        modify (_ { nextScene = Just PlayingScene })
+        wait 300
         modify (_ { gameScene = PlayingScene })
+        wait 100
+        modify (_ { nextScene = Nothing })
         pure next
 
+    (Home next) -> do
+        modify (_ { nextScene = Just TitleScene })
+        wait 300
+        modify (_ { gameScene = TitleScene })
+        wait 100
+        modify (_ { nextScene = Nothing })
+        pure next
+
+wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
+wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))
 
 setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setMute mute sounds = do

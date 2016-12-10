@@ -5,6 +5,7 @@ import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF)
+import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE)
 import Data.Eq (class Eq)
@@ -23,7 +24,8 @@ type CoreEffects eff = (
     babylon :: BABYLON,
     ref :: REF,
     ajax :: AJAX,
-    storage :: STORAGE | eff)
+    storage :: STORAGE,
+    timer :: TIMER | eff)
 
 type Effects eff =  CoreEffects (
     dom :: DOM,
