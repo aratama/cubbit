@@ -9,6 +9,8 @@ type Options = {
     loadDistance :: Int,
     fogDensity :: Number,
     maximumLoadedChunks :: Int,
+    vertexColorEnabled :: Boolean,
+    shadowEnabled :: Boolean,
     shadowDisplayRange :: Int,
     shadowMapSize :: Int,
     skyboxRotationSpeed :: Number,
@@ -38,6 +40,8 @@ readOptions value = do
     loadDistance <- readProp "loadDistance" value
     fogDensity <- readProp "fogDensity" value
     maximumLoadedChunks <- readProp "maximumLoadedChunks" value
+    vertexColorEnabled <- readProp "vertexColorEnabled" value
+    shadowEnabled <- readProp "shadowEnabled" value
     shadowDisplayRange <- readProp "shadowDisplayRange" value
     shadowMapSize <- readProp "shadowMapSize" value
     skyboxRotationSpeed <- readProp "skyboxRotationSpeed" value
@@ -64,7 +68,9 @@ readOptions value = do
         loadDistance,
         fogDensity,
         maximumLoadedChunks,
+        vertexColorEnabled,
         shadowDisplayRange,
+        shadowEnabled,
         shadowMapSize,
         skyboxRotationSpeed,
         enableWaterMaterial,

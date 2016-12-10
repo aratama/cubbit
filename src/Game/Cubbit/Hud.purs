@@ -270,7 +270,7 @@ eval scene cursor materials options ref sounds = case _ of
                         picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
                         case picked of
                             Nothing -> pure unit
-                            Just blockIndex -> editBlock ref materials scene blockIndex block
+                            Just blockIndex -> editBlock ref materials scene blockIndex block options
 
                 case state.mode of
                     Put blockType -> do

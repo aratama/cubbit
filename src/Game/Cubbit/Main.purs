@@ -243,7 +243,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 forE (-initialWorldSize) initialWorldSize \x -> do
                     forE (-initialWorldSize) initialWorldSize \z -> void do
                         let index = chunkIndex x 0 z
-                        createChunkMesh ref materials scene index
+                        createChunkMesh ref materials scene index options
 
             -- start game loop
             engine # runRenderLoop do

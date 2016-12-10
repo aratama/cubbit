@@ -3,7 +3,9 @@
     "loadDistance": 6,
     "fogDensity": 0.005,
     "maximumLoadedChunks": 2197,
+    "vertexColorEnabled": true,
     "shadowDisplayRange": 4,
+    "shadowEnabled": true,
     "shadowMapSize": 4096,
     "skyboxRotationSpeed": 0.0004,
     "enableWaterMaterial": false,
@@ -23,6 +25,6 @@
     "cameraVertialSensitivity": 0.004,
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002,
-    "landingVelocityLimit": -0.5,
+    "landingVelocityLimit": -0.3,
     "landingDuration": 40
 }

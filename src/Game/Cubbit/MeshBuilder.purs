@@ -20,6 +20,7 @@ import Game.Cubbit.LocalIndex (LocalIndex, localIndex, runLocalIndex)
 import Game.Cubbit.MeshBuilder (createTerrainGeometry)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (Materials, Mode(..), State(State))
+import Game.Cubbit.Option (Options)
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Material (setAlpha)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
@@ -78,8 +79,8 @@ loadDefaultChunk ref index = do
             pure true
 
 
-createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
-createChunkMesh ref materials scene index = do
+createChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Options -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
+createChunkMesh ref materials scene index options = do
     State state@{ terrain: Terrain terrain } <- readRef ref
 
     let i = runChunkIndex index
@@ -110,7 +111,7 @@ createChunkMesh ref materials scene index = do
 
             let gen vertices mat gruop = if 0 < length vertices.indices
                     then do
-                        mesh <- generateMesh index (VertexDataProps vertices) mat scene
+                        mesh <- generateMesh index (VertexDataProps vertices) mat scene options
                         setRenderingGroupId gruop (meshToAbstractMesh mesh)
                         pure (MeshLoaded mesh)
                     else do
@@ -133,8 +134,8 @@ createChunkMesh ref materials scene index = do
 
             pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
 
-generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Eff (babylon :: BABYLON | eff) Mesh
-generateMesh index verts mat scene = do
+generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Options -> Eff (babylon :: BABYLON | eff) Mesh
+generateMesh index verts mat scene options = do
     let rci = runChunkIndex index
     let cx = rci.x
     let cy = rci.y
@@ -142,8 +143,8 @@ generateMesh index verts mat scene = do
     terrainMesh <- createMesh "terrain" scene
     applyToMesh terrainMesh false =<< createVertexData (verts)
     setRenderingGroupId terrainRenderingGroup (meshToAbstractMesh terrainMesh)
-    setReceiveShadows true (meshToAbstractMesh terrainMesh)
-    setUseVertexColors true (meshToAbstractMesh terrainMesh)
+    setReceiveShadows options.shadowEnabled (meshToAbstractMesh terrainMesh)
+    setUseVertexColors options.vertexColorEnabled (meshToAbstractMesh terrainMesh)
     setMaterial mat (meshToAbstractMesh terrainMesh)
     setIsPickable false (meshToAbstractMesh terrainMesh)
     pure terrainMesh
@@ -151,8 +152,8 @@ generateMesh index verts mat scene = do
 
 
 
-editBlock :: forall eff. Ref State -> Materials -> Scene -> BlockIndex -> BlockType -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-editBlock ref materials scene globalBlockIndex block = do
+editBlock :: forall eff. Ref State -> Materials -> Scene -> BlockIndex -> BlockType -> Options -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+editBlock ref materials scene globalBlockIndex block options = do
     State state <- readRef ref
     let editChunkIndex = globalIndexToChunkIndex globalBlockIndex
     chunkMaybe <- lookupChunk editChunkIndex state.terrain
@@ -163,7 +164,7 @@ editBlock ref materials scene globalBlockIndex block = do
             let li = runLocalIndex localIndex
             updateChunkMesh ref materials scene chunkData {
                 blocks = insert localIndex block chunkData.blocks
-            }
+            } options
 
             let eci = runChunkIndex editChunkIndex
 
@@ -171,7 +172,7 @@ editBlock ref materials scene globalBlockIndex block = do
                     chunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
                     case chunkMaybe of
                         Nothing -> pure unit
-                        Just chunkData -> updateChunkMesh ref materials scene chunkData
+                        Just chunkData -> updateChunkMesh ref materials scene chunkData options
 
             when (li.x == 0) (refreash (-1) 0 0)
             when (li.x == chunkSize - 1) (refreash 1 0 0)
@@ -180,8 +181,8 @@ editBlock ref materials scene globalBlockIndex block = do
             when (li.z == 0) (refreash 0 0 (-1))
             when (li.z == chunkSize - 1) (refreash 0 0 1)
 
-updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-updateChunkMesh ref materials scene chunkWithMesh = void do
+updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Options -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+updateChunkMesh ref materials scene chunkWithMesh options = void do
 
     State state <- readRef ref
 
@@ -194,9 +195,9 @@ updateChunkMesh ref materials scene chunkWithMesh = void do
         Nothing -> pure unit
         Just chunkData -> disposeChunk chunkData
 
-    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.blockMaterial scene
-    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterMaterial scene
-    transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene
+    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.blockMaterial scene options
+    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterMaterial scene options
+    transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene options
 
     let ci = runChunkIndex index
     mesh <- pure {

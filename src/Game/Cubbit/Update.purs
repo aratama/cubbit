@@ -258,7 +258,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
 
                         -- let ci = runChunkIndex index
 
-                        createChunkMesh ref materials scene index
+                        createChunkMesh ref materials scene index options
 
                         --State st <- readRef ref
                         --size <- chunkCount st.terrain
@@ -303,14 +303,18 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
                         --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
 
             -- update shadow rendering list
-            do
-                let cci = runChunkIndex cameraPositionChunkIndex
-                neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z terrain.map
-                let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
-                            MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
-                            _ -> Nothing
-                        ) <$> neighbors)
-                setRenderList (meshes <> state.playerMeshes) shadowMap
+            if options.shadowEnabled
+                then do
+
+                    let cci = runChunkIndex cameraPositionChunkIndex
+                    neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z terrain.map
+                    let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
+                                MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                                _ -> Nothing
+                            ) <$> neighbors)
+                    setRenderList (meshes <> state.playerMeshes) shadowMap
+                else do
+                    setRenderList [] shadowMap
 
             -- picking
             do
