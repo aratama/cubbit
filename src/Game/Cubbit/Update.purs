@@ -24,7 +24,8 @@ import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud (Query(SetCursorPosition), queryToHud)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Materials, Mode(Move, Remove, Put), Options, State(State))
+import Game.Cubbit.Types (Effects, ForeachIndex, Materials, Mode(Move, Remove, Put), State(State))
+import Game.Cubbit.Option (Options)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -242,7 +243,7 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
             Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
             setTarget cameraTargetVector camera
 
-            skyboxRotationVector <- createVector3 0.0 (Int.toNumber state.totalFrames * 0.0001) 0.0
+            skyboxRotationVector <- createVector3 0.0 (Int.toNumber state.totalFrames * options.skyboxRotationSpeed) 0.0
             setRotation skyboxRotationVector (meshToAbstractMesh skybox)
 
 

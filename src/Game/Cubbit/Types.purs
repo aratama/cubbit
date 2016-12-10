@@ -6,6 +6,7 @@ import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Ref (REF)
 import DOM (DOM)
+import DOM.WebStorage (STORAGE)
 import Data.Eq (class Eq)
 import Data.Nullable (Nullable)
 import Game.Cubbit.BlockType (BlockType(..))
@@ -21,7 +22,8 @@ type CoreEffects eff = (
     console :: CONSOLE,
     babylon :: BABYLON,
     ref :: REF,
-    ajax :: AJAX | eff)
+    ajax :: AJAX,
+    storage :: STORAGE | eff)
 
 type Effects eff =  CoreEffects (
     dom :: DOM,
@@ -91,32 +93,7 @@ type Sounds = {
     putSound :: Sound
 }
 
-type Options = {
-    loadDistance :: Int,
-    fogDensity :: Number,
-    maximumLoadedChunks :: Int,
-    shadowDisplayRange :: Int,
-    shadowMapSize :: Int,
-    enableWaterMaterial :: Boolean,
-    chunkUnloadSpeed :: Int,
-    jumpVelocity :: Number,
-    initialWorldSize :: Int,
-    moveSpeed :: Number,
-    cameraTargetSpeed :: Number,
-    cameraRotationSpeed :: Number,
-    cameraZoomSpeed :: Number,
-    cameraMaxZ :: Number,
-    cameraMinZ :: Number,
-    cameraFOV :: Number,
-    cameraMinimumRange :: Number,
-    cameraMaximumRange :: Number,
-    cameraHorizontalSensitivity :: Number,
-    cameraVertialSensitivity :: Number,
-    pointerHorizontalSensitivity :: Number,
-    pointerVerticalSensitivity :: Number,
-    landingVelocityLimit :: Number,
-    landingDuration :: Int
-}
+
 
 foreign import data ForeachIndex :: *
 

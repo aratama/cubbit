@@ -12,6 +12,7 @@ import DOM.Event.KeyboardEvent (KeyboardEvent, key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
 import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import DOM.HTML.Types (HTMLElement)
+import DOM.WebStorage (STORAGE)
 import Data.Array (replicate)
 import Data.BooleanAlgebra (not)
 import Data.Functor (map)
@@ -22,10 +23,12 @@ import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
+import Game.Cubbit.Config (Config(..), readConfig, writeConfig)
+import Game.Cubbit.Option (Options)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Types (Materials, Mode(..), Options, State(..), Sounds)
+import Game.Cubbit.Types (Materials, Mode(..), Sounds, State(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
@@ -50,11 +53,11 @@ type HudState = {
     centerPanelVisible :: Boolean
 }
 
-initialState :: HudState
-initialState = {
+initialState :: Boolean -> HudState
+initialState mute = {
     cursorPosition: blockIndex 0 0 0,
     mode : Move,
-    mute: false,
+    mute: mute,
     centerPanelVisible: false
 }
 
@@ -73,7 +76,7 @@ data Query a = SetCursorPosition BlockIndex a
              | SetCenterPanelVisible Boolean a
              | Nop Event a
 
-type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON | eff)
+type HudEffects eff = HalogenEffects (ajax :: AJAX, babylon :: BABYLON, storage :: STORAGE | eff)
 
 slotClass :: forall r i. Boolean -> IProp (class :: I | r) i
 slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""))
@@ -136,7 +139,10 @@ render state = div [
         id_ "hotbar",
         suppressMouseMove,
         suppressMouseDown
-    ] hotbuttons
+    ] [
+        div [id_ "hotbar-lower"] [],
+        div [id_ "hotbar-upper"] hotbuttons
+    ]
 ]
 
   where
@@ -286,19 +292,20 @@ eval scene cursor materials options ref sounds = case _ of
 
 
     (OnKeyDown e next) -> do
+        let go f = void do modifyRef ref \(State state) -> State (f state true)
         liftEff do
             case key e of
-                " " -> void do modifyRef ref \(State state) -> State state { spaceKey = true }
-                "w" -> void do modifyRef ref \(State state) -> State state { wKey = true }
-                "s" -> void do modifyRef ref \(State state) -> State state { sKey = true }
-                "a" -> void do modifyRef ref \(State state) -> State state { aKey = true }
-                "d" -> void do modifyRef ref \(State state) -> State state { dKey = true }
-                "r" -> void do modifyRef ref \(State state) -> State state { rKey = true }
-                "f" -> void do modifyRef ref \(State state) -> State state { fKey = true }
-                "q" -> void do modifyRef ref \(State state) -> State state { qKey = true }
-                "e" -> void do modifyRef ref \(State state) -> State state { eKey = true }
-                "t" -> void do modifyRef ref \(State state) -> State state { tKey = true }
-                "g" -> void do modifyRef ref \(State state) -> State state { gKey = true }
+                " " -> go _ { spaceKey = _ }
+                "w" -> go _ { wKey = _ }
+                "s" -> go _ { sKey = _ }
+                "a" -> go _ { aKey = _ }
+                "d" -> go _ { dKey = _ }
+                "r" -> go _ { rKey = _ }
+                "f" -> go _ { fKey = _ }
+                "q" -> go _ { qKey = _ }
+                "e" -> go _ { eKey = _ }
+                "t" -> go _ { tKey = _ }
+                "g" -> go _ { gKey = _ }
                 _ -> pure unit
             preventDefault (keyboardEventToEvent e)
             stopPropagation (keyboardEventToEvent e)
@@ -306,19 +313,20 @@ eval scene cursor materials options ref sounds = case _ of
         pure next
 
     (OnKeyUp e next) -> do
+        let go f = void do modifyRef ref \(State state) -> State (f state false)
         liftEff do
             case key e of
-                " " -> void do modifyRef ref \(State state) -> State state { spaceKey = false }
-                "w" -> void do modifyRef ref \(State state) -> State state { wKey = false }
-                "s" -> void do modifyRef ref \(State state) -> State state { sKey = false }
-                "a" -> void do modifyRef ref \(State state) -> State state { aKey = false }
-                "d" -> void do modifyRef ref \(State state) -> State state { dKey = false }
-                "r" -> void do modifyRef ref \(State state) -> State state { rKey = false }
-                "f" -> void do modifyRef ref \(State state) -> State state { fKey = false }
-                "q" -> void do modifyRef ref \(State state) -> State state { qKey = false }
-                "e" -> void do modifyRef ref \(State state) -> State state { eKey = false }
-                "t" -> void do modifyRef ref \(State state) -> State state { tKey = false }
-                "g" -> void do modifyRef ref \(State state) -> State state { gKey = false }
+                " " -> go _ { spaceKey = _ }
+                "w" -> go _ { wKey = _ }
+                "s" -> go _ { sKey = _ }
+                "a" -> go _ { aKey = _ }
+                "d" -> go _ { dKey = _ }
+                "r" -> go _ { rKey = _ }
+                "f" -> go _ { fKey = _ }
+                "q" -> go _ { qKey = _ }
+                "e" -> go _ { eKey = _ }
+                "t" -> go _ { tKey = _ }
+                "g" -> go _ { gKey = _ }
                 _ -> pure unit
             preventDefault (keyboardEventToEvent e)
             stopPropagation (keyboardEventToEvent e)
@@ -328,11 +336,8 @@ eval scene cursor materials options ref sounds = case _ of
         modify \state -> state { mute = not state.mute }
         state <- get
         liftEff do
-            let go = setVolume (if state.mute then 0.0 else 1.0)
-            go sounds.forestSound
-            go sounds.switchSound
-            go sounds.pickSound
-            go sounds.putSound            
+            setMute state.mute sounds
+            writeConfig (Config { mute: state.mute })
         pure next
 
     (SetCenterPanelVisible visible next) -> do
@@ -345,13 +350,29 @@ eval scene cursor materials options ref sounds = case _ of
             stopPropagation e
         pure next
 
-ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Component HTML Query Void (Aff (HudEffects eff))
-ui ref options scene cursor materials sounds = component { render, eval: eval scene cursor materials options ref sounds, initialState: initialState }
+setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
+setMute mute sounds = do
+    let go = setVolume (if mute then 0.0 else 1.0)
+    go sounds.forestSound
+    go sounds.switchSound
+    go sounds.pickSound
+    go sounds.putSound
+
+
+ui :: forall eff. Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
+ui ref options scene cursor materials sounds mute = component {
+    render,
+    eval: eval scene cursor materials options ref sounds,
+    initialState: initialState mute
+}
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
 initializeHud :: forall eff. Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud ref options body scene cursor materials sounds = runUI (ui ref options scene cursor materials sounds) body
+initializeHud ref options body scene cursor materials sounds = do
+    Config config <- liftEff $ readConfig
+    liftEff $ setMute config.mute sounds
+    runUI (ui ref options scene cursor materials sounds config.mute) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

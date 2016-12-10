@@ -5,6 +5,7 @@
     "maximumLoadedChunks": 2197,
     "shadowDisplayRange": 4,
     "shadowMapSize": 4096,
+    "skyboxRotationSpeed": 0.0004,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
     "jumpVelocity": 0.18,
