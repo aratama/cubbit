@@ -39,4 +39,4 @@ newtype Options = Options {
 derive instance genericOptions :: Generic Options
 
 readOptions :: Foreign -> F Options
-readOptions value = readGeneric (defaultOptions { unwrapNewtypes = true }) value
+readOptions = readGeneric defaultOptions { unwrapNewtypes = true }
