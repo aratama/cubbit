@@ -1,4 +1,4 @@
-module Game.Cubbit.Hud.Type (Query(..), HudEffects, HudState, GameScene(..)) where
+module Game.Cubbit.Hud.Type (Query(..), HudEffects, HudState, GameScene(..), PlayingSceneQuery(..)) where
 
 import Control.Monad.Eff.Timer (TIMER)
 import DOM.Event.Event (Event)
@@ -14,34 +14,39 @@ import Halogen (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 
 type HudState = {
+
+    gameScene :: GameScene,
+
     cursorPosition :: BlockIndex,
     mode :: Mode,
     mute :: Boolean,
     centerPanelVisible :: Boolean,
     nextScene :: Maybe GameScene,
-    gameScene :: GameScene,
     life :: Int,
     maxLife :: Int
 }
 
 data GameScene = TitleScene | PlayingScene
 
-data Query a = SetCursorPosition BlockIndex a
+data Query a = PlayingSceneQuery PlayingSceneQuery a
              | PreventDefault Event a
-             | SetMode Mode a
-             | SetPosition Vec a
-             | TogglePointerLock a
-             | SetMousePosition MouseEvent a
-             | OnMouseClick MouseEvent a
-             | ToggleDebugLayer a
-             | Zoom MouseEvent a
-             | OnKeyDown KeyboardEvent a
-             | OnKeyUp KeyboardEvent a
-             | ToggleMute a
-             | SetCenterPanelVisible Boolean a
              | Nop Event a
+             | ToggleMute a
              | Start a
-             | Home a
+             | PeekState (HudState -> a)
+
+data PlayingSceneQuery = SetCursorPosition BlockIndex
+                         | SetMode Mode
+                         | SetPosition Vec
+                         | TogglePointerLock
+                         | SetMousePosition MouseEvent
+                         | OnMouseClick MouseEvent
+                         | ToggleDebugLayer
+                         | Zoom MouseEvent
+                         | OnKeyDown KeyboardEvent
+                         | OnKeyUp KeyboardEvent
+                         | SetCenterPanelVisible Boolean
+                         | Home
 
 type HudEffects eff = HalogenEffects (
     ajax :: AJAX,

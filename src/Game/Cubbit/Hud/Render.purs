@@ -9,7 +9,7 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Unit (unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
-import Game.Cubbit.Hud.Type (GameScene(PlayingScene, TitleScene), HudState, Query(SetCenterPanelVisible, Home, ToggleDebugLayer, ToggleMute, SetPosition, TogglePointerLock, Start, Zoom, OnMouseClick, SetMousePosition, OnKeyUp, OnKeyDown, PreventDefault, SetMode, Nop))
+import Game.Cubbit.Hud.Type (GameScene(PlayingScene, TitleScene), HudState, PlayingSceneQuery(..), Query(..))
 import Game.Cubbit.Types (Mode(Remove, Put, Move))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
@@ -35,11 +35,11 @@ render state = div [
     onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
     tabIndex 0,
     unsafeCoerce (autofocus true),
-    onKeyDown \e -> Just (OnKeyDown e unit),
-    onKeyUp \e -> Just (OnKeyUp e unit),
-    onMouseMove \e -> Just (SetMousePosition e unit),
-    onMouseDown \e -> Just (OnMouseClick e unit),
-    onWheel \e -> Just (Zoom e unit)
+    onKeyDown \e -> Just (PlayingSceneQuery (OnKeyDown e) unit),
+    onKeyUp \e -> Just (PlayingSceneQuery (OnKeyUp e) unit),
+    onMouseMove \e -> Just (PlayingSceneQuery (SetMousePosition e) unit),
+    onMouseDown \e -> Just (PlayingSceneQuery (OnMouseClick e) unit),
+    onWheel \e -> Just (PlayingSceneQuery (Zoom e) unit)
 ] [
     div [Properties.key "content-inner"] case state.gameScene of
 
@@ -66,17 +66,17 @@ render state = div [
                 suppressMouseMove,
                 suppressMouseDown
             ] [
-                div [class_ (ClassName "button first-person-view"), onClick \e -> Just (TogglePointerLock unit)] [icon "eye"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (SetPosition { x: 0.0, y: 30.0, z: 0.0 } unit)] [icon "plane"],
+                div [class_ (ClassName "button first-person-view"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
+                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
                 div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (ToggleDebugLayer unit)] [icon "gear"],
-                div [class_ (ClassName "button home"), onClick \e -> Just (Home unit)] [icon "home"]
+                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery ToggleDebugLayer unit)] [icon "gear"],
+                div [class_ (ClassName "button home"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
             ],
 
             if state.centerPanelVisible
                 then div [
                         id_ "center-panel-outer",
-                        onClick \e -> Just (SetCenterPanelVisible false unit),
+                        onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible false) unit),
                         suppressMouseMove,
                         suppressMouseDown
                     ] [div [id_ "center-panel"] []]
@@ -91,7 +91,7 @@ render state = div [
                 div [id_ "hotbar-upper"] hotbuttons
             ],
 
-            div [id_ "open-center-panel", onClick \e -> Just (SetCenterPanelVisible true unit)] [icon "suitcase"]
+            div [id_ "open-center-panel", onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible true) unit)] [icon "suitcase"]
         ],
     div [
         id_ "shadow",
@@ -127,7 +127,7 @@ render state = div [
 
     slot (Just mode) = div [
         slotClass (state.mode == mode),
-        onClick \e -> Just (SetMode mode unit)
+        onClick \e -> Just (PlayingSceneQuery (SetMode mode) unit)
     ] [img [src (tool mode)]]
     slot Nothing = div [slotClass false] []
 

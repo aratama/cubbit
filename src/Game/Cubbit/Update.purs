@@ -21,7 +21,7 @@ import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
-import Game.Cubbit.Hud.Type (Query(..))
+import Game.Cubbit.Hud.Type (Query(..), PlayingSceneQuery(..))
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options))
@@ -353,7 +353,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                                     let rbi = runBlockIndex bi
                                     r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                                     setPosition r cursor
-                                    queryToHud driver (SetCursorPosition bi)
+                                    queryToHud driver (PlayingSceneQuery (SetCursorPosition bi))
 
                 do
                     setIsVisible (case state.mode of
