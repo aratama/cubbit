@@ -28,7 +28,7 @@ import Game.Cubbit.BlockType (airBlock, dirtBlock, grassBlock, leavesBlock, wate
 import Game.Cubbit.Config (Config(..), readConfig, writeConfig)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
-import Game.Cubbit.Option (Options)
+import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Types (Mode(..), State(..))
 import Game.Cubbit.Sounds (Sounds)
@@ -216,7 +216,7 @@ styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
 
 eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
-eval scene cursor materials options ref sounds = case _ of
+eval scene cursor materials (Options options) ref sounds = case _ of
 
     (PreventDefault e next) -> do
         liftEff (preventDefault e)
@@ -305,7 +305,7 @@ eval scene cursor materials options ref sounds = case _ of
                         picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
                         case picked of
                             Nothing -> pure unit
-                            Just blockIndex -> editBlock ref materials scene blockIndex block options
+                            Just blockIndex -> editBlock ref materials scene blockIndex block (Options options)
 
                 case state.mode of
                     Put blockType -> do

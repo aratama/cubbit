@@ -4,7 +4,7 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (error)
+import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (newRef)
 import Control.Monad.Error.Class (throwError)
@@ -12,6 +12,7 @@ import Control.Monad.Except (runExcept)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (Foreign)
+import Data.Foreign.Generic (defaultOptions, toJSONGeneric)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
@@ -23,7 +24,7 @@ import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud (initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Option (readOptions)
+import Game.Cubbit.Option (Options(Options), readOptions)
 import Game.Cubbit.Sounds (loadSounds)
 import Game.Cubbit.Terrain (emptyTerrain)
 import Game.Cubbit.Types (Effects, Mode(Move), State(State))
@@ -68,9 +69,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
         -- load options
         response <- get "options.json"
-        options <- case runExcept (readOptions response.response) of
+        Options options <- case runExcept (readOptions response.response) of
             Left err -> throwError (EXP.error (show err))
             Right opt -> pure opt
+
+        -- liftEff $ log (toJSONGeneric (defaultOptions { unwrapNewtypes  = true }) (Options options))
 
         engine <- liftEff $ createEngine canvasGL true
 
@@ -125,7 +128,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             pure skyboxMesh
 
         -- prepare materials
-        materials <- liftEff $ initializeMaterials scene skybox texture alphaTexture options
+        materials <- liftEff $ initializeMaterials scene skybox texture alphaTexture (Options options)
 
 
         res <- get "./alice/alice.babylon"
@@ -189,7 +192,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         }
 
         -- initialize hud
-        driver <- initializeHud ref options body scene cursor materials sounds
+        driver <- initializeHud ref (Options options) body scene cursor materials sounds
 
         liftEff do
 
@@ -243,11 +246,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 forE (-initialWorldSize) initialWorldSize \x -> do
                     forE (-initialWorldSize) initialWorldSize \z -> void do
                         let index = chunkIndex x 0 z
-                        createChunkMesh ref materials scene index options
+                        createChunkMesh ref materials scene index (Options options)
 
             -- start game loop
             engine # runRenderLoop do
-                update ref engine scene materials sounds shadowMap cursor targetCamera options skybox driver
+                update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
                 render scene
 
             -- focus

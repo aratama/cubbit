@@ -3,7 +3,7 @@ module Game.Cubbit.Materials (Materials, initializeMaterials) where
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
-import Game.Cubbit.Option (Options)
+import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Types (Effects)
 import Graphics.Babylon.BaseTexture (setHasAlpha)
 import Graphics.Babylon.Color3 (createColor3)
@@ -26,7 +26,7 @@ type Materials = {
 }
 
 initializeMaterials :: forall eff. Scene -> Mesh -> Texture -> Texture -> Options -> Eff (Effects eff) Materials
-initializeMaterials scene skybox texture alphaTexture options = do
+initializeMaterials scene skybox texture alphaTexture (Options options) = do
 
     setHasAlpha true (textureToBaseTexture alphaTexture)
 

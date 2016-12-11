@@ -23,7 +23,7 @@ import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud (Query(SetCursorPosition), queryToHud)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Option (Options)
+import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State))
@@ -43,7 +43,7 @@ import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (negate, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
+import Prelude (negate, not, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
 update :: forall eff. Ref State
                    -> Engine
@@ -57,7 +57,7 @@ update :: forall eff. Ref State
                    -> Mesh
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> Eff (Effects eff) Unit
-update ref engine scene materials sounds shadowMap cursor camera options skybox driver = do
+update ref engine scene materials sounds shadowMap cursor camera (Options options) skybox driver = do
 
         State state@{ terrain: Terrain terrain } <- readRef ref
 
@@ -65,7 +65,7 @@ update ref engine scene materials sounds shadowMap cursor camera options skybox 
         do
             -- calculate player velocity
             deltaTime <- getDeltaTime engine
-            let speed = options.moveSpeed * deltaTime
+
 
             let rot =  negate if state.firstPersonView then (state.playerRotation + pi) else  state.cameraYaw
 
@@ -90,24 +90,40 @@ update ref engine scene materials sounds shadowMap cursor camera options skybox 
 
             let jumpVelocity = if isLanding && state.spaceKey && state.landing == 0 then options.jumpVelocity else 0.0
 
-            let velocity = if 0 < state.landing then { x: 0.0, y: 0.0, z: 0.0 } else if stopped
-                        then state.velocity {
-                            x = state.velocity.x * 0.5,
-                            y = state.velocity.y + jumpVelocity,
-                            z = state.velocity.z * 0.5
-                        }
-                        else let len = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z) in state.velocity {
-                            x = rotatedKeyVector.x / len * speed,
-                            y = state.velocity.y + jumpVelocity,
-                            z = rotatedKeyVector.z / len * speed
-                        }
+            let speed = options.moveSpeed * deltaTime
+
+            let moveFactor = if isLanding then 1.0 else 0.2
+
+            let velocity = if not isLanding
+
+                    then state.velocity {
+                        x = state.velocity.x,
+                        y = state.velocity.y,
+                        z = state.velocity.z
+                    }
+
+                    else if 0 < state.landing
+                        then { x: 0.0, y: 0.0, z: 0.0 }
+                        else if stopped
+                            then state.velocity {
+                                x = state.velocity.x * 0.5,
+                                y = state.velocity.y + jumpVelocity,
+                                z = state.velocity.z * 0.5
+                            }
+                            else let len = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z) in state.velocity {
+                                x = if isLanding then rotatedKeyVector.x / len * speed else state.velocity.x,
+                                y = state.velocity.y + jumpVelocity,
+                                z = if isLanding then rotatedKeyVector.z / len * speed else state.velocity.z
+                            }
 
             -- playerRotation == 0   =>    -z direction
-            let playerRotation' = if 0 < state.landing
-                    then state.playerRotation
-                    else if stopped || state.firstPersonView
+            let playerRotation' = if isLanding
+                    then (if 0 < state.landing
                         then state.playerRotation
-                        else (atan2 velocity.x velocity.z) - pi
+                        else if stopped || state.firstPersonView
+                            then state.playerRotation
+                            else (atan2 velocity.x velocity.z) - pi
+                    ) else state.playerRotation
 
             let playerPosition = {
                         x: state.position.x + velocity.x,
@@ -263,7 +279,7 @@ update ref engine scene materials sounds shadowMap cursor camera options skybox 
 
                         -- let ci = runChunkIndex index
 
-                        createChunkMesh ref materials scene index options
+                        createChunkMesh ref materials scene index (Options options)
 
                         --State st <- readRef ref
                         --size <- chunkCount st.terrain

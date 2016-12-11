@@ -29,7 +29,8 @@
     "purescript-affjax": "^3.0.1",
     "purescript-halogen": "https://github.com/slamdata/purescript-halogen.git#9aa087940ccf1b023a2aafb144297c96a6ea24b7",
     "purescript-localstorage": "^3.0.1",
-    "purescript-js-timers": "^2.0.0"
+    "purescript-js-timers": "^2.0.0",
+    "purescript-foreign-generic": "^2.0.0"
   },
   "devDependencies": {
     "purescript-strongcheck": "^2.0.1"
