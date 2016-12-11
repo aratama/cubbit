@@ -30,7 +30,8 @@ import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Types (Materials, Mode(..), Sounds, State(..))
+import Game.Cubbit.Types (Materials, Mode(..), State(..))
+import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
@@ -380,20 +381,20 @@ eval scene cursor materials options ref sounds = case _ of
         pure next
 
     (Start next) -> do
-        modify (_ { nextScene = Just PlayingScene })
-        wait 1000
-        modify (_ { gameScene = PlayingScene })
-        wait 100
-        modify (_ { nextScene = Nothing })
+        warpToNextScene sounds PlayingScene
         pure next
 
     (Home next) -> do
-        modify (_ { nextScene = Just TitleScene })
-        wait 1000
-        modify (_ { gameScene = TitleScene })
-        wait 100
-        modify (_ { nextScene = Nothing })
+        warpToNextScene sounds TitleScene
         pure next
+
+warpToNextScene sounds nextScene = do
+    liftEff $ play sounds.warpSound
+    modify (_ { nextScene = Just nextScene })
+    wait 1000
+    modify (_ { gameScene = nextScene })
+    wait 100
+    modify (_ { nextScene = Nothing })
 
 wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
 wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))

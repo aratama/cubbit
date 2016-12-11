@@ -90,12 +90,7 @@ type Materials = {
     outlineMaterial :: Material
 }
 
-type Sounds = {
-    forestSound :: Sound,
-    switchSound :: Sound,
-    pickSound :: Sound,
-    putSound :: Sound
-}
+
 
 
 
