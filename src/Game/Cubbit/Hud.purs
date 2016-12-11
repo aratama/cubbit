@@ -381,7 +381,7 @@ eval scene cursor materials options ref sounds = case _ of
 
     (Start next) -> do
         modify (_ { nextScene = Just PlayingScene })
-        wait 300
+        wait 1000
         modify (_ { gameScene = PlayingScene })
         wait 100
         modify (_ { nextScene = Nothing })
@@ -389,7 +389,7 @@ eval scene cursor materials options ref sounds = case _ of
 
     (Home next) -> do
         modify (_ { nextScene = Just TitleScene })
-        wait 300
+        wait 1000
         modify (_ { gameScene = TitleScene })
         wait 100
         modify (_ { nextScene = Nothing })

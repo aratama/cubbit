@@ -55,7 +55,7 @@ html, body {
     background-color: black;
     opacity: 1.0;
     transition-property: opacity;
-    transition-duration: 0.3s;
+    transition-duration: 1.0s;
     pointer-events: none;
 }
 
