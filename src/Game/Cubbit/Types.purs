@@ -52,6 +52,7 @@ newtype State = State {
     firstPersonView :: Boolean,
 
     -- player physics
+
     position :: Vec,
     velocity :: Vec,
     playerRotation :: Number,
@@ -82,13 +83,7 @@ newtype State = State {
     landing :: Int
 }
 
-type Materials = {
-    blockMaterial :: Material,
-    waterMaterial :: Material,
-    cellShadingMaterial :: Material,
-    bushMaterial :: Material,
-    outlineMaterial :: Material
-}
+
 
 
 

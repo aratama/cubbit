@@ -20,10 +20,17 @@ type Sounds = {
 
 loadSounds :: forall eff. Scene -> Aff (Effects eff) Sounds
 loadSounds scene = do
-    forestSound <- loadSound "forest.mp3" "sound/forest.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = true }
-    switchSound <- loadSound "tm2_switch001.mp3" "sound/tm2_switch001.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
-    pickSound <- loadSound "bosu06.mp3" "sound/bosu06.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
-    putSound <- loadSound "bosu28_c.mp3" "sound/bosu28_c.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
-    stepSound <- loadSound "step13a.mp3" "sound/step13a.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
-    warpSound <- loadSound "warp01.mp3" "sound/warp01.mp3" scene defaultCreateSoundOptions { autoplay = false, loop = false }
+
+    -- environment
+    forestSound <- load "sound/forest.mp3" true
+    stepSound <- load "sound/step13a.mp3" true
+
+    -- effects
+    switchSound <- load "sound/tm2_switch001.mp3" false
+    pickSound <- load "sound/bosu06.mp3" false
+    putSound <- load "sound/bosu28_c.mp3" false
+    warpSound <- load "sound/warp01.mp3" false
     pure $ { forestSound, switchSound, pickSound, putSound, stepSound, warpSound }
+
+  where
+    load url loop = loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }

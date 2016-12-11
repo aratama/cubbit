@@ -5,7 +5,6 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
@@ -22,10 +21,12 @@ import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud (Query(SetCursorPosition), queryToHud)
+import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Materials, Mode(Move, Remove, Put), State(State))
 import Game.Cubbit.Option (Options)
+import Game.Cubbit.Sounds (Sounds)
+import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
+import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State))
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -36,6 +37,7 @@ import Graphics.Babylon.PickingInfo (getPickedPoint)
 import Graphics.Babylon.Ray (createRayWithLength)
 import Graphics.Babylon.Scene (pickWithRay)
 import Graphics.Babylon.ShadowGenerator (setRenderList)
+import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
@@ -47,6 +49,7 @@ update :: forall eff. Ref State
                    -> Engine
                    -> Scene
                    -> Materials
+                   -> Sounds
                    -> ShadowMap
                    -> Mesh
                    -> TargetCamera
@@ -54,7 +57,7 @@ update :: forall eff. Ref State
                    -> Mesh
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> Eff (Effects eff) Unit
-update ref engine scene materials shadowMap cursor camera options skybox driver = do
+update ref engine scene materials sounds shadowMap cursor camera options skybox driver = do
 
         State state@{ terrain: Terrain terrain } <- readRef ref
 
@@ -337,6 +340,14 @@ update ref engine scene materials shadowMap cursor camera options skybox driver 
                     Put _ -> true
                     Remove -> true
                     Move -> false) (meshToAbstractMesh cursor)
+
+            -- sounds
+            do
+                if state.animation /= "run" && animation' == "run"
+                    then play sounds.stepSound
+                    else if state.animation == "run" && animation' /= "run"
+                        then stop sounds.stepSound
+                        else pure unit
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

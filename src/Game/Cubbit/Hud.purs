@@ -30,18 +30,19 @@ import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options)
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Types (Materials, Mode(..), State(..))
+import Game.Cubbit.Types (Mode(..), State(..))
 import Game.Cubbit.Sounds (Sounds)
+import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, setVolume)
 import Graphics.Babylon.Types (BABYLON, Mesh, Scene, Sound)
-import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenF, HalogenIO, component, liftAff, liftEff, modify)
+import Halogen (Component, ComponentDSL, ComponentHTML, HalogenEffects, HalogenIO, component, liftAff, liftEff, modify)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
-import Halogen.HTML.Elements (canvas, i)
+import Halogen.HTML.Elements (i)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
-import Halogen.HTML.Properties (I, IProp, LengthLiteral(..), autofocus, class_, height, id_, src, width, tabIndex)
+import Halogen.HTML.Properties (I, IProp, autofocus, class_, id_, src, tabIndex)
 import Halogen.HTML.Properties (key) as Properties
 import Halogen.Query (action, get)
 import Halogen.VirtualDOM.Driver (runUI)
@@ -56,7 +57,9 @@ type HudState = {
     mute :: Boolean,
     centerPanelVisible :: Boolean,
     nextScene :: Maybe GameScene,
-    gameScene :: GameScene
+    gameScene :: GameScene,
+    life :: Int,
+    maxLife :: Int
 }
 
 data GameScene = TitleScene | PlayingScene
@@ -68,7 +71,9 @@ initialState mute = {
     mute: mute,
     centerPanelVisible: false,
     nextScene: Nothing,
-    gameScene: TitleScene
+    gameScene: TitleScene,
+    life: 10,
+    maxLife: 12
 }
 
 data Query a = SetCursorPosition BlockIndex a
@@ -130,7 +135,7 @@ render state = div [
 
                 div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 
-                div [id_ "life"] (replicate 12 (div [class_ (ClassName "active")] [icon "heart"]) <> replicate 2 (icon "heart")),
+                div [id_ "life"] (replicate state.life (div [class_ (ClassName "active")] [icon "heart"]) <> replicate (state.maxLife - state.life) (icon "heart")),
 
 
                 p [id_ "message-box-top"] [],

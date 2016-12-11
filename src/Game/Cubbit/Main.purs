@@ -158,6 +158,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             firstPersonView: false,
             firstPersonViewPitch: 0.0,
 
+
+
             position: { x: 0.5, y: 10.0, z: 0.5 },
             velocity: { x: 0.0, y: 0.0, z: 0.0 },
             playerRotation: 0.5,
@@ -245,7 +247,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             -- start game loop
             engine # runRenderLoop do
-                update ref engine scene materials shadowMap cursor targetCamera options skybox driver
+                update ref engine scene materials sounds shadowMap cursor targetCamera options skybox driver
                 render scene
 
             -- focus
