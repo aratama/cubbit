@@ -34,37 +34,58 @@ type Effects eff =  CoreEffects (
 
 data Mode = Move | Put BlockType | Remove
 
-newtype State = State {
-    mode :: Mode,
-    terrain :: Terrain,
-    mousePosition :: { x :: Int, y :: Int },
-    debugLayer :: Boolean,
 
-    -- camera
-    cameraPosition :: Vec,
-
-    cameraTarget :: Vec,
+data SceneState = TitleSceneState | PlayingSceneState {
+    playerMeshes :: Array AbstractMesh,
     cameraYaw :: Number,
     cameraPitch :: Number,
     cameraRange :: Number,
-
     firstPersonViewPitch :: Number,
     firstPersonView :: Boolean,
-
-    -- player physics
-
     position :: Vec,
     velocity :: Vec,
     playerRotation :: Number,
     playerPitch :: Number,
+    animation :: String,
+    mode :: Mode,
+    landing :: Int
+}
 
-    totalFrames :: Int,
-    minimap :: Boolean,
+newtype State = State {
 
     playerMeshes :: Array AbstractMesh,
+    cameraYaw :: Number,
+    cameraPitch :: Number,
+    cameraRange :: Number,
+    firstPersonViewPitch :: Number,
+    firstPersonView :: Boolean,
+    position :: Vec,
+    velocity :: Vec,
+    playerRotation :: Number,
+    playerPitch :: Number,
+    animation :: String,
+    mode :: Mode,
+    landing :: Int,
 
+
+    sceneState :: SceneState,
+
+
+
+    -- world
+    terrain :: Terrain,
+    skyboxRotation :: Number,
     updateIndex :: Nullable ForeachIndex,
 
+    -- camera
+    cameraPosition :: Vec,
+    cameraTarget :: Vec,
+
+    -- ui
+    totalFrames :: Int,
+    minimap :: Boolean,
+    debugLayer :: Boolean,
+    mousePosition :: { x :: Int, y :: Int },
     spaceKey :: Boolean,
     wKey :: Boolean,
     sKey :: Boolean,
@@ -75,12 +96,7 @@ newtype State = State {
     rKey :: Boolean,
     fKey :: Boolean,
     tKey :: Boolean,
-    gKey :: Boolean,
-
-    skyboxRotation :: Number,
-
-    animation :: String,
-    landing :: Int
+    gKey :: Boolean
 }
 
 
