@@ -40,6 +40,11 @@ import Unsafe.Coerce (unsafeCoerce)
 eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
 eval scene cursor materials (Options options) ref sounds query = case query of
 
+    (RequstAnimationFrame next) -> do
+        -- update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
+        -- render scene
+        pure next
+
     (PeekState f) -> do
         s <- get
         pure (f s)

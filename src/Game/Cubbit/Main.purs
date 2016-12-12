@@ -20,7 +20,8 @@ import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (focus)
-import Game.Cubbit.Hud.Driver (initializeHud)
+import Game.Cubbit.Hud.Driver (initializeHud, queryToHud)
+import Game.Cubbit.Hud.Type (Query(..))
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options), readOptions)
@@ -52,6 +53,7 @@ import Graphics.Babylon.Util (querySelectorCanvas)
 import Graphics.Babylon.Vector3 (createVector3)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
+import Halogen.Query (action)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
@@ -252,6 +254,9 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             -- start game loop
             engine # runRenderLoop do
+
+                -- driver.query (action RequstAnimationFrame)
+
                 update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
                 render scene
 

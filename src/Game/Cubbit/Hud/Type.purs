@@ -34,6 +34,7 @@ data Query a = PlayingSceneQuery PlayingSceneQuery a
              | ToggleMute a
              | Start a
              | PeekState (HudState -> a)
+             | RequstAnimationFrame a 
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode
