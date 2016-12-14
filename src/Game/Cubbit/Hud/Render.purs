@@ -9,8 +9,8 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Unit (unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
-import Game.Cubbit.Hud.Type (GameScene(PlayingScene, TitleScene), HudState, PlayingSceneQuery(..), Query(..))
-import Game.Cubbit.Types (Mode(Remove, Put, Move))
+import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..))
+import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
 import Halogen.HTML.Elements (i)
@@ -27,8 +27,8 @@ slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""
 icon :: forall p i. String -> HTML p i
 icon name = i [class_ (ClassName ("fa fa-" <> name))] []
 
-render :: HudState -> ComponentHTML Query
-render state = div [
+render :: State -> ComponentHTML Query
+render (State state) = div [
     id_ "content",
     Properties.key "root-content",
     class_ (ClassName "content-layer"),
@@ -41,9 +41,11 @@ render state = div [
     onMouseDown \e -> Just (PlayingSceneQuery (OnMouseClick e) unit),
     onWheel \e -> Just (PlayingSceneQuery (Zoom e) unit)
 ] [
-    div [Properties.key "content-inner"] case state.gameScene of
 
-        TitleScene -> [
+    div [Properties.key "content-inner"] case state.sceneState of
+    -- div [Properties.key "content-inner"] case state.gameScene of
+
+        TitleSceneState -> [
             img [
                 class_ (ClassName "content-layer"),
                 src "title.png",
@@ -51,12 +53,12 @@ render state = div [
             ]
         ]
 
-        PlayingScene -> [
+        PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
             img [id_ "screen-shade", class_ (ClassName "content-layer"), src "screenshade.png"],
 
             div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 
-            div [id_ "life"] (replicate state.life (div [class_ (ClassName "active")] [icon "heart"]) <> replicate (state.maxLife - state.life) (icon "heart")),
+            div [id_ "life"] (replicate playingSceneState.life (div [class_ (ClassName "active")] [icon "heart"]) <> replicate (playingSceneState.maxLife - playingSceneState.life) (icon "heart")),
 
 
             p [id_ "message-box-top"] [],
@@ -68,12 +70,13 @@ render state = div [
             ] [
                 div [class_ (ClassName "button first-person-view"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
-                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
+                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if playingSceneState.mute then "volume-off" else "volume-up"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery ToggleDebugLayer unit)] [icon "gear"],
                 div [class_ (ClassName "button home"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
             ],
 
-            if state.centerPanelVisible
+
+            if playingSceneState.centerPanelVisible
                 then div [
                         id_ "center-panel-outer",
                         onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible false) unit),
@@ -82,13 +85,14 @@ render state = div [
                     ] [div [id_ "center-panel"] []]
                 else text "",
 
+
             div [
                 id_ "hotbar",
                 suppressMouseMove,
                 suppressMouseDown
             ] [
                 div [id_ "hotbar-lower"] [],
-                div [id_ "hotbar-upper"] hotbuttons
+                div [id_ "hotbar-upper"] (hotbuttons playingSceneState)
             ],
 
             div [id_ "open-center-panel", onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible true) unit)] [icon "suitcase"]
@@ -105,7 +109,8 @@ render state = div [
     suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
     suppressMouseDown = onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
 
-    hotbuttons = map slot [
+
+    hotbuttons playingSceneState = map slot [
         Just Move,
         Just (Put grassBlock),
         Just (Put woodBlock),
@@ -116,22 +121,25 @@ render state = div [
         Just Remove
     ]
 
-    tool Move = "toolicon/bow.svg"
-    tool (Put t) | t == grassBlock = "toolicon/grass.svg"
-                 | t == woodBlock = "toolicon/wood.svg"
-                 | t == waterBlock = "toolicon/water.svg"
-                 | t == leavesBlock = "toolicon/leaves.svg"
-                 | t == dirtBlock = "toolicon/dirt.svg"
-                 | otherwise = "toolicon/grass.svg"
-    tool Remove = "toolicon/pickaxe.svg"
+      where
 
-    slot (Just mode) = div [
-        slotClass (state.mode == mode),
-        onClick \e -> Just (PlayingSceneQuery (SetMode mode) unit)
-    ] [img [src (tool mode)]]
-    slot Nothing = div [slotClass false] []
+        tool Move = "toolicon/bow.svg"
+        tool (Put t) | t == grassBlock = "toolicon/grass.svg"
+                     | t == woodBlock = "toolicon/wood.svg"
+                     | t == waterBlock = "toolicon/water.svg"
+                     | t == leavesBlock = "toolicon/leaves.svg"
+                     | t == dirtBlock = "toolicon/dirt.svg"
+                     | otherwise = "toolicon/grass.svg"
+        tool Remove = "toolicon/pickaxe.svg"
 
-    index = runBlockIndex state.cursorPosition
+        slot (Just mode) = div [
+            slotClass (playingSceneState.mode == mode),
+            onClick \e -> Just (PlayingSceneQuery (SetMode mode) unit)
+        ] [img [src (tool mode)]]
+        slot Nothing = div [slotClass false] []
+
+
+
 
 styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)

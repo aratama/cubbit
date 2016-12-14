@@ -16,29 +16,31 @@ import Data.Maybe (Maybe(Nothing, Just))
 import Data.Ord (max, min)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
+import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
 import Game.Cubbit.Config (Config(Config), writeConfig)
 import Game.Cubbit.Control (pickBlock)
-import Game.Cubbit.Hud.Type (Query(..), HudEffects, HudState, GameScene(..), PlayingSceneQuery(..))
+import Game.Cubbit.Hud.Type (Query(..), HudEffects, PlayingSceneQuery(..))
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Sounds (Sounds)
-import Game.Cubbit.Types (Mode(..), State(..), SceneState(..))
+import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, setVolume)
-import Graphics.Babylon.Types (BABYLON, Mesh, Scene)
-import Halogen (ComponentDSL, liftAff, liftEff, modify)
+import Graphics.Babylon.Types (BABYLON, Mesh, Scene, AbstractMesh)
+import Halogen (ComponentDSL, liftAff, liftEff, modify, put)
 import Halogen.Query (get)
 import Math (pi)
 import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
 
-eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
-eval scene cursor materials (Options options) ref sounds query = case query of
+-- eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
+eval :: forall eff. Array AbstractMesh -> Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
+eval playerMeshes scene cursor materials (Options options) ref sounds query = case query of
 
     (PeekState f) -> do
         s <- get
@@ -56,16 +58,39 @@ eval scene cursor materials (Options options) ref sounds query = case query of
         pure next
 
     (Start next) -> do
-        warpToNextScene sounds PlayingScene
+        -- warpToNextScene sounds PlayingScene
+        warpToNextScene ref sounds (PlayingSceneState {
+            playerMeshes: playerMeshes,
+            cameraYaw: 0.0,
+            cameraPitch: 0.7,
+            cameraRange: 5.0,
+            firstPersonView: false,
+            firstPersonViewPitch: 0.0,
+            position: { x: 0.5, y: 10.0, z: 0.5 },
+            velocity: { x: 0.0, y: 0.0, z: 0.0 },
+            playerRotation: 0.5,
+            playerPitch: 0.0,
+            animation: "",
+            mode: Move,
+            landing: 0,
+
+            cursorPosition: blockIndex 0 0 0,
+            mute: false,
+            centerPanelVisible: false,
+            life: 10,
+            maxLife: 12
+        })
         pure next
 
 
     (ToggleMute next) -> do
+    {-
         modify \state -> state { mute = not state.mute }
         state <- get
         liftEff do
             setMute state.mute sounds
             writeConfig (Config { mute: state.mute })
+-}
         pure next
 
     (PlayingSceneQuery playingSceneQuery next) -> do
@@ -82,18 +107,29 @@ eval scene cursor materials (Options options) ref sounds query = case query of
         case playingSceneQuery of
 
             (SetCursorPosition position) -> do
-                state <- get
-                when (position /= state.cursorPosition) do
-                    modify (_ { cursorPosition = position })
 
+                State state <- liftEff $ readRef ref
+                case state.sceneState of
+                    TitleSceneState -> pure unit
+                    PlayingSceneState playingSceneState -> do
+                        when (position /= playingSceneState.cursorPosition) do
+                            modifyAppState ref (\(State state) -> State state {
+                                sceneState = PlayingSceneState playingSceneState {
+                                    cursorPosition = position
+                                }
+                            })
+
+                pure unit
             (SetMode mode) -> do
+
                 liftEff do
                     State s <- readRef ref
                     when (s.mode /= mode) do
-                        writeRef ref (State s { mode = mode })
                         play sounds.switchSound
-                modify _ { mode = mode }
 
+                modifyAppState ref (\(State state) -> State state { mode = mode })
+
+                pure unit
             (SetPosition position) -> do
 
 
@@ -223,23 +259,36 @@ eval scene cursor materials (Options options) ref sounds query = case query of
 
 
             (SetCenterPanelVisible visible) -> do
-                modify \state -> state { centerPanelVisible = visible }
+                --modify \state -> state { centerPanelVisible = visible }
+                pure unit
 
 
 
             Home -> do
-                warpToNextScene sounds TitleScene
+                -- warpToNextScene sounds TitleScene
+                warpToNextScene ref sounds TitleSceneState
 
         pure next
 
-warpToNextScene :: forall eff. Sounds -> GameScene -> ComponentDSL HudState Query Void (Aff (HudEffects eff)) Unit
-warpToNextScene sounds nextScene = do
+warpToNextScene :: forall eff. Ref State -> Sounds -> SceneState -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
+--warpToNextScene :: forall eff. Sounds -> GameScene -> ComponentDSL HudState Query Void (Aff (HudEffects eff)) Unit
+warpToNextScene ref sounds nextScene = do
     liftEff $ play sounds.warpSound
-    modify (_ { nextScene = Just nextScene })
+    modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
     wait 1000
-    modify (_ { gameScene = nextScene })
+    modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
     wait 100
-    modify (_ { nextScene = Nothing })
+    modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
+
+
+modifyAppState :: forall eff. Ref State -> (State -> State) -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
+modifyAppState ref f = do
+    state <- liftEff $ readRef ref
+    let state' = (f state)
+    liftEff $ writeRef ref state'
+    put state'
+
+
 
 wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
 wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))

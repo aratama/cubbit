@@ -9,7 +9,9 @@ import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE)
 import Data.Eq (class Eq)
+import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
+import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.BlockType (BlockType(..))
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
@@ -48,11 +50,19 @@ data SceneState = TitleSceneState | PlayingSceneState {
     playerPitch :: Number,
     animation :: String,
     mode :: Mode,
-    landing :: Int
+    landing :: Int,
+
+
+    cursorPosition :: BlockIndex,
+    mute :: Boolean,
+    centerPanelVisible :: Boolean,
+    life :: Int,
+    maxLife :: Int
 }
 
 newtype State = State {
 
+    -- TODO: Remove them
     playerMeshes :: Array AbstractMesh,
     cameraYaw :: Number,
     cameraPitch :: Number,
@@ -69,6 +79,7 @@ newtype State = State {
 
 
     sceneState :: SceneState,
+    nextScene ::Maybe SceneState,
 
 
 
