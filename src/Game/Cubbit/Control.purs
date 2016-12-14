@@ -13,7 +13,7 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Ord (abs, min)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Terrain (globalPositionToGlobalIndex, lookupSolidBlockByVec)
+import Game.Cubbit.Terrain (Terrain(..), globalPositionToGlobalIndex, lookupSolidBlockByVec)
 import Game.Cubbit.Types (Effects, Mode(Move, Remove, Put), State(State), PlayingSceneState)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton)
 import Graphics.Babylon.Mesh (setPosition)
@@ -37,8 +37,8 @@ playAnimation name state = do
                 when (isNothing animatable) do
                     error ("playAnimation: animation named \"" <> name <> "\" not found.")
 
-pickBlock :: forall e. Scene -> Mesh -> State -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
-pickBlock scene cursor (State state) screenX screenY = do
+pickBlock :: forall e. Scene -> Mesh -> Mode -> Terrain -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
+pickBlock scene cursor mode terrain  screenX screenY = do
     let predicate mesh = do
             let name = getName (abstractMeshToNode mesh)
             pure (name /= "cursor")
@@ -53,14 +53,14 @@ pickBlock scene cursor (State state) screenX screenY = do
             let dy = abs (p.y - round p.y)
             let dz = abs (p.z - round p.z)
             let minDelta = min dx (min dy dz)
-            let lookupBlock' x y z = lookupSolidBlockByVec { x, y, z } state.terrain
+            let lookupBlock' x y z = lookupSolidBlockByVec { x, y, z } terrain
 
             let putCursor bi = do
                     let rbi = runBlockIndex bi
                     r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                     setPosition r cursor
 
-            case state.mode of
+            case mode of
                 Put _ -> if minDelta == dx then do
                         l <- lookupBlock' (p.x + 0.5) p.y p.z
                         r <- lookupBlock' (p.x - 0.5) p.y p.z

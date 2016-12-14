@@ -116,11 +116,15 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                     (SetMode mode) -> do
 
                         liftEff do
-                            State s <- readRef ref
-                            when (s.mode /= mode) do
+
+                            when (playingSceneState.mode /= mode) do
                                 play sounds.switchSound
 
-                        modifyAppState ref (\(State state) -> State state { mode = mode })
+                        modifyAppState ref (\(State state) -> State state {
+                            sceneState = PlayingSceneState playingSceneState {
+                                mode = mode
+                            }
+                        })
 
                         pure unit
                     (SetPosition position) -> do
@@ -200,12 +204,12 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                             when (buttons e == 1) do
 
                                 let put block = do
-                                        picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
+                                        picked <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
                                         case picked of
                                             Nothing -> pure unit
                                             Just blockIndex -> editBlock ref materials scene blockIndex block (Options options)
 
-                                case state.mode of
+                                case playingSceneState.mode of
                                     Put blockType -> do
                                         put blockType
                                         play sounds.putSound

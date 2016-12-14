@@ -142,9 +142,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 velocity: { x: 0.0, y: 0.0, z: 0.0 },
                 playerRotation: 0.5,
                 playerPitch: 0.0,
-                mode: Move,
-                landing: 0,
-
 
                 nextScene: Nothing,
                 sceneState: TitleSceneState,

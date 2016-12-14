@@ -76,7 +76,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                     Just block | isSolidBlock block -> true
                     _ -> false
 
-            let jumpVelocity = if isLanding && state.spaceKey && state.landing == 0 then options.jumpVelocity else 0.0
+            let jumpVelocity = if isLanding && state.spaceKey && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
 
             let speed = options.moveSpeed * deltaTime
 
@@ -93,11 +93,11 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             let velocityX = if isLanding then (if stopped then state.velocity.x * 0.5 else normalizedMoveX) else state.velocity.x
             let velocityY = state.velocity.y + jumpVelocity + gravityAccelerator
             let velocityZ = if isLanding then (if stopped then state.velocity.z * 0.5 else normalizedMoveZ) else state.velocity.z
-            let velocity = if 0 < state.landing then vecZero else vec velocityX velocityY velocityZ
+            let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
 
             -- playerRotation == 0   =>    -z direction
             let playerRotation' = if isLanding
-                    then (if 0 < state.landing
+                    then (if 0 < playingSceneState.landing
                         then state.playerRotation
                         else if stopped || playingSceneState.firstPersonView
                             then state.playerRotation
@@ -108,7 +108,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
 
-            let animation' = if 0 < state.landing
+            let animation' = if 0 < playingSceneState.landing
                     then "land"
                     else if isLanding
                         then (if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle")
@@ -131,7 +131,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                     Just block | isSolidBlock block -> true
                     _ -> false
 
-            let landingCount = if isLanding' && state.velocity.y < options.landingVelocityLimit then options.landingDuration else state.landing
+            let landingCount = if isLanding' && state.velocity.y < options.landingVelocityLimit then options.landingDuration else playingSceneState.landing
 
             -- camera view target
             let cameraSpeed = if playingSceneState.firstPersonView then 0.5 else options.cameraTargetSpeed
@@ -201,7 +201,6 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                         position = position',
                         velocity = velocity,
                         playerRotation = playerRotation',
-                        landing = max 0 (landingCount - 1),
 
 
 
@@ -230,9 +229,6 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
         State state@{ terrain: Terrain terrain } <- readRef ref
 
         deltaTime <- getDeltaTime engine
-
-
-
 
         case state.sceneState of
 
@@ -358,10 +354,10 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                 -- picking
                 do
-                    case state.mode of
+                    case playingSceneState.mode of
                         Move -> pure unit
                         _ -> do
-                            pickedBlock <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
+                            pickedBlock <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
                             case pickedBlock of
                                 Nothing -> pure unit
                                 Just bi -> void do
@@ -371,7 +367,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                                     queryToHud driver (PlayingSceneQuery (SetCursorPosition bi))
 
                 do
-                    setIsVisible (case state.mode of
+                    setIsVisible (case playingSceneState.mode of
                         Put _ -> true
                         Remove -> true
                         Move -> false) (meshToAbstractMesh cursor)

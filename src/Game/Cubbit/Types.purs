@@ -62,15 +62,32 @@ data SceneState = TitleSceneState | PlayingSceneState PlayingSceneState
 
 newtype State = State {
 
-    -- TODO: Remove them
 
+
+
+
+
+
+
+
+
+
+    -- TODO: Remove them
     firstPersonViewPitch :: Number,
     position :: Vec,
     velocity :: Vec,
     playerRotation :: Number,
     playerPitch :: Number,
-    mode :: Mode,
-    landing :: Int,
+
+
+
+
+
+
+
+
+
+
 
     sceneState :: SceneState,
     nextScene ::Maybe SceneState,
