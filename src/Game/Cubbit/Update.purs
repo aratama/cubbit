@@ -13,6 +13,7 @@ import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (min, max)
+import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (runBlockIndex)
@@ -27,7 +28,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..))
+import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..), PlayingSceneState)
 import Game.Cubbit.Vec (vec, vecAdd, vecZero)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -45,18 +46,14 @@ import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (negate, not, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
+import Prelude (negate, not, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), ($))
 
 
-calcurateNextState :: forall eff. Options -> Number -> State -> State
-calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) = runPure do
-    case state.sceneState of
+calcurateNextState :: forall eff. Options -> Number -> State -> PlayingSceneState -> Tuple State PlayingSceneState
+calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState = runPure do
 
-        TitleSceneState -> pure (State state)
 
-        PlayingSceneState playingSceneState -> do
-
-            let rot =  negate if state.firstPersonView then (state.playerRotation + pi) else  state.cameraYaw
+            let rot =  negate if playingSceneState.firstPersonView then (state.playerRotation + pi) else  playingSceneState.cameraYaw
 
             let keyStep key = if key then 1.0 else 0.0
 
@@ -102,7 +99,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             let playerRotation' = if isLanding
                     then (if 0 < state.landing
                         then state.playerRotation
-                        else if stopped || state.firstPersonView
+                        else if stopped || playingSceneState.firstPersonView
                             then state.playerRotation
                             else (atan2 velocity.x velocity.z) - pi
                     ) else state.playerRotation
@@ -137,7 +134,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             let landingCount = if isLanding' && state.velocity.y < options.landingVelocityLimit then options.landingDuration else state.landing
 
             -- camera view target
-            let cameraSpeed = if state.firstPersonView then 0.5 else options.cameraTargetSpeed
+            let cameraSpeed = if playingSceneState.firstPersonView then 0.5 else options.cameraTargetSpeed
 
             let eyeHeight = options.eyeHeight
 
@@ -150,9 +147,9 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             let firstPersonCameraTargetY = position'.y + eyeHeight + sin state.playerPitch
             let firstPersonCameraTargetZ = position'.z + sin playerRotationTheta * cos state.playerPitch
 
-            let cameraTargetX' = if state.firstPersonView then firstPersonCameraTargetX else thirdPersonCameraTargetX
-            let cameraTargetY' = if state.firstPersonView then firstPersonCameraTargetY else thirdPersonCameraTargetY
-            let cameraTargetZ' = if state.firstPersonView then firstPersonCameraTargetZ else thirdPersonCameraTargetZ
+            let cameraTargetX' = if playingSceneState.firstPersonView then firstPersonCameraTargetX else thirdPersonCameraTargetX
+            let cameraTargetY' = if playingSceneState.firstPersonView then firstPersonCameraTargetY else thirdPersonCameraTargetY
+            let cameraTargetZ' = if playingSceneState.firstPersonView then firstPersonCameraTargetZ else thirdPersonCameraTargetZ
 
             let cameraTargetInterpolatedX' = state.cameraTarget.x + (cameraTargetX' - state.cameraTarget.x) * cameraSpeed
             let cameraTargetInterpolatedY' = state.cameraTarget.y + (cameraTargetY' - state.cameraTarget.y) * cameraSpeed
@@ -164,18 +161,18 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             let cameraPosition = state.cameraPosition
             let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
 
-            let theta = negate state.cameraYaw - pi * 0.5
-            let thirdPersonCameraPositionX = position'.x + cos theta * cos state.cameraPitch * state.cameraRange
-            let thirdPersonCameraPositionY = position'.y + eyeHeight + sin state.cameraPitch * state.cameraRange
-            let thirdPersonCameraPositionZ = position'.z + sin theta * cos state.cameraPitch * state.cameraRange
+            let theta = negate playingSceneState.cameraYaw - pi * 0.5
+            let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
+            let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
+            let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
 
             let firstPersonCameraPositionX = position'.x
             let firstPersonCameraPositionY = position'.y + eyeHeight
             let firstPersonCameraPositionZ = position'.z
 
-            let cameraPositionX = if state.firstPersonView then firstPersonCameraPositionX else thirdPersonCameraPositionX
-            let cameraPositionY = if state.firstPersonView then firstPersonCameraPositionY else thirdPersonCameraPositionY
-            let cameraPositionZ = if state.firstPersonView then firstPersonCameraPositionZ else thirdPersonCameraPositionZ
+            let cameraPositionX = if playingSceneState.firstPersonView then firstPersonCameraPositionX else thirdPersonCameraPositionX
+            let cameraPositionY = if playingSceneState.firstPersonView then firstPersonCameraPositionY else thirdPersonCameraPositionY
+            let cameraPositionZ = if playingSceneState.firstPersonView then firstPersonCameraPositionZ else thirdPersonCameraPositionZ
 
             let cameraPositionInterpolatedX = cameraPosition.x + (cameraPositionX - cameraPosition.x) * cameraSpeed
             let cameraPositionInterpolatedY = cameraPosition.y + (cameraPositionY - cameraPosition.y) * cameraSpeed
@@ -184,10 +181,10 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             -- final state
 
 
-            let sceneState = PlayingSceneState playingSceneState {
-                        cameraYaw = state.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                        cameraPitch = max 0.1 (min (pi * 0.48) (state.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
-                        cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (state.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
+            let sceneState =  playingSceneState {
+                        cameraYaw = playingSceneState.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
+                        cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
+                        cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
                         position = position',
                         velocity = velocity,
                         playerRotation = playerRotation',
@@ -198,16 +195,12 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
             let state' = state {
 
-                        sceneState = sceneState,
+                        sceneState = PlayingSceneState sceneState,
 
 
-                        cameraYaw = state.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                        cameraPitch = max 0.1 (min (pi * 0.48) (state.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
-                        cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (state.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
                         position = position',
                         velocity = velocity,
                         playerRotation = playerRotation',
-                        animation = animation',
                         landing = max 0 (landingCount - 1),
 
 
@@ -218,7 +211,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                         skyboxRotation = state.skyboxRotation + options.skyboxRotationSpeed * deltaTime
                     }
 
-            pure (State state')
+            pure (Tuple (State state') sceneState)
 
 update :: forall eff. Ref State
                    -> Engine
@@ -238,7 +231,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
         deltaTime <- getDeltaTime engine
 
-        State state' <- pure (calcurateNextState (Options options) deltaTime (State state))
+
 
 
         case state.sceneState of
@@ -247,6 +240,9 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
             PlayingSceneState playingSceneState -> do
 
+
+                Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
+
                 writeRef ref (State state')
 
 
@@ -254,15 +250,15 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                 let cameraPositionChunkIndex = globalPositionToChunkIndex state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
 
 
-                when (state'.animation /= state.animation) do
-                    playAnimation state'.animation ref
+                when (playingSceneState'.animation /= playingSceneState.animation) do
+                    playAnimation playingSceneState'.animation playingSceneState
 
                 playerRotationVector <- createVector3 0.0 state'.playerRotation 0.0
                 positionVector <- createVector3 state'.position.x state'.position.y state'.position.z
-                for_ state.playerMeshes \mesh -> void do
+                for_ playingSceneState.playerMeshes \mesh -> void do
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh
-                    setVisibility (if state.firstPersonView then 0.0 else 1.0) mesh
+                    setVisibility (if playingSceneState.firstPersonView then 0.0 else 1.0) mesh
 
                 -- update camera
 
@@ -356,7 +352,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                                     MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                                     _ -> Nothing
                                 ) <$> neighbors)
-                        setRenderList (meshes <> state.playerMeshes) shadowMap
+                        setRenderList (meshes <> playingSceneState.playerMeshes) shadowMap
                     else do
                         setRenderList [] shadowMap
 
@@ -382,9 +378,9 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                 -- sounds
                 do
-                    if state.animation /= "run" && state'.animation == "run"
+                    if playingSceneState.animation /= "run" && playingSceneState'.animation == "run"
                         then play sounds.stepSound
-                        else if state.animation == "run" && state'.animation /= "run"
+                        else if playingSceneState.animation == "run" && playingSceneState'.animation /= "run"
                             then stop sounds.stepSound
                             else pure unit
 

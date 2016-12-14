@@ -136,40 +136,20 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         initialTerrain <- liftEff $ emptyTerrain 0
         let initialState =  State {
 
-                playerMeshes: playerMeshes,
-                cameraYaw: 0.0,
-                cameraPitch: 0.7,
-                cameraRange: 5.0,
-                firstPersonView: false,
+
                 firstPersonViewPitch: 0.0,
                 position: { x: 0.5, y: 10.0, z: 0.5 },
                 velocity: { x: 0.0, y: 0.0, z: 0.0 },
                 playerRotation: 0.5,
                 playerPitch: 0.0,
-                animation: "",
                 mode: Move,
                 landing: 0,
 
 
                 nextScene: Nothing,
                 sceneState: TitleSceneState,
-    {-
-                sceneState: PlayingSceneState {
-                    playerMeshes: playerMeshes,
-                    cameraYaw: 0.0,
-                    cameraPitch: 0.7,
-                    cameraRange: 5.0,
-                    firstPersonView: false,
-                    firstPersonViewPitch: 0.0,
-                    position: { x: 0.5, y: 10.0, z: 0.5 },
-                    velocity: { x: 0.0, y: 0.0, z: 0.0 },
-                    playerRotation: 0.5,
-                    playerPitch: 0.0,
-                    animation: "",
-                    mode: Move,
-                    landing: 0
-                },
-    -}
+
+                mute: false,
 
 
                 skyboxRotation: 0.0,

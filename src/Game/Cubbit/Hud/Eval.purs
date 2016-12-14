@@ -31,14 +31,12 @@ import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, setVolume)
 import Graphics.Babylon.Types (BABYLON, Mesh, Scene, AbstractMesh)
-import Halogen (ComponentDSL, liftAff, liftEff, modify, put)
+import Halogen (ComponentDSL, liftAff, liftEff, put)
 import Halogen.Query (get)
 import Math (pi)
 import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
-
--- eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL HudState Query Void (Aff (HudEffects eff)))
 eval :: forall eff. Array AbstractMesh -> Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval playerMeshes scene cursor materials (Options options) ref sounds query = case query of
 
@@ -58,7 +56,6 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
         pure next
 
     (Start next) -> do
-        -- warpToNextScene sounds PlayingScene
         warpToNextScene ref sounds (PlayingSceneState {
             playerMeshes: playerMeshes,
             cameraYaw: 0.0,
@@ -75,7 +72,6 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
             landing: 0,
 
             cursorPosition: blockIndex 0 0 0,
-            mute: false,
             centerPanelVisible: false,
             life: 10,
             maxLife: 12
@@ -84,13 +80,14 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
 
 
     (ToggleMute next) -> do
-    {-
-        modify \state -> state { mute = not state.mute }
-        state <- get
+        modifyAppState ref (\(State state) -> State state { mute = not state.mute })
+
         liftEff do
+            State state <- readRef ref
             setMute state.mute sounds
             writeConfig (Config { mute: state.mute })
--}
+
+
         pure next
 
     (PlayingSceneQuery playingSceneQuery next) -> do
@@ -99,19 +96,16 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
         State gameState <- liftEff $ readRef ref
         case gameState.sceneState of
             TitleSceneState -> pure unit
+
+
+
+
             PlayingSceneState playingSceneState -> do
-                pure unit
 
+                case playingSceneQuery of
 
+                    (SetCursorPosition position) -> do
 
-        case playingSceneQuery of
-
-            (SetCursorPosition position) -> do
-
-                State state <- liftEff $ readRef ref
-                case state.sceneState of
-                    TitleSceneState -> pure unit
-                    PlayingSceneState playingSceneState -> do
                         when (position /= playingSceneState.cursorPosition) do
                             modifyAppState ref (\(State state) -> State state {
                                 sceneState = PlayingSceneState playingSceneState {
@@ -119,19 +113,17 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                                 }
                             })
 
-                pure unit
-            (SetMode mode) -> do
+                    (SetMode mode) -> do
 
-                liftEff do
-                    State s <- readRef ref
-                    when (s.mode /= mode) do
-                        play sounds.switchSound
+                        liftEff do
+                            State s <- readRef ref
+                            when (s.mode /= mode) do
+                                play sounds.switchSound
 
-                modifyAppState ref (\(State state) -> State state { mode = mode })
+                        modifyAppState ref (\(State state) -> State state { mode = mode })
 
-                pure unit
-            (SetPosition position) -> do
-
+                        pure unit
+                    (SetPosition position) -> do
 
 
 
@@ -139,139 +131,153 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
 
 
 
-                liftEff (modifyRef ref (\(State s) -> State s { position = position }))
 
-            TogglePointerLock -> do
-                liftEff do
-                    modifyRef ref (\(State state) -> State state { firstPersonView = not state.firstPersonView })
-                    State state <- readRef ref
-                    if state.firstPersonView
-                        then requestPointerLock (\e -> do
+                        liftEff (modifyRef ref (\(State s) -> State s { position = position }))
+
+                    TogglePointerLock -> do
+                        liftEff do
+                            let firstPersonView = not playingSceneState.firstPersonView
                             modifyRef ref (\(State state) -> State state {
-                                playerRotation = state.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
-                                playerPitch = max (-pi * 0.45) (min (pi * 0.45) state.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                                sceneState = PlayingSceneState playingSceneState {
+                                    firstPersonView = firstPersonView
+                                }
                             })
-                            pure unit
-                        ) (modifyRef ref (\(State state) -> State state {
-                            firstPersonView = false
-                        }))
-                        else exitPointerLock
+                            if firstPersonView
+                                then requestPointerLock (\e -> do
+                                    modifyRef ref (\(State state) -> State state {
+                                        playerRotation = state.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
+                                        playerPitch = max (-pi * 0.45) (min (pi * 0.45) state.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                                    })
+                                    pure unit
+                                ) (modifyRef ref (\(State state) -> State state {
+                                    sceneState = case state.sceneState of
+                                        TitleSceneState -> TitleSceneState
+                                        PlayingSceneState ps -> PlayingSceneState ps {
+                                            firstPersonView = false
+                                        }
+                                }))
+                                else exitPointerLock
 
-            (SetMousePosition e) -> do
-                liftEff do
-                    modifyRef ref \(State state) ->
-                        let isRightButton = buttons e == 2
-                            dx = offsetX e - state.mousePosition.x
-                            dy = offsetY e - state.mousePosition.y
-                                in State state {
-                                        mousePosition = {
-                                            x: offsetX e ,
-                                            y: offsetY e
-                                        },
-                                        cameraYaw = if isRightButton then state.cameraYaw + toNumber dx * options.cameraHorizontalSensitivity else state.cameraYaw,
-                                        cameraPitch = if isRightButton then max (-pi * 0.45) $ min (pi * 0.45) $ state.cameraPitch + toNumber dy * options.cameraVertialSensitivity else state.cameraPitch
-                                    }
+                    (SetMousePosition e) -> do
+                        liftEff do
+                            modifyRef ref \(State state) ->
+                                let isRightButton = buttons e == 2
+                                    dx = offsetX e - state.mousePosition.x
+                                    dy = offsetY e - state.mousePosition.y
+                                        in State state {
+                                                mousePosition = {
+                                                    x: offsetX e ,
+                                                    y: offsetY e
+                                                },
+                                                sceneState = PlayingSceneState playingSceneState {
+                                                    cameraYaw = if isRightButton then playingSceneState.cameraYaw + toNumber dx * options.cameraHorizontalSensitivity else playingSceneState.cameraYaw,
+                                                    cameraPitch = if isRightButton then max (-pi * 0.45) $ min (pi * 0.45) $ playingSceneState.cameraPitch + toNumber dy * options.cameraVertialSensitivity else playingSceneState.cameraPitch
+                                                }
+                                            }
 
 
-            (ToggleDebugLayer) -> do
-                liftEff do
-                    modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })
+                    (ToggleDebugLayer) -> do
+                        liftEff do
+                            modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })
 
-                    State state <- readRef ref
-                    if state.debugLayer
-                        then getDebugLayer scene >>= DebugLayer.show true true Nothing
-                        else getDebugLayer scene >>= DebugLayer.hide
+                            State state <- readRef ref
+                            if state.debugLayer
+                                then getDebugLayer scene >>= DebugLayer.show true true Nothing
+                                else getDebugLayer scene >>= DebugLayer.hide
 
-            (OnMouseClick e) -> do
-                liftEff do
+                    (OnMouseClick e) -> do
+                        liftEff do
 
-                    State state <- readRef ref
+                            State state <- readRef ref
 
-                    modifyRef ref \(State s) -> State s {
-                        mousePosition = {
-                            x: offsetX e ,
-                            y: offsetY e
+                            modifyRef ref \(State s) -> State s {
+                                mousePosition = {
+                                    x: offsetX e ,
+                                    y: offsetY e
+                                }
+                            }
+
+                            when (buttons e == 1) do
+
+                                let put block = do
+                                        picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
+                                        case picked of
+                                            Nothing -> pure unit
+                                            Just blockIndex -> editBlock ref materials scene blockIndex block (Options options)
+
+                                case state.mode of
+                                    Put blockType -> do
+                                        put blockType
+                                        play sounds.putSound
+                                    Remove -> do
+                                        put airBlock
+                                        play sounds.pickSound
+                                    Move -> pure unit
+
+
+                    (Zoom e) -> do
+                        liftEff do
+                            modifyRef ref \(State state) -> State state {
+                                sceneState = PlayingSceneState playingSceneState {
+                                    cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + (toNumber (deltaY e) * options.cameraZoomSpeed)))
+                                }
+                            }
+
+
+                    (OnKeyDown e) -> do
+                        let go f = void do modifyRef ref \(State state) -> State (f state true)
+                        liftEff do
+                            case key e of
+                                " " -> go _ { spaceKey = _ }
+                                "w" -> go _ { wKey = _ }
+                                "s" -> go _ { sKey = _ }
+                                "a" -> go _ { aKey = _ }
+                                "d" -> go _ { dKey = _ }
+                                "r" -> go _ { rKey = _ }
+                                "f" -> go _ { fKey = _ }
+                                "q" -> go _ { qKey = _ }
+                                "e" -> go _ { eKey = _ }
+                                "t" -> go _ { tKey = _ }
+                                "g" -> go _ { gKey = _ }
+                                _ -> pure unit
+                            preventDefault (keyboardEventToEvent e)
+                            stopPropagation (keyboardEventToEvent e)
+
+                    (OnKeyUp e) -> do
+                        let go f = void do modifyRef ref \(State state) -> State (f state false)
+                        liftEff do
+                            case key e of
+                                " " -> go _ { spaceKey = _ }
+                                "w" -> go _ { wKey = _ }
+                                "s" -> go _ { sKey = _ }
+                                "a" -> go _ { aKey = _ }
+                                "d" -> go _ { dKey = _ }
+                                "r" -> go _ { rKey = _ }
+                                "f" -> go _ { fKey = _ }
+                                "q" -> go _ { qKey = _ }
+                                "e" -> go _ { eKey = _ }
+                                "t" -> go _ { tKey = _ }
+                                "g" -> go _ { gKey = _ }
+                                _ -> pure unit
+                            preventDefault (keyboardEventToEvent e)
+                            stopPropagation (keyboardEventToEvent e)
+
+
+                    (SetCenterPanelVisible visible) -> do
+
+                        modifyAppState ref \(State state) -> State state {
+                            sceneState = PlayingSceneState playingSceneState { centerPanelVisible = visible }
                         }
-                    }
-
-                    when (buttons e == 1) do
-
-                        let put block = do
-                                picked <- pickBlock scene cursor (State state) state.mousePosition.x state.mousePosition.y
-                                case picked of
-                                    Nothing -> pure unit
-                                    Just blockIndex -> editBlock ref materials scene blockIndex block (Options options)
-
-                        case state.mode of
-                            Put blockType -> do
-                                put blockType
-                                play sounds.putSound
-                            Remove -> do
-                                put airBlock
-                                play sounds.pickSound
-                            Move -> pure unit
-
-
-            (Zoom e) -> do
-                liftEff do
-                    modifyRef ref \(State state) -> State state {
-                        cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (state.cameraRange + (toNumber (deltaY e) * options.cameraZoomSpeed)))
-                    }
-
-
-            (OnKeyDown e) -> do
-                let go f = void do modifyRef ref \(State state) -> State (f state true)
-                liftEff do
-                    case key e of
-                        " " -> go _ { spaceKey = _ }
-                        "w" -> go _ { wKey = _ }
-                        "s" -> go _ { sKey = _ }
-                        "a" -> go _ { aKey = _ }
-                        "d" -> go _ { dKey = _ }
-                        "r" -> go _ { rKey = _ }
-                        "f" -> go _ { fKey = _ }
-                        "q" -> go _ { qKey = _ }
-                        "e" -> go _ { eKey = _ }
-                        "t" -> go _ { tKey = _ }
-                        "g" -> go _ { gKey = _ }
-                        _ -> pure unit
-                    preventDefault (keyboardEventToEvent e)
-                    stopPropagation (keyboardEventToEvent e)
-
-            (OnKeyUp e) -> do
-                let go f = void do modifyRef ref \(State state) -> State (f state false)
-                liftEff do
-                    case key e of
-                        " " -> go _ { spaceKey = _ }
-                        "w" -> go _ { wKey = _ }
-                        "s" -> go _ { sKey = _ }
-                        "a" -> go _ { aKey = _ }
-                        "d" -> go _ { dKey = _ }
-                        "r" -> go _ { rKey = _ }
-                        "f" -> go _ { fKey = _ }
-                        "q" -> go _ { qKey = _ }
-                        "e" -> go _ { eKey = _ }
-                        "t" -> go _ { tKey = _ }
-                        "g" -> go _ { gKey = _ }
-                        _ -> pure unit
-                    preventDefault (keyboardEventToEvent e)
-                    stopPropagation (keyboardEventToEvent e)
-
-
-            (SetCenterPanelVisible visible) -> do
-                --modify \state -> state { centerPanelVisible = visible }
-                pure unit
+                        pure unit
 
 
 
-            Home -> do
-                -- warpToNextScene sounds TitleScene
-                warpToNextScene ref sounds TitleSceneState
+                    Home -> do
+                        warpToNextScene ref sounds TitleSceneState
 
         pure next
 
 warpToNextScene :: forall eff. Ref State -> Sounds -> SceneState -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
---warpToNextScene :: forall eff. Sounds -> GameScene -> ComponentDSL HudState Query Void (Aff (HudEffects eff)) Unit
 warpToNextScene ref sounds nextScene = do
     liftEff $ play sounds.warpSound
     modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })

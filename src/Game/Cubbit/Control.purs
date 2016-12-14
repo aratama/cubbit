@@ -14,7 +14,7 @@ import Data.Ord (abs, min)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
 import Game.Cubbit.Terrain (globalPositionToGlobalIndex, lookupSolidBlockByVec)
-import Game.Cubbit.Types (Effects, Mode(Move, Remove, Put), State(State))
+import Game.Cubbit.Types (Effects, Mode(Move, Remove, Put), State(State), PlayingSceneState)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton)
 import Graphics.Babylon.Mesh (setPosition)
 import Graphics.Babylon.Node (getName)
@@ -26,9 +26,8 @@ import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
 import Prelude (($), (+), (-), (/=), (<>), (==))
 
-playAnimation :: forall eff. String -> Ref State -> Eff (Effects eff) Unit
-playAnimation name ref = do
-    State state <- readRef ref
+playAnimation :: forall eff. String -> PlayingSceneState -> Eff (Effects eff) Unit
+playAnimation name state = do
     for_ state.playerMeshes \mesh -> void do
         skeletonMaybe <- getSkeleton mesh
         case skeletonMaybe of

@@ -43,7 +43,6 @@ render (State state) = div [
 ] [
 
     div [Properties.key "content-inner"] case state.sceneState of
-    -- div [Properties.key "content-inner"] case state.gameScene of
 
         TitleSceneState -> [
             img [
@@ -70,7 +69,7 @@ render (State state) = div [
             ] [
                 div [class_ (ClassName "button first-person-view"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
-                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if playingSceneState.mute then "volume-off" else "volume-up"],
+                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery ToggleDebugLayer unit)] [icon "gear"],
                 div [class_ (ClassName "button home"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
             ],

@@ -37,7 +37,7 @@ type Effects eff =  CoreEffects (
 data Mode = Move | Put BlockType | Remove
 
 
-data SceneState = TitleSceneState | PlayingSceneState {
+type PlayingSceneState = {
     playerMeshes :: Array AbstractMesh,
     cameraYaw :: Number,
     cameraPitch :: Number,
@@ -52,36 +52,30 @@ data SceneState = TitleSceneState | PlayingSceneState {
     mode :: Mode,
     landing :: Int,
 
-
     cursorPosition :: BlockIndex,
-    mute :: Boolean,
     centerPanelVisible :: Boolean,
     life :: Int,
     maxLife :: Int
 }
 
+data SceneState = TitleSceneState | PlayingSceneState PlayingSceneState
+
 newtype State = State {
 
     -- TODO: Remove them
-    playerMeshes :: Array AbstractMesh,
-    cameraYaw :: Number,
-    cameraPitch :: Number,
-    cameraRange :: Number,
+
     firstPersonViewPitch :: Number,
-    firstPersonView :: Boolean,
     position :: Vec,
     velocity :: Vec,
     playerRotation :: Number,
     playerPitch :: Number,
-    animation :: String,
     mode :: Mode,
     landing :: Int,
-
 
     sceneState :: SceneState,
     nextScene ::Maybe SceneState,
 
-
+    mute :: Boolean,
 
     -- world
     terrain :: Terrain,
