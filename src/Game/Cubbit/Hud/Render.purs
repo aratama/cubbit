@@ -49,12 +49,18 @@ render (State state@{ config: Config config }) = div [
             img [
                 class_ (ClassName "content-layer"),
                 src "title.png",
+                Properties.key "title.png",
                 onClick \e -> Just (Start unit)
             ]
         ]
 
         PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
-            img [id_ "screen-shade", class_ (ClassName "content-layer"), src "screenshade.png"],
+            img [
+                Properties.key "screenshade.png",
+                id_ "screen-shade",
+                class_ (ClassName "content-layer"),
+                src "screenshade.png"
+            ],
 
             div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
 

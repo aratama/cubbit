@@ -2,13 +2,17 @@ module Game.Cubbit.Main (main) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
+import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error)
+import Control.Monad.Eff.Exception (Error)
 import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (newRef)
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
+import DOM (DOM)
+import DOM.HTML.Types (HTMLElement)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (Foreign)
@@ -17,8 +21,8 @@ import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
 import Data.String (Pattern(..), contains)
 import Data.Unit (Unit)
-import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud, queryToHud)
@@ -87,7 +91,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setCollisionsEnabled true sce
             pure sce
 
-
+        loadImage "./title.png"
+        loadImage "./screenshade.png"
 
         texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
         alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
@@ -247,6 +252,12 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             hideLoading
 
-foreign import hideLoading :: forall eff. Eff eff Unit
+foreign import hideLoading :: forall eff. Eff (dom :: DOM | eff) Unit
 
 foreign import flipFaces :: Foreign -> Array VertexDataProps
+
+loadImage :: forall eff. String -> Aff (dom :: DOM | eff) HTMLElement
+loadImage src = makeAff (loadImageEff src)
+
+
+foreign import loadImageEff :: forall eff. String -> (Error -> Eff (dom :: DOM | eff) Unit) -> (HTMLElement -> Eff (dom :: DOM | eff) Unit) -> Eff (dom :: DOM | eff) Unit
