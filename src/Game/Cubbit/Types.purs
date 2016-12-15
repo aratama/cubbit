@@ -9,11 +9,14 @@ import Control.Monad.Eff.Timer (TIMER)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE)
 import Data.Eq (class Eq)
+import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
-import Game.Cubbit.BlockType (BlockType(..))
+import Game.Cubbit.BlockIndex (BlockIndex)
+import Game.Cubbit.BlockType (BlockType)
+import Game.Cubbit.Config (Config)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material, Sound)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -35,24 +38,7 @@ type Effects eff =  CoreEffects (
 data Mode = Move | Put BlockType | Remove
 
 
-data SceneState = TitleSceneState | PlayingSceneState {
-    playerMeshes :: Array AbstractMesh,
-    cameraYaw :: Number,
-    cameraPitch :: Number,
-    cameraRange :: Number,
-    firstPersonViewPitch :: Number,
-    firstPersonView :: Boolean,
-    position :: Vec,
-    velocity :: Vec,
-    playerRotation :: Number,
-    playerPitch :: Number,
-    animation :: String,
-    mode :: Mode,
-    landing :: Int
-}
-
-newtype State = State {
-
+type PlayingSceneState = {
     playerMeshes :: Array AbstractMesh,
     cameraYaw :: Number,
     cameraPitch :: Number,
@@ -67,10 +53,19 @@ newtype State = State {
     mode :: Mode,
     landing :: Int,
 
+    cursorPosition :: BlockIndex,
+    centerPanelVisible :: Boolean,
+    life :: Int,
+    maxLife :: Int
+}
+
+data SceneState = TitleSceneState | PlayingSceneState PlayingSceneState
+
+newtype State = State {
+    config :: Config,
 
     sceneState :: SceneState,
-
-
+    nextScene ::Maybe SceneState,
 
     -- world
     terrain :: Terrain,

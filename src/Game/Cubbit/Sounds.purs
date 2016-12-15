@@ -1,12 +1,14 @@
-module Game.Cubbit.Sounds (Sounds, loadSounds) where
+module Game.Cubbit.Sounds (Sounds, loadSounds, setMute) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Eff (Eff)
+import Data.Unit (Unit)
 import Game.Cubbit.Types (Effects)
 import Graphics.Babylon.Aff.Sound (loadSound)
-import Graphics.Babylon.Sound (defaultCreateSoundOptions)
-import Graphics.Babylon.Types (Scene, Sound)
+import Graphics.Babylon.Sound (defaultCreateSoundOptions, setVolume)
+import Graphics.Babylon.Types (BABYLON, Scene, Sound)
 import Prelude (($))
 
 type Sounds = {
@@ -34,3 +36,13 @@ loadSounds scene = do
 
   where
     load url loop = loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }
+
+setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
+setMute mute sounds = do
+    let go = setVolume (if mute then 0.0 else 1.0)
+    go sounds.forestSound
+    go sounds.stepSound
+    go sounds.switchSound
+    go sounds.pickSound
+    go sounds.putSound
+    go sounds.warpSound

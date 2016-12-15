@@ -17,6 +17,7 @@ import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
 import Data.String (Pattern(..), contains)
 import Data.Unit (Unit)
+import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (focus)
@@ -27,7 +28,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options), readOptions)
 import Game.Cubbit.Sounds (loadSounds)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(Move), State(State), SceneState(..))
+import Game.Cubbit.Types (Effects, Mode(Move), SceneState(..), State(State))
 import Game.Cubbit.Update (update)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Aff.SceneLoader (loadMesh)
@@ -134,69 +135,43 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         res <- get "./alice/alice.babylon"
         let vertexDataArray = flipFaces res.response
 
+        Config config <- liftEff $ readConfig
+
         -- initialize game state
         initialTerrain <- liftEff $ emptyTerrain 0
-        ref <- liftEff $ newRef $ State {
+        let initialState =  State {
+                config: Config config,
 
-            playerMeshes: playerMeshes,
-            cameraYaw: 0.0,
-            cameraPitch: 0.7,
-            cameraRange: 5.0,
-            firstPersonView: false,
-            firstPersonViewPitch: 0.0,
-            position: { x: 0.5, y: 10.0, z: 0.5 },
-            velocity: { x: 0.0, y: 0.0, z: 0.0 },
-            playerRotation: 0.5,
-            playerPitch: 0.0,
-            animation: "",
-            mode: Move,
-            landing: 0,
+                sceneState: TitleSceneState,
+                nextScene: Nothing,
+                skyboxRotation: 0.0,
+                terrain: initialTerrain,
+                updateIndex: toNullable Nothing,
 
+                cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
+                cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
 
-            sceneState: PlayingSceneState {
-                playerMeshes: playerMeshes,
-                cameraYaw: 0.0,
-                cameraPitch: 0.7,
-                cameraRange: 5.0,
-                firstPersonView: false,
-                firstPersonViewPitch: 0.0,
-                position: { x: 0.5, y: 10.0, z: 0.5 },
-                velocity: { x: 0.0, y: 0.0, z: 0.0 },
-                playerRotation: 0.5,
-                playerPitch: 0.0,
-                animation: "",
-                mode: Move,
-                landing: 0
-            },
+                mousePosition: { x: 0, y: 0 },
+                debugLayer: false,
+                minimap: false,
+                totalFrames: 0,
+                spaceKey: false,
+                wKey: false,
+                sKey: false,
+                aKey: false,
+                dKey: false,
+                qKey: false,
+                eKey: false,
+                rKey: false,
+                fKey: false,
+                tKey: false,
+                gKey: false
+            }
 
-
-
-            skyboxRotation: 0.0,
-            terrain: initialTerrain,
-            updateIndex: toNullable Nothing,
-
-            cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
-            cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
-
-            mousePosition: { x: 0, y: 0 },
-            debugLayer: false,
-            minimap: false,
-            totalFrames: 0,
-            spaceKey: false,
-            wKey: false,
-            sKey: false,
-            aKey: false,
-            dKey: false,
-            qKey: false,
-            eKey: false,
-            rKey: false,
-            fKey: false,
-            tKey: false,
-            gKey: false
-        }
+        ref <- liftEff $ newRef initialState
 
         -- initialize hud
-        driver <- initializeHud ref (Options options) body scene cursor materials sounds
+        driver <- initializeHud playerMeshes initialState ref (Options options) body scene cursor materials sounds
 
         liftEff do
 
