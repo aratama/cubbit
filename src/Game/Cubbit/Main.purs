@@ -149,7 +149,10 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
                 playerMeshes: playerMeshes,
 
-                sceneState: TitleSceneState { position: 0.0 },
+                sceneState: TitleSceneState {
+                    position: 0.0,
+                    configVisible: false
+                },
                 nextScene: Nothing,
                 skyboxRotation: 0.0,
                 terrain: initialTerrain,

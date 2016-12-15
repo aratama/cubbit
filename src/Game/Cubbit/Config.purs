@@ -8,12 +8,16 @@ import DOM (DOM)
 import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
 
 newtype Config = Config {
-    mute :: Boolean
+    mute :: Boolean,
+    bgmVolume :: Number,
+    seVolume :: Number
 }
 
 defaultConfig :: Config
 defaultConfig = Config {
-    mute: false
+    mute: false,
+    bgmVolume: 0.8,
+    seVolume: 0.8
 }
 
 derive instance genericConfig :: Generic Config

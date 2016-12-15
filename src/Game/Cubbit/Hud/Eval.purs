@@ -56,6 +56,32 @@ eval scene cursor materials (Options options) ref sounds query = case query of
             stopPropagation e
         pure next
 
+    (ShowConfig next) -> do
+
+        modifyAppState ref (\(State state) -> State state {
+            sceneState = case state.sceneState of
+                TitleSceneState titleSceneState -> TitleSceneState titleSceneState {
+                    configVisible = true
+                }
+                PlayingSceneState playingSceneState -> PlayingSceneState playingSceneState
+        })
+        liftEff $ play sounds.switchSound
+
+        pure next
+
+    (CloseConfig next) -> do
+
+        modifyAppState ref (\(State state) -> State state {
+            sceneState = case state.sceneState of
+                TitleSceneState titleSceneState -> TitleSceneState titleSceneState {
+                    configVisible = false
+                }
+                PlayingSceneState playingSceneState -> PlayingSceneState playingSceneState
+        })
+        liftEff $ play sounds.switchSound
+
+        pure next
+
     (Start next) -> do
 
         let nextScene = PlayingSceneState {
@@ -306,7 +332,8 @@ eval scene cursor materials (Options options) ref sounds query = case query of
 
                     Home -> do
                         let nextScene = TitleSceneState {
-                                    position: 0.0
+                                    position: 0.0,
+                                    configVisible: false
                                 }
                         liftEff $ play sounds.warpSound
                         modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })

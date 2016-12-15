@@ -45,12 +45,31 @@ render (State state@{ config: Config config }) = div [
 
     div [Properties.key "content-inner"] case state.sceneState of
 
-        TitleSceneState _ -> [
+        TitleSceneState titleSceneState -> [
             img [
                 class_ (ClassName "content-layer"),
                 src "title.png",
                 Properties.key "title.png",
                 onClick \e -> Just (Start unit)
+            ],
+
+            div [
+                class_ (ClassName "show-config"),
+                onClick \e -> Just (ShowConfig unit)
+            ] [text "Configurations"],
+
+            div [
+                class_ (ClassName ("content-layer config-root" <> if titleSceneState.configVisible then " visible" else "")),
+                onClick \e -> Just (CloseConfig unit)
+            ] [
+                div [
+                    class_ (ClassName "config-inner"),
+                    onClick \e -> Just (Nop (mouseEventToEvent e) unit)
+                ] [
+                    div [class_ (ClassName "config-title")] [text "Configurations"],
+                    div [class_ (ClassName "config-bgm-volume")] [text "BGM Volume"],
+                    div [class_ (ClassName "config-se-volume")] [text "SE Volume"]
+                ]
             ]
         ]
 

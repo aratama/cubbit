@@ -39,7 +39,8 @@ data Mode = Move | Put BlockType | Remove
 
 
 type TitleSceneState = {
-    position :: Number
+    position :: Number,
+    configVisible :: Boolean
 }
 
 type PlayingSceneState = {
@@ -63,9 +64,8 @@ type PlayingSceneState = {
     maxLife :: Int
 }
 
-data SceneState = TitleSceneState TitleSceneState | PlayingSceneState PlayingSceneState
-
-
+data SceneState = TitleSceneState TitleSceneState
+                | PlayingSceneState PlayingSceneState
 
 
 newtype State = State {

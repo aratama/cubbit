@@ -18,6 +18,8 @@ data Query a = PlayingSceneQuery PlayingSceneQuery a
              | ToggleMute a
              | Start a
              | PeekState (State -> a)
+             | ShowConfig a
+             | CloseConfig a
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode
