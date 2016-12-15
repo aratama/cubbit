@@ -20,6 +20,7 @@ import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
+import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
 import Game.Cubbit.Hud.Type (Query(..), PlayingSceneQuery(..))
@@ -221,7 +222,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
         deltaTime <- getDeltaTime engine
 
-        State state' <- case state.sceneState of
+        State state'@{ config: Config config } <- case state.sceneState of
 
             TitleSceneState titleSceneState -> do
                 let state' = state {
@@ -332,7 +333,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                     -- let ci = runChunkIndex index
 
-                    createChunkMesh ref materials scene index (Options options)
+                    createChunkMesh ref materials scene index (Options options) state.config
 
                     --State st <- readRef ref
                     --size <- chunkCount st.terrain
@@ -377,7 +378,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                     --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
 
         -- update shadow rendering list
-        if options.shadowEnabled
+        if config.shadow
             then do
 
 

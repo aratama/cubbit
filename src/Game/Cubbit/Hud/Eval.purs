@@ -25,17 +25,18 @@ import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (Sounds, setMute, stopAllSounds)
+import Game.Cubbit.Sounds (Sounds, setBGMVolume, setMute, stopAllSounds,setSEVolume)
+import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Sound (play, stop)
+import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (ComponentDSL, liftAff, liftEff, put)
 import Halogen.Query (get)
 import Math (pi)
-import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=))
+import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=), (/))
 import Unsafe.Coerce (unsafeCoerce)
 
 eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
@@ -54,6 +55,10 @@ eval scene cursor materials (Options options) ref sounds query = case query of
         liftEff do
             preventDefault e
             stopPropagation e
+        pure next
+
+    (StopPropagation e next) -> do
+        liftEff $ stopPropagation e
         pure next
 
     (ShowConfig next) -> do
@@ -81,6 +86,66 @@ eval scene cursor materials (Options options) ref sounds query = case query of
         liftEff $ play sounds.switchSound
 
         pure next
+
+    (SetBGMVolume value next) -> do
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                bgmVolume = value
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            setBGMVolume (toNumber value / 8.0) sounds
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
+    (SetSEVolume value next) -> do
+
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                seVolume = value
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            setSEVolume (toNumber value / 8.0) sounds
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
+    (ToggleShadow next) -> do
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                shadow = not config.shadow
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
+    (ToggleVertexColor next) -> do
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                vertexColor = not config.vertexColor
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
 
     (Start next) -> do
 
@@ -261,7 +326,7 @@ eval scene cursor materials (Options options) ref sounds query = case query of
                                         picked <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
                                         case picked of
                                             Nothing -> pure unit
-                                            Just blockIndex -> editBlock ref materials scene blockIndex block (Options options)
+                                            Just blockIndex -> editBlock ref materials scene blockIndex block (Options options) state.config
 
                                 case playingSceneState.mode of
                                     Put blockType -> do

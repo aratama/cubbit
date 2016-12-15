@@ -34,5 +34,8 @@
   },
   "devDependencies": {
     "purescript-strongcheck": "^2.0.1"
+  },
+  "resolutions": {
+    "purescript-unsafe-coerce": "^2.0.0"
   }
 }

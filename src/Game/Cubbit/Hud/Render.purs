@@ -3,24 +3,28 @@ module Game.Cubbit.Hud.Render (render) where
 import DOM.Event.Event (Event)
 import DOM.Event.MouseEvent (MouseEvent)
 import DOM.Event.Types (EventType(..), mouseEventToEvent)
-import Data.Array (replicate)
-import Data.Functor (map)
+import Data.Array (replicate, (..))
+import Data.Functor (map, mapFlipped)
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Unit (unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
 import Game.Cubbit.Config (Config(..))
+import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..))
 import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState))
 import Halogen (ComponentHTML)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, img, p, prop, text)
-import Halogen.HTML.Elements (i)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h2, img, p, prop, text)
+import Halogen.HTML.Elements (i, p_, a)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
-import Halogen.HTML.Properties (I, IProp, autofocus, class_, id_, src, tabIndex)
+import Halogen.HTML.Properties (I, IProp, autofocus, class_, href, id_, src, tabIndex, target)
 import Halogen.HTML.Properties (key) as Properties
 import Halogen.Query (action)
-import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==))
+import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==), (<=))
 import Unsafe.Coerce (unsafeCoerce)
+
+
+
 
 slotClass :: forall r i. Boolean -> IProp (class :: I | r) i
 slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""))
@@ -48,8 +52,8 @@ render (State state@{ config: Config config }) = div [
         TitleSceneState titleSceneState -> [
             img [
                 class_ (ClassName "content-layer"),
-                src "title.png",
-                Properties.key "title.png",
+                src "image/title.png",
+                Properties.key "image/title.png",
                 onClick \e -> Just (Start unit)
             ],
 
@@ -66,19 +70,36 @@ render (State state@{ config: Config config }) = div [
                     class_ (ClassName "config-inner"),
                     onClick \e -> Just (Nop (mouseEventToEvent e) unit)
                 ] [
-                    div [class_ (ClassName "config-title")] [text "Configurations"],
-                    div [class_ (ClassName "config-bgm-volume")] [text "BGM Volume"],
-                    div [class_ (ClassName "config-se-volume")] [text "SE Volume"]
+                    h2 [class_ (ClassName "config-heading")] [text "Sounds"],
+                    option "Mute" (toggle config.mute ToggleMute),
+                    option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
+                    option "SE Volume" (slider config.seVolume SetSEVolume),
+
+                    h2 [class_ (ClassName "config-heading")] [text "Graphics"],
+                    option "Shadow" (toggle config.shadow ToggleShadow),
+                    option "Shadow Area" (slider 2 SetBGMVolume),
+                    option "Fog" (toggle config.mute ToggleMute),
+                    option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
+
+                    h2 [class_ (ClassName "config-heading")] [text "Terrain"],
+                    option "Chunk Area" (slider 2 SetBGMVolume),
+                    option "Max Chunks" (slider 2 SetBGMVolume),
+
+                    p_ [a [
+                        target "_blank",
+                        href "LICENSE.txt",
+                        onClick \e -> Just (StopPropagation (mouseEventToEvent e) unit)
+                    ] [text "License Attribution"]]
                 ]
             ]
         ]
 
         PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
             img [
-                Properties.key "screenshade.png",
+                Properties.key "image/screenshade.png",
                 id_ "screen-shade",
                 class_ (ClassName "content-layer"),
-                src "screenshade.png"
+                src "image/screenshade.png"
             ],
 
             div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
@@ -134,6 +155,28 @@ render (State state@{ config: Config config }) = div [
     suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
     suppressMouseDown = onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
 
+    option caption ui = div [class_ (ClassName "config-option")] [
+        div [
+            class_ (ClassName "config-caption")
+        ] [
+            text caption
+        ],
+        ui
+    ]
+
+    slider value action = div [
+        class_ (ClassName "config-slider")
+    ] (mapFlipped (0 .. sliderMaxValue) \i ->
+        div [
+            class_ (ClassName ("config-slider-box " <> if i <= value then "fill" else "empty")),
+            onClick \e -> Just (action i unit)
+        ] []
+    )
+
+    toggle value action = div [
+        class_ (ClassName ("config-toggle " <> if value then "on" else "off")),
+        onClick \e -> Just (action unit)
+    ] [text if value then "On" else "Off"]
 
     hotbuttons playingSceneState = map slot [
         Just Move,

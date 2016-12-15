@@ -3,6 +3,9 @@ module Game.Cubbit.Constants where
 chunkSize :: Int
 chunkSize = 16
 
+sliderMaxValue :: Int
+sliderMaxValue = 5
+
 -- rendering groups
 
 skyBoxRenderingGruop :: Int

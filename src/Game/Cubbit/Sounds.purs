@@ -1,4 +1,4 @@
-module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, stopAllSounds, setBGMVolume) where
+module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, stopAllSounds, setBGMVolume, setSEVolume) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
@@ -84,6 +84,9 @@ setMute mute sounds = for_ sounds.all (setVolume (if mute then 0.0 else 1.0))
 
 setBGMVolume :: forall eff. Number -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setBGMVolume volume sounds = for_ sounds.bgms (setVolume volume)
+
+setSEVolume :: forall eff. Number -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
+setSEVolume volume sounds = for_ sounds.ses (setVolume volume)
 
 stopAllSounds :: forall eff. Sounds -> Eff (babylon :: BABYLON | eff) Unit
 stopAllSounds sounds = for_ sounds.all stop

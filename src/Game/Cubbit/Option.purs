@@ -10,8 +10,6 @@ newtype Options = Options {
     loadDistance :: Int,
     fogDensity :: Number,
     maximumLoadedChunks :: Int,
-    vertexColorEnabled :: Boolean,
-    shadowEnabled :: Boolean,
     shadowDisplayRange :: Int,
     shadowMapSize :: Int,
     skyboxRotationSpeed :: Number,

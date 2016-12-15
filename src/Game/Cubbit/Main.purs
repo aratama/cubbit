@@ -16,6 +16,7 @@ import DOM.HTML.Types (HTMLElement)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Foreign (Foreign)
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
@@ -23,16 +24,15 @@ import Data.String (Pattern(..), contains)
 import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Config (Config(Config), readConfig)
-import Game.Cubbit.Constants (skyBoxRenderingGruop)
+import Game.Cubbit.Constants (skyBoxRenderingGruop, sliderMaxValue)
 import Game.Cubbit.Event (focus)
-import Game.Cubbit.Hud.Driver (initializeHud, queryToHud)
-import Game.Cubbit.Hud.Type (Query(..))
+import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Materials (initializeMaterials)
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options), readOptions)
-import Game.Cubbit.Sounds (loadSounds)
+import Game.Cubbit.Sounds (loadSounds, setBGMVolume, setMute, setSEVolume)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, Mode(Move), SceneState(..), State(State))
+import Game.Cubbit.Types (Effects, SceneState(TitleSceneState), State(State))
 import Game.Cubbit.Update (update)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Aff.SceneLoader (loadMesh)
@@ -58,7 +58,6 @@ import Graphics.Babylon.Util (querySelectorCanvas)
 import Graphics.Babylon.Vector3 (createVector3)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Halogen.Query (action)
 import Network.HTTP.Affjax (get)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
@@ -91,11 +90,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setCollisionsEnabled true sce
             pure sce
 
-        loadImage "./title.png"
-        loadImage "./screenshade.png"
+        loadImage "./image/title.png"
+        loadImage "./image/screenshade.png"
 
-        texture <- loadTexture "./texture.png" scene defaultCreateTextureOptions
-        alphaTexture <- loadTexture "./alpha.png" scene defaultCreateTextureOptions
+        texture <- loadTexture "./image/texture.png" scene defaultCreateTextureOptions
+        alphaTexture <- loadTexture "./image/alpha.png" scene defaultCreateTextureOptions
         loadTexture "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
         playerMeshes <- loadMesh "" "./alice/" "alice.babylon" scene pure
         sounds <- loadSounds scene
@@ -237,7 +236,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 forE (-initialWorldSize) initialWorldSize \x -> do
                     forE (-initialWorldSize) initialWorldSize \z -> void do
                         let index = chunkIndex x 0 z
-                        createChunkMesh ref materials scene index (Options options)
+                        createChunkMesh ref materials scene index (Options options) (Config config)
 
             -- start game loop
             engine # runRenderLoop do
@@ -250,7 +249,9 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             -- focus
             focus "content"
 
-
+            setMute config.mute sounds
+            setBGMVolume (toNumber config.bgmVolume / toNumber sliderMaxValue) sounds
+            setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
             play sounds.cleaning
 
             hideLoading

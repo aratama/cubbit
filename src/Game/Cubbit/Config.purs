@@ -9,15 +9,19 @@ import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
 
 newtype Config = Config {
     mute :: Boolean,
-    bgmVolume :: Number,
-    seVolume :: Number
+    bgmVolume :: Int,
+    seVolume :: Int,
+    shadow :: Boolean,
+    vertexColor :: Boolean
 }
 
 defaultConfig :: Config
 defaultConfig = Config {
     mute: false,
-    bgmVolume: 0.8,
-    seVolume: 0.8
+    bgmVolume: 3,
+    seVolume: 3,
+    shadow: true,
+    vertexColor: true
 }
 
 derive instance genericConfig :: Generic Config

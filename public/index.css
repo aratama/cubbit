@@ -5,7 +5,7 @@
 
 @font-face {
     font-family: "ranobe";
-    src: url("font/ラノベPOP.otf");
+    src: url("font/ranobepop.otf");
 }
 
 html, body {
@@ -24,6 +24,8 @@ html, body {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+
+    cursor: default;
 }
 
 
@@ -45,7 +47,7 @@ html, body {
 #content:focus {
     outline: none !important;
     border-color: white;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
 #renderCanvas, #canvas2d {
@@ -304,10 +306,18 @@ html, body {
     border-radius: 100px;
     color: #7b7bdd;
     position: absolute;
-    right: 10px;
-    top: 10px;
+    right: 20px;
+    top: 20px;
     padding: 10px;
     box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.5);
+}
+
+.show-config:hover {
+    transform: translateY(-2px);
+}
+
+.show-config:active {
+    transform: translateY(2px);
 }
 
 .config-root {
@@ -337,7 +347,7 @@ html, body {
     border-radius: 12px;
 }
 
-.config-root .config-title {
+.config-root .config-heading {
     font-size: x-large;
 }
 
@@ -347,36 +357,62 @@ html, body {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-footer {
-    display: block;
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    text-align: right;
+.config-option {
+    display: flex;
+    flex-direction: row;
+    margin: 4px;
 }
 
-footer a {
+.config-option .config-caption {
+    width: 120px;
+    height: 1em;
+}
+
+.config-option .config-toggle {
+    background-color: transparent;
     color: white;
-    text-decoration: none;
-    font-size: x-small;
-    opacity: 0.3;
+    width: 100px;
+    height: 1em;
+    padding: 4px;
+    border: solid 1px white;
+    border-radius: 4px;
+    text-align: center;
 }
 
-footer a:hover {
-    opacity: 1.0;
+.config-option .config-toggle.on {
+    background-color: white;
+    color: #cdb27b;
 }
+
+
+
+.config-slider {
+    display: flex;
+    flex-direction: row;
+}
+
+.config-slider-box {
+    width: 1em;
+    height: 1em;
+    border: solid 1px white;
+    margin: 2px;
+    border-radius: 4px;
+}
+
+.config-slider-box.fill {
+    background-color: white;
+}
+
+.config-root a {
+    color: #7b7bdd;
+}
+
+
+
+
+
+
+
+
+
+

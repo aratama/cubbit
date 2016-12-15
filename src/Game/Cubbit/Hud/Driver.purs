@@ -16,14 +16,13 @@ import Game.Cubbit.Hud.Render (render)
 import Game.Cubbit.Hud.Type (HudEffects, Query)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options)
-import Game.Cubbit.Sounds (Sounds, setMute)
+import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Types (State(..))
-import Graphics.Babylon.Types (AbstractMesh, Mesh, Scene)
-import Halogen (Component, HalogenIO, component, liftEff)
+import Graphics.Babylon.Types (Mesh, Scene)
+import Halogen (Component, HalogenIO, component)
 import Halogen.HTML (HTML)
 import Halogen.VirtualDOM.Driver (runUI)
-import Prelude (bind, pure, ($))
-
+import Prelude (pure, ($))
 
 ui :: forall eff. State -> Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
 ui initialState ref options scene cursor materials sounds mute = component {
@@ -36,7 +35,6 @@ type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
 initializeHud :: forall eff. State -> Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
 initializeHud (State state@{ config: Config config }) ref options body scene cursor materials sounds = do
-    liftEff $ setMute config.mute sounds
     runUI (ui (State state) ref options scene cursor materials sounds config.mute) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
