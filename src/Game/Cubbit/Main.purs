@@ -242,7 +242,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             -- focus
             focus "content"
 
-            play sounds.forestSound
+
+            play sounds.cleaning
 
             hideLoading
 

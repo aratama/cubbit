@@ -25,12 +25,12 @@ import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (Sounds, setMute)
+import Game.Cubbit.Sounds (Sounds, setMute, stopAllSounds)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Sound (play)
+import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (ComponentDSL, liftAff, liftEff, put)
 import Halogen.Query (get)
@@ -87,10 +87,14 @@ eval scene cursor materials (Options options) ref sounds query = case query of
             sceneState = nextScene
         })
         liftEff do
+            stopAllSounds sounds
             State state <- readRef ref
             for_ state.playerMeshes \mesh -> void do
                 setIsVisible true mesh
-        wait 100
+        wait 1000
+        liftEff do
+            play sounds.forestSound
+            play sounds.rye
         modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
 
 
@@ -301,20 +305,22 @@ eval scene cursor materials (Options options) ref sounds query = case query of
 
 
                     Home -> do
-                        warpToNextScene ref sounds $ TitleSceneState {
-                            position: 0.0
-                        }
-
+                        let nextScene = TitleSceneState {
+                                    position: 0.0
+                                }
+                        liftEff $ play sounds.warpSound
+                        modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
+                        wait 1000
+                        liftEff do
+                            stopAllSounds sounds
+                        modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
+                        wait 1000
+                        liftEff do
+                            play sounds.cleaning
+                        modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
         pure next
 
-warpToNextScene :: forall eff. Ref State -> Sounds -> SceneState -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
-warpToNextScene ref sounds nextScene = do
-    liftEff $ play sounds.warpSound
-    modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
-    wait 1000
-    modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
-    wait 100
-    modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
+
 
 
 modifyAppState :: forall eff. Ref State -> (State -> State) -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
