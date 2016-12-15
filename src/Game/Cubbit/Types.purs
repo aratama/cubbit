@@ -38,8 +38,12 @@ type Effects eff =  CoreEffects (
 data Mode = Move | Put BlockType | Remove
 
 
+type TitleSceneState = {
+    position :: Number
+}
+
 type PlayingSceneState = {
-    playerMeshes :: Array AbstractMesh,
+
     cameraYaw :: Number,
     cameraPitch :: Number,
     cameraRange :: Number,
@@ -59,10 +63,15 @@ type PlayingSceneState = {
     maxLife :: Int
 }
 
-data SceneState = TitleSceneState | PlayingSceneState PlayingSceneState
+data SceneState = TitleSceneState TitleSceneState | PlayingSceneState PlayingSceneState
+
+
+
 
 newtype State = State {
     config :: Config,
+
+    playerMeshes :: Array AbstractMesh,
 
     sceneState :: SceneState,
     nextScene ::Maybe SceneState,

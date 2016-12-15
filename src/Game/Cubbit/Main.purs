@@ -142,7 +142,9 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let initialState =  State {
                 config: Config config,
 
-                sceneState: TitleSceneState,
+                playerMeshes: playerMeshes,
+
+                sceneState: TitleSceneState { position: 0.0 },
                 nextScene: Nothing,
                 skyboxRotation: 0.0,
                 terrain: initialTerrain,
@@ -171,7 +173,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         ref <- liftEff $ newRef initialState
 
         -- initialize hud
-        driver <- initializeHud playerMeshes initialState ref (Options options) body scene cursor materials sounds
+        driver <- initializeHud initialState ref (Options options) body scene cursor materials sounds
 
         liftEff do
 
@@ -218,6 +220,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 skeleton <- getSkeleton mesh
                 let name = getName (unsafeCoerce mesh)
                 setMaterial (if contains (Pattern "-outline") name then materials.outlineMaterial else materials.cellShadingMaterial) mesh
+
+                setIsVisible false mesh
 
             -- load initial chunks
             do

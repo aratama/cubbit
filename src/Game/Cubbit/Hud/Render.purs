@@ -45,7 +45,7 @@ render (State state@{ config: Config config }) = div [
 
     div [Properties.key "content-inner"] case state.sceneState of
 
-        TitleSceneState -> [
+        TitleSceneState _ -> [
             img [
                 class_ (ClassName "content-layer"),
                 src "title.png",

@@ -48,6 +48,17 @@ html, body {
     left: 0;
 }
 
+
+#shadow {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 1.0;
+    transition-property: opacity;
+    transition-duration: 1.0s;
+    pointer-events: none;
+}
+
 #canvas2d {
     pointer-events: none;
     touch-action: none;
@@ -249,12 +260,6 @@ html, body {
 
 #screen-shade {
     pointer-events:none;
-    display:block;
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-    height: 100%;
 }
 
 #cursor-position {

@@ -4,7 +4,6 @@ import Control.Alt (void)
 import Control.Alternative (when)
 import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Aff.Class (class MonadAff)
-import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import Control.Monad.Eff.Timer (TIMER, setTimeout)
 import DOM.Event.Event (preventDefault, stopPropagation)
@@ -14,6 +13,7 @@ import Data.BooleanAlgebra (not)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(Nothing, Just))
 import Data.Ord (max, min)
+import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (blockIndex)
@@ -27,18 +27,19 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Sounds (Sounds, setMute)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
+import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Sound (play, setVolume)
-import Graphics.Babylon.Types (BABYLON, Mesh, Scene, AbstractMesh)
+import Graphics.Babylon.Sound (play)
+import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (ComponentDSL, liftAff, liftEff, put)
 import Halogen.Query (get)
 import Math (pi)
 import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
-eval :: forall eff. Array AbstractMesh -> Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
-eval playerMeshes scene cursor materials (Options options) ref sounds query = case query of
+eval :: forall eff. Scene -> Mesh -> Materials -> Options -> Ref State -> Sounds -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
+eval scene cursor materials (Options options) ref sounds query = case query of
 
     (PeekState f) -> do
         s <- get
@@ -56,26 +57,44 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
         pure next
 
     (Start next) -> do
-        warpToNextScene ref sounds (PlayingSceneState {
-            playerMeshes: playerMeshes,
-            cameraYaw: 0.0,
-            cameraPitch: 0.7,
-            cameraRange: 5.0,
-            firstPersonView: false,
-            firstPersonViewPitch: 0.0,
-            position: { x: 0.5, y: 10.0, z: 0.5 },
-            velocity: { x: 0.0, y: 0.0, z: 0.0 },
-            playerRotation: 0.5,
-            playerPitch: 0.0,
-            animation: "",
-            mode: Move,
-            landing: 0,
 
-            cursorPosition: blockIndex 0 0 0,
-            centerPanelVisible: false,
-            life: 10,
-            maxLife: 12
+        let nextScene = PlayingSceneState {
+                    cameraYaw: 0.0,
+                    cameraPitch: 0.7,
+                    cameraRange: 5.0,
+                    firstPersonView: false,
+                    firstPersonViewPitch: 0.0,
+                    position: { x: 0.5, y: 10.0, z: 0.5 },
+                    velocity: { x: 0.0, y: 0.0, z: 0.0 },
+                    playerRotation: 0.5,
+                    playerPitch: 0.0,
+                    animation: "",
+                    mode: Move,
+                    landing: 0,
+
+                    cursorPosition: blockIndex 0 0 0,
+                    centerPanelVisible: false,
+                    life: 10,
+                    maxLife: 12
+                }
+
+        liftEff $ play sounds.warpSound
+        modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
+        wait 1000
+        modifyAppState ref (\(State state) -> State state {
+            cameraPosition = { x: 10.0, y: 20.0, z: negate 10.0 },
+            cameraTarget = { x: 0.5, y: 11.0, z: 0.5 },
+            sceneState = nextScene
         })
+        liftEff do
+            State state <- readRef ref
+            for_ state.playerMeshes \mesh -> void do
+                setIsVisible true mesh
+        wait 100
+        modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
+
+
+
         pure next
 
 
@@ -99,7 +118,7 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
         -- todo
         State gameState <- liftEff $ readRef ref
         case gameState.sceneState of
-            TitleSceneState -> pure unit
+            TitleSceneState titleSceneState -> pure unit
 
 
 
@@ -150,15 +169,17 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                             if firstPersonView
                                 then requestPointerLock (\e -> do
                                     modifyRef ref (\(State state) -> State state {
-                                        sceneState = PlayingSceneState playingSceneState {
-                                            playerRotation = playingSceneState.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
-                                            playerPitch = max (-pi * 0.45) (min (pi * 0.45) playingSceneState.playerPitch - e.movementY * options.pointerVerticalSensitivity)
-                                        }
+                                        sceneState = case state.sceneState of
+                                            TitleSceneState ts -> TitleSceneState ts
+                                            PlayingSceneState ps -> PlayingSceneState ps {
+                                                playerRotation = ps.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
+                                                playerPitch = max (-pi * 0.45) (min (pi * 0.45) ps.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                                            }
                                     })
                                     pure unit
                                 ) (modifyRef ref (\(State state) -> State state {
                                     sceneState = case state.sceneState of
-                                        TitleSceneState -> TitleSceneState
+                                        TitleSceneState ts -> TitleSceneState ts
                                         PlayingSceneState ps -> PlayingSceneState ps {
                                             firstPersonView = false
                                         }
@@ -280,7 +301,9 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
 
 
                     Home -> do
-                        warpToNextScene ref sounds TitleSceneState
+                        warpToNextScene ref sounds $ TitleSceneState {
+                            position: 0.0
+                        }
 
         pure next
 

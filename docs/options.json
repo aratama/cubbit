@@ -1,5 +1,7 @@
 
 {
+    "eyeHeight": 1.4,
+    "gravity": -0.0005,
     "loadDistance": 6,
     "fogDensity": 0.005,
     "maximumLoadedChunks": 2197,
@@ -7,7 +9,7 @@
     "shadowDisplayRange": 4,
     "shadowEnabled": true,
     "shadowMapSize": 4096,
-    "skyboxRotationSpeed": 0.0004,
+    "skyboxRotationSpeed": 0.00002,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
     "jumpVelocity": 0.18,

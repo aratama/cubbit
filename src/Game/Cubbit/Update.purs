@@ -221,134 +221,40 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
         deltaTime <- getDeltaTime engine
 
-        case state.sceneState of
+        State state' <- case state.sceneState of
 
-            TitleSceneState -> pure unit
+            TitleSceneState titleSceneState -> do
+                let state' = state {
+                        cameraPosition = { x: 5.0 - titleSceneState.position, y: 20.0, z: negate 10.0 + titleSceneState.position },
+                        cameraTarget = { x: 0.5 - titleSceneState.position, y: 11.0, z: titleSceneState.position },
+                        sceneState = TitleSceneState titleSceneState {
+                            position = titleSceneState.position + deltaTime * 0.0008
+                        }
+                    }
+                pure (State state')
 
             PlayingSceneState playingSceneState -> do
 
-
                 Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
 
-                writeRef ref (State state')
-
-
-                let cameraPosition = state.cameraPosition
-                let cameraPositionChunkIndex = globalPositionToChunkIndex state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
-
-
                 when (playingSceneState'.animation /= playingSceneState.animation) do
-                    playAnimation playingSceneState'.animation playingSceneState
+                    playAnimation playingSceneState'.animation state.playerMeshes
 
                 playerRotationVector <- createVector3 0.0 playingSceneState'.playerRotation 0.0
                 positionVector <- createVector3 playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
-                for_ playingSceneState.playerMeshes \mesh -> void do
+                for_ state.playerMeshes \mesh -> void do
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh
                     setVisibility (if playingSceneState.firstPersonView then 0.0 else 1.0) mesh
 
-                -- update camera
 
-                cameraPositionVector <- createVector3 state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
-
-                cameraTargetVector <- createVector3 state'.cameraTarget.x state'.cameraTarget.y state'.cameraTarget.z
-
-                cameraDirection <- subtract cameraTargetVector cameraPositionVector
-                cameraDirectionLength <- length cameraDirection
-                cameraRay <- createRayWithLength cameraPositionVector cameraDirection cameraDirectionLength
-                let predicate mesh = do
-                        let name = getName (abstractMeshToNode mesh)
-                        pure (name == "terrain")
-                picked <- pickWithRay cameraRay predicate true scene
-
-                let pickedPoint = getPickedPoint picked
-
-                let cameraPosition'' = case getPickedPoint picked of
-                        Nothing -> cameraPositionVector
-                        Just point -> point
-                Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
-                setTarget cameraTargetVector camera
-
-                skyboxRotationVector <- createVector3 0.0 state'.skyboxRotation 0.0
-                setRotation skyboxRotationVector (meshToAbstractMesh skybox)
-
-
-                -- load chunks
-                do
-                    let costLimit = 100
-                    costRef <- newRef 0
-
-                    let ci = runChunkIndex cameraPositionChunkIndex
-
-                    let loadAndGenerateChunk index = do
-
-                            -- let ci = runChunkIndex index
-
-                            createChunkMesh ref materials scene index (Options options)
-
-                            --State st <- readRef ref
-                            --size <- chunkCount st.terrain
-                            --log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
-                            --log $ "total chunks:" <> show (size + 1)
-
-
-                    nextIndex <- foreachBlocks options.loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
-
-                        let index = chunkIndex x y z
-                        chunkMaybe <- lookupChunk index state.terrain
-                        case chunkMaybe of
-                            Just chunkWithMaybe -> do
-                                case chunkWithMaybe.standardMaterialMesh of
-                                    MeshNotLoaded -> do
-                                        loadAndGenerateChunk index
-                                        pure 100
-                                    _ -> pure 1
-                            Nothing -> do
-                                loadAndGenerateChunk index
-                                pure 100
-
-
-                    modifyRef ref \(State st) -> State st {
-                        updateIndex = toNullable (Just nextIndex)
-                    }
-
-                -- unload chunks
-                do
-
-                    let ci = runChunkIndex cameraPositionChunkIndex
-                    --sort ci.x ci.y ci.z terrain.map
-
-                    loadedChunkCount <- size terrain.map
-                    when (options.maximumLoadedChunks < loadedChunkCount) do
-                        sorted <- getSortedChunks ci.x ci.y ci.z terrain.map
-                        let sliced = drop options.maximumLoadedChunks sorted
-                        for_ (take options.chunkUnloadSpeed sliced) \chunkWithMesh -> do
-                            disposeChunk chunkWithMesh
-                            delete chunkWithMesh.index terrain.map
-                            --let ci = runChunkIndex chunkWithMesh.index
-                            --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
-
-                -- update shadow rendering list
-                if options.shadowEnabled
-                    then do
-
-
-                        let cci = runChunkIndex cameraPositionChunkIndex
-                        neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z terrain.map
-                        let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
-                                    MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
-                                    _ -> Nothing
-                                ) <$> neighbors)
-                        setRenderList (meshes <> playingSceneState.playerMeshes) shadowMap
-                    else do
-                        setRenderList [] shadowMap
 
                 -- picking
                 do
-                    case playingSceneState.mode of
+                    case playingSceneState'.mode of
                         Move -> pure unit
                         _ -> do
-                            pickedBlock <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
+                            pickedBlock <- pickBlock scene cursor playingSceneState'.mode state.terrain state.mousePosition.x state.mousePosition.y
                             case pickedBlock of
                                 Nothing -> pure unit
                                 Just bi -> void do
@@ -357,8 +263,9 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                                     setPosition r cursor
                                     queryToHud driver (PlayingSceneQuery (SetCursorPosition bi))
 
+
                 do
-                    setIsVisible (case playingSceneState.mode of
+                    setIsVisible (case playingSceneState'.mode of
                         Put _ -> true
                         Remove -> true
                         Move -> false) (meshToAbstractMesh cursor)
@@ -370,6 +277,123 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                         else if playingSceneState.animation == "run" && playingSceneState'.animation /= "run"
                             then stop sounds.stepSound
                             else pure unit
+
+                pure (State state')
+
+
+
+
+        writeRef ref (State state')
+
+
+        -- update camera
+        let cameraPosition = state'.cameraPosition
+        let cameraPositionChunkIndex = globalPositionToChunkIndex state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
+
+        cameraPositionVector <- createVector3 state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
+        cameraTargetVector <- createVector3 state'.cameraTarget.x state'.cameraTarget.y state'.cameraTarget.z
+
+        cameraPositionBlockMaybe <- lookupBlockByVec cameraPosition state'.terrain
+        cameraPosition''  <- case cameraPositionBlockMaybe of
+
+            Just block | isSolidBlock block -> do
+
+                cameraDirection <- subtract cameraTargetVector cameraPositionVector
+                cameraDirectionLength <- length cameraDirection
+                cameraRay <- createRayWithLength cameraPositionVector cameraDirection cameraDirectionLength
+                let predicate mesh = do
+                        let name = getName (abstractMeshToNode mesh)
+                        pure (name == "terrain")
+                picked <- pickWithRay cameraRay predicate true scene
+
+                let pickedPoint = getPickedPoint picked
+
+                pure case getPickedPoint picked of
+                        Nothing -> cameraPositionVector
+                        Just point -> point
+
+            _ -> pure cameraPositionVector
+
+        Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
+        setTarget cameraTargetVector camera
+
+        skyboxRotationVector <- createVector3 0.0 state'.skyboxRotation 0.0
+        setRotation skyboxRotationVector (meshToAbstractMesh skybox)
+
+
+        -- load chunks
+        do
+            let costLimit = 100
+            costRef <- newRef 0
+
+            let ci = runChunkIndex cameraPositionChunkIndex
+
+            let loadAndGenerateChunk index = do
+
+                    -- let ci = runChunkIndex index
+
+                    createChunkMesh ref materials scene index (Options options)
+
+                    --State st <- readRef ref
+                    --size <- chunkCount st.terrain
+                    --log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
+                    --log $ "total chunks:" <> show (size + 1)
+
+
+            nextIndex <- foreachBlocks options.loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
+
+                let index = chunkIndex x y z
+                chunkMaybe <- lookupChunk index state.terrain
+                case chunkMaybe of
+                    Just chunkWithMaybe -> do
+                        case chunkWithMaybe.standardMaterialMesh of
+                            MeshNotLoaded -> do
+                                loadAndGenerateChunk index
+                                pure 100
+                            _ -> pure 1
+                    Nothing -> do
+                        loadAndGenerateChunk index
+                        pure 100
+
+
+            modifyRef ref \(State st) -> State st {
+                updateIndex = toNullable (Just nextIndex)
+            }
+
+        -- unload chunks
+        do
+
+            let ci = runChunkIndex cameraPositionChunkIndex
+            --sort ci.x ci.y ci.z terrain.map
+
+            loadedChunkCount <- size terrain.map
+            when (options.maximumLoadedChunks < loadedChunkCount) do
+                sorted <- getSortedChunks ci.x ci.y ci.z terrain.map
+                let sliced = drop options.maximumLoadedChunks sorted
+                for_ (take options.chunkUnloadSpeed sliced) \chunkWithMesh -> do
+                    disposeChunk chunkWithMesh
+                    delete chunkWithMesh.index terrain.map
+                    --let ci = runChunkIndex chunkWithMesh.index
+                    --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
+
+        -- update shadow rendering list
+        if options.shadowEnabled
+            then do
+
+
+                let cci = runChunkIndex cameraPositionChunkIndex
+                neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z terrain.map
+                let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
+                            MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                            _ -> Nothing
+                        ) <$> neighbors)
+                setRenderList (meshes <> state.playerMeshes) shadowMap
+            else do
+                setRenderList [] shadowMap
+
+
+
+
 
 
 foreign import foreachBlocks :: forall eff. Int -> Int -> Int -> Int -> Nullable ForeachIndex -> (Int -> Int -> Int -> Eff eff Int) -> Eff eff ForeachIndex

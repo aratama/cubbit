@@ -21,14 +21,14 @@ import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getPickedPoint)
 import Graphics.Babylon.Scene (pick)
 import Graphics.Babylon.Skeleton (beginAnimation)
-import Graphics.Babylon.Types (BABYLON, Mesh, Scene)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON, Mesh, Scene)
 import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
 import Prelude (($), (+), (-), (/=), (<>), (==))
 
-playAnimation :: forall eff. String -> PlayingSceneState -> Eff (Effects eff) Unit
-playAnimation name state = do
-    for_ state.playerMeshes \mesh -> void do
+playAnimation :: forall eff. String -> Array AbstractMesh -> Eff (Effects eff) Unit
+playAnimation name playerMeshes = do
+    for_ playerMeshes \mesh -> void do
         skeletonMaybe <- getSkeleton mesh
         case skeletonMaybe of
             Nothing -> pure unit

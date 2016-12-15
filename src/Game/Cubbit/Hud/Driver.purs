@@ -25,19 +25,19 @@ import Halogen.VirtualDOM.Driver (runUI)
 import Prelude (bind, pure, ($))
 
 
-ui :: forall eff. Array AbstractMesh -> State -> Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
-ui playerMeshes initialState ref options scene cursor materials sounds mute = component {
+ui :: forall eff. State -> Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
+ui initialState ref options scene cursor materials sounds mute = component {
     render,
-    eval: eval playerMeshes scene cursor materials options ref sounds,
+    eval: eval scene cursor materials options ref sounds,
     initialState: initialState
 }
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
-initializeHud :: forall eff. Array AbstractMesh -> State -> Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud playerMeshes (State state@{ config: Config config }) ref options body scene cursor materials sounds = do
+initializeHud :: forall eff. State -> Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud (State state@{ config: Config config }) ref options body scene cursor materials sounds = do
     liftEff $ setMute config.mute sounds
-    runUI (ui playerMeshes (State state) ref options scene cursor materials sounds config.mute) body
+    runUI (ui (State state) ref options scene cursor materials sounds config.mute) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))
