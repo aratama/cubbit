@@ -146,6 +146,35 @@ eval scene cursor materials (Options options) ref sounds query = case query of
 
         pure next
 
+    (SetShadowArea value next) -> do
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                shadowArea = value
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
+
+    (SetChunkArea value next) -> do
+
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                chunkArea = value
+            }
+        })
+        liftEff do
+            play sounds.switchSound
+            State state' <- readRef ref
+            writeConfig state'.config
+
+        pure next
+
 
     (Start next) -> do
 

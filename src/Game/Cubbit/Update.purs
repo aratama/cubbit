@@ -341,7 +341,8 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                     --log $ "total chunks:" <> show (size + 1)
 
 
-            nextIndex <- foreachBlocks options.loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
+            let loadDistance = 3 + config.chunkArea
+            nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
 
                 let index = chunkIndex x y z
                 chunkMaybe <- lookupChunk index state.terrain
@@ -380,10 +381,9 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
         -- update shadow rendering list
         if config.shadow
             then do
-
-
+                let shadowDisplayRange = 1 + config.shadowArea
                 let cci = runChunkIndex cameraPositionChunkIndex
-                neighbors <- filterNeighbors options.shadowDisplayRange cci.x cci.y cci.z terrain.map
+                neighbors <- filterNeighbors shadowDisplayRange cci.x cci.y cci.z terrain.map
                 let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
                             MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                             _ -> Nothing

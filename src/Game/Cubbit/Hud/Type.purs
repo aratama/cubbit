@@ -20,11 +20,14 @@ data Query a = PlayingSceneQuery PlayingSceneQuery a
              | PeekState (State -> a)
              | ShowConfig a
              | CloseConfig a
+
              | SetBGMVolume Int a
              | SetSEVolume Int a
              | StopPropagation Event a
              | ToggleShadow a
              | ToggleVertexColor a
+             | SetShadowArea Int a
+             | SetChunkArea Int a
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode

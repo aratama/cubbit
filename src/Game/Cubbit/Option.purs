@@ -7,10 +7,8 @@ import Data.Generic (class Generic)
 newtype Options = Options {
     eyeHeight :: Number,
     gravity :: Number,
-    loadDistance :: Int,
     fogDensity :: Number,
     maximumLoadedChunks :: Int,
-    shadowDisplayRange :: Int,
     shadowMapSize :: Int,
     skyboxRotationSpeed :: Number,
     enableWaterMaterial :: Boolean,

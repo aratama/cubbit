@@ -12,7 +12,9 @@ newtype Config = Config {
     bgmVolume :: Int,
     seVolume :: Int,
     shadow :: Boolean,
-    vertexColor :: Boolean
+    shadowArea :: Int,
+    vertexColor :: Boolean,
+    chunkArea :: Int
 }
 
 defaultConfig :: Config
@@ -21,7 +23,9 @@ defaultConfig = Config {
     bgmVolume: 3,
     seVolume: 3,
     shadow: true,
-    vertexColor: true
+    shadowArea: 3,
+    vertexColor: true,
+    chunkArea: 3
 }
 
 derive instance genericConfig :: Generic Config

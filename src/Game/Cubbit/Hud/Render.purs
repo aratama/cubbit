@@ -77,13 +77,11 @@ render (State state@{ config: Config config }) = div [
 
                     h2 [class_ (ClassName "config-heading")] [text "Graphics"],
                     option "Shadow" (toggle config.shadow ToggleShadow),
-                    option "Shadow Area" (slider 2 SetBGMVolume),
-                    option "Fog" (toggle config.mute ToggleMute),
+                    option "Shadow Area" (slider config.shadowArea SetShadowArea),
                     option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
 
                     h2 [class_ (ClassName "config-heading")] [text "Terrain"],
-                    option "Chunk Area" (slider 2 SetBGMVolume),
-                    option "Max Chunks" (slider 2 SetBGMVolume),
+                    option "Chunk Area" (slider config.chunkArea SetChunkArea),
 
                     p_ [a [
                         target "_blank",
@@ -145,9 +143,8 @@ render (State state@{ config: Config config }) = div [
         ],
     div [
         id_ "shadow",
-        class_ (ClassName "content-layer"),
-        Properties.key "shadow",
-        styleStr ("opacity: " <> if isNothing state.nextScene then "0.0" else "1.0")
+        class_ (ClassName ("content-layer" <> if isNothing state.nextScene then " hide" else "")),
+        Properties.key "shadow"
     ] []
 ]
 
