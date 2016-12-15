@@ -1,4 +1,4 @@
-module Game.Cubbit.Hud.Eval (eval, setMute) where
+module Game.Cubbit.Hud.Eval (eval) where
 
 import Control.Alt (void)
 import Control.Alternative (when)
@@ -25,7 +25,7 @@ import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (Sounds)
+import Game.Cubbit.Sounds (Sounds, setMute)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
@@ -80,12 +80,16 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
 
 
     (ToggleMute next) -> do
-        modifyAppState ref (\(State state) -> State state { mute = not state.mute })
+        modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+            config = Config config {
+                mute = not config.mute
+            }
+        })
 
         liftEff do
-            State state <- readRef ref
-            setMute state.mute sounds
-            writeConfig (Config { mute: state.mute })
+            State state@{ config: Config config } <- readRef ref
+            setMute config.mute sounds
+            writeConfig state.config
 
 
         pure next
@@ -129,14 +133,11 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                         pure unit
                     (SetPosition position) -> do
 
-
-
-
-
-
-
-
-                        liftEff (modifyRef ref (\(State s) -> State s { position = position }))
+                        liftEff (modifyRef ref (\(State s) -> State s {
+                            sceneState = PlayingSceneState playingSceneState {
+                                position = position
+                            }
+                        }))
 
                     TogglePointerLock -> do
                         liftEff do
@@ -149,8 +150,10 @@ eval playerMeshes scene cursor materials (Options options) ref sounds query = ca
                             if firstPersonView
                                 then requestPointerLock (\e -> do
                                     modifyRef ref (\(State state) -> State state {
-                                        playerRotation = state.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
-                                        playerPitch = max (-pi * 0.45) (min (pi * 0.45) state.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                                        sceneState = PlayingSceneState playingSceneState {
+                                            playerRotation = playingSceneState.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
+                                            playerPitch = max (-pi * 0.45) (min (pi * 0.45) playingSceneState.playerPitch - e.movementY * options.pointerVerticalSensitivity)
+                                        }
                                     })
                                     pure unit
                                 ) (modifyRef ref (\(State state) -> State state {
@@ -303,13 +306,6 @@ modifyAppState ref f = do
 wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
 wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))
 
-setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
-setMute mute sounds = do
-    let go = setVolume (if mute then 0.0 else 1.0)
-    go sounds.forestSound
-    go sounds.switchSound
-    go sounds.pickSound
-    go sounds.putSound
 
 offsetX :: MouseEvent -> Int
 offsetX e = (unsafeCoerce e).offsetX

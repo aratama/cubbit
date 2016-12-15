@@ -12,10 +12,11 @@ import Data.Eq (class Eq)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
 import Game.Cubbit.BlockIndex (BlockIndex)
-import Game.Cubbit.BlockType (BlockType(..))
+import Game.Cubbit.BlockType (BlockType)
+import Game.Cubbit.Config (Config)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (AbstractMesh, BABYLON, Material, Sound)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -61,38 +62,10 @@ type PlayingSceneState = {
 data SceneState = TitleSceneState | PlayingSceneState PlayingSceneState
 
 newtype State = State {
-
-
-
-
-
-
-
-
-
-
-
-    -- TODO: Remove them
-    firstPersonViewPitch :: Number,
-    position :: Vec,
-    velocity :: Vec,
-    playerRotation :: Number,
-    playerPitch :: Number,
-
-
-
-
-
-
-
-
-
-
+    config :: Config,
 
     sceneState :: SceneState,
     nextScene ::Maybe SceneState,
-
-    mute :: Boolean,
 
     -- world
     terrain :: Terrain,

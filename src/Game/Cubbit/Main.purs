@@ -17,6 +17,7 @@ import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
 import Data.String (Pattern(..), contains)
 import Data.Unit (Unit)
+import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Event (focus)
@@ -132,23 +133,15 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         res <- get "./alice/alice.babylon"
         let vertexDataArray = flipFaces res.response
 
+        Config config <- liftEff $ readConfig
+
         -- initialize game state
         initialTerrain <- liftEff $ emptyTerrain 0
         let initialState =  State {
+                config: Config config,
 
-
-                firstPersonViewPitch: 0.0,
-                position: { x: 0.5, y: 10.0, z: 0.5 },
-                velocity: { x: 0.0, y: 0.0, z: 0.0 },
-                playerRotation: 0.5,
-                playerPitch: 0.0,
-
-                nextScene: Nothing,
                 sceneState: TitleSceneState,
-
-                mute: false,
-
-
+                nextScene: Nothing,
                 skyboxRotation: 0.0,
                 terrain: initialTerrain,
                 updateIndex: toNullable Nothing,

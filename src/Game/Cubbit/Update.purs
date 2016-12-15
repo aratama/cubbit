@@ -46,171 +46,162 @@ import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (negate, not, (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), ($))
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
-
-calcurateNextState :: forall eff. Options -> Number -> State -> PlayingSceneState -> Tuple State PlayingSceneState
+calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Tuple State PlayingSceneState
 calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState = runPure do
 
+    let rot =  negate if playingSceneState.firstPersonView then (playingSceneState.playerRotation + pi) else  playingSceneState.cameraYaw
 
-            let rot =  negate if playingSceneState.firstPersonView then (state.playerRotation + pi) else  playingSceneState.cameraYaw
+    let keyStep key = if key then 1.0 else 0.0
 
-            let keyStep key = if key then 1.0 else 0.0
+    let keyVector = {
+            x: keyStep state.dKey - keyStep state.aKey,
+            z: keyStep state.wKey - keyStep state.sKey
+        }
 
-            let keyVector = {
-                    x: keyStep state.dKey - keyStep state.aKey,
-                    z: keyStep state.wKey - keyStep state.sKey
-                }
+    let rotatedKeyVector = {
+            x: cos rot * keyVector.x - sin rot * keyVector.z,
+            z: sin rot * keyVector.x + cos rot * keyVector.z
+        }
 
-            let rotatedKeyVector = {
-                    x: cos rot * keyVector.x - sin rot * keyVector.z,
-                    z: sin rot * keyVector.x + cos rot * keyVector.z
-                }
+    let stopped = rotatedKeyVector.x == 0.0 && rotatedKeyVector.z == 0.0
 
-            let stopped = rotatedKeyVector.x == 0.0 && rotatedKeyVector.z == 0.0
+    let position = playingSceneState.position
+    footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - 0.01, z: position.z } state.terrain
 
-            let position = state.position
-            footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - 0.01, z: position.z } state.terrain
+    let isLanding = case footHoldBlockMaybe of
+            Just block | isSolidBlock block -> true
+            _ -> false
 
-            let isLanding = case footHoldBlockMaybe of
-                    Just block | isSolidBlock block -> true
-                    _ -> false
+    let jumpVelocity = if isLanding && state.spaceKey && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
 
-            let jumpVelocity = if isLanding && state.spaceKey && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
+    let speed = options.moveSpeed * deltaTime
 
-            let speed = options.moveSpeed * deltaTime
-
-            let moveFactor = if isLanding then 1.0 else 0.2
-
-
-            let gravityAccelerator = if isLanding then 0.0 else options.gravity * deltaTime
-
-            let moveVectorLength = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z)
-            let normalizedMoveX = if isLanding then rotatedKeyVector.x / moveVectorLength * speed else state.velocity.x
-            let normalizedMoveZ = if isLanding then rotatedKeyVector.z / moveVectorLength * speed else state.velocity.z
+    let moveFactor = if isLanding then 1.0 else 0.2
 
 
-            let velocityX = if isLanding then (if stopped then state.velocity.x * 0.5 else normalizedMoveX) else state.velocity.x
-            let velocityY = state.velocity.y + jumpVelocity + gravityAccelerator
-            let velocityZ = if isLanding then (if stopped then state.velocity.z * 0.5 else normalizedMoveZ) else state.velocity.z
-            let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
+    let gravityAccelerator = if isLanding then 0.0 else options.gravity * deltaTime
 
-            -- playerRotation == 0   =>    -z direction
-            let playerRotation' = if isLanding
-                    then (if 0 < playingSceneState.landing
-                        then state.playerRotation
-                        else if stopped || playingSceneState.firstPersonView
-                            then state.playerRotation
-                            else (atan2 velocity.x velocity.z) - pi
-                    ) else state.playerRotation
-
-            let playerPosition = vecAdd state.position velocity
+    let moveVectorLength = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z)
+    let normalizedMoveX = if isLanding then rotatedKeyVector.x / moveVectorLength * speed else playingSceneState.velocity.x
+    let normalizedMoveZ = if isLanding then rotatedKeyVector.z / moveVectorLength * speed else playingSceneState.velocity.z
 
 
+    let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
+    let velocityY = playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
+    let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
+    let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
 
-            let animation' = if 0 < playingSceneState.landing
-                    then "land"
-                    else if isLanding
-                        then (if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle")
-                        else "jump"
+    -- playerRotation == 0   =>    -z direction
+    let playerRotation' = if isLanding
+            then (if 0 < playingSceneState.landing
+                then playingSceneState.playerRotation
+                else if stopped || playingSceneState.firstPersonView
+                    then playingSceneState.playerRotation
+                    else (atan2 velocity.x velocity.z) - pi
+            ) else playingSceneState.playerRotation
 
-            let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
-            blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
-
-            let position' = case blockMaybe of
-                                Just block | isSolidBlock block -> playerPosition {
-                                    y = Int.toNumber (globalIndex.y) + 1.001
-                                }
-                                _ -> playerPosition
+    let playerPosition = vecAdd playingSceneState.position velocity
 
 
 
+    let animation' = if 0 < playingSceneState.landing
+            then "land"
+            else if isLanding
+                then (if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle")
+                else "jump"
 
-            footHoldBlockMaybe' <- lookupBlockByVec { x: position'.x, y: position'.y - 0.01, z: position'.z } state.terrain
-            let isLanding' = case footHoldBlockMaybe' of
-                    Just block | isSolidBlock block -> true
-                    _ -> false
+    let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
+    blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
 
-            let landingCount = if isLanding' && state.velocity.y < options.landingVelocityLimit then options.landingDuration else playingSceneState.landing
-
-            -- camera view target
-            let cameraSpeed = if playingSceneState.firstPersonView then 0.5 else options.cameraTargetSpeed
-
-            let eyeHeight = options.eyeHeight
-
-            let thirdPersonCameraTargetX = position'.x
-            let thirdPersonCameraTargetY = position'.y + eyeHeight
-            let thirdPersonCameraTargetZ = position'.z
-
-            let playerRotationTheta = negate state.playerRotation - pi * 0.5
-            let firstPersonCameraTargetX = position'.x + cos playerRotationTheta * cos state.playerPitch
-            let firstPersonCameraTargetY = position'.y + eyeHeight + sin state.playerPitch
-            let firstPersonCameraTargetZ = position'.z + sin playerRotationTheta * cos state.playerPitch
-
-            let cameraTargetX' = if playingSceneState.firstPersonView then firstPersonCameraTargetX else thirdPersonCameraTargetX
-            let cameraTargetY' = if playingSceneState.firstPersonView then firstPersonCameraTargetY else thirdPersonCameraTargetY
-            let cameraTargetZ' = if playingSceneState.firstPersonView then firstPersonCameraTargetZ else thirdPersonCameraTargetZ
-
-            let cameraTargetInterpolatedX' = state.cameraTarget.x + (cameraTargetX' - state.cameraTarget.x) * cameraSpeed
-            let cameraTargetInterpolatedY' = state.cameraTarget.y + (cameraTargetY' - state.cameraTarget.y) * cameraSpeed
-            let cameraTargetInterpolatedZ' = state.cameraTarget.z + (cameraTargetZ' - state.cameraTarget.z) * cameraSpeed
-
-            let cameraTarget' = { x: cameraTargetInterpolatedX', y: cameraTargetInterpolatedY', z: cameraTargetInterpolatedZ' }
-
-            -- camera position
-            let cameraPosition = state.cameraPosition
-            let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
-
-            let theta = negate playingSceneState.cameraYaw - pi * 0.5
-            let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
-            let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
-            let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
-
-            let firstPersonCameraPositionX = position'.x
-            let firstPersonCameraPositionY = position'.y + eyeHeight
-            let firstPersonCameraPositionZ = position'.z
-
-            let cameraPositionX = if playingSceneState.firstPersonView then firstPersonCameraPositionX else thirdPersonCameraPositionX
-            let cameraPositionY = if playingSceneState.firstPersonView then firstPersonCameraPositionY else thirdPersonCameraPositionY
-            let cameraPositionZ = if playingSceneState.firstPersonView then firstPersonCameraPositionZ else thirdPersonCameraPositionZ
-
-            let cameraPositionInterpolatedX = cameraPosition.x + (cameraPositionX - cameraPosition.x) * cameraSpeed
-            let cameraPositionInterpolatedY = cameraPosition.y + (cameraPositionY - cameraPosition.y) * cameraSpeed
-            let cameraPositionInterpolatedZ = cameraPosition.z + (cameraPositionZ - cameraPosition.z) * cameraSpeed
-
-            -- final state
-
-
-            let sceneState =  playingSceneState {
-                        cameraYaw = playingSceneState.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                        cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
-                        cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
-                        position = position',
-                        velocity = velocity,
-                        playerRotation = playerRotation',
-                        animation = animation',
-                        landing = max 0 (landingCount - 1)
-                    }
-
-
-            let state' = state {
-
-                        sceneState = PlayingSceneState sceneState,
-
-
-                        position = position',
-                        velocity = velocity,
-                        playerRotation = playerRotation',
+    let position' = case blockMaybe of
+                        Just block | isSolidBlock block -> playerPosition {
+                            y = Int.toNumber (globalIndex.y) + 1.001
+                        }
+                        _ -> playerPosition
 
 
 
-                        cameraTarget = cameraTarget',
-                        cameraPosition = { x:cameraPositionInterpolatedX, y: cameraPositionInterpolatedY, z: cameraPositionInterpolatedZ },
-                        totalFrames = state.totalFrames + 1,
-                        skyboxRotation = state.skyboxRotation + options.skyboxRotationSpeed * deltaTime
-                    }
 
-            pure (Tuple (State state') sceneState)
+    footHoldBlockMaybe' <- lookupBlockByVec { x: position'.x, y: position'.y - 0.01, z: position'.z } state.terrain
+    let isLanding' = case footHoldBlockMaybe' of
+            Just block | isSolidBlock block -> true
+            _ -> false
+
+    let landingCount = if isLanding' && playingSceneState.velocity.y < options.landingVelocityLimit then options.landingDuration else playingSceneState.landing
+
+    -- camera view target
+    let cameraSpeed = if playingSceneState.firstPersonView then 0.5 else options.cameraTargetSpeed
+
+    let eyeHeight = options.eyeHeight
+
+    let thirdPersonCameraTargetX = position'.x
+    let thirdPersonCameraTargetY = position'.y + eyeHeight
+    let thirdPersonCameraTargetZ = position'.z
+
+    let playerRotationTheta = negate playingSceneState.playerRotation - pi * 0.5
+    let firstPersonCameraTargetX = position'.x + cos playerRotationTheta * cos playingSceneState.playerPitch
+    let firstPersonCameraTargetY = position'.y + eyeHeight + sin playingSceneState.playerPitch
+    let firstPersonCameraTargetZ = position'.z + sin playerRotationTheta * cos playingSceneState.playerPitch
+
+    let cameraTargetX' = if playingSceneState.firstPersonView then firstPersonCameraTargetX else thirdPersonCameraTargetX
+    let cameraTargetY' = if playingSceneState.firstPersonView then firstPersonCameraTargetY else thirdPersonCameraTargetY
+    let cameraTargetZ' = if playingSceneState.firstPersonView then firstPersonCameraTargetZ else thirdPersonCameraTargetZ
+
+    let cameraTargetInterpolatedX' = state.cameraTarget.x + (cameraTargetX' - state.cameraTarget.x) * cameraSpeed
+    let cameraTargetInterpolatedY' = state.cameraTarget.y + (cameraTargetY' - state.cameraTarget.y) * cameraSpeed
+    let cameraTargetInterpolatedZ' = state.cameraTarget.z + (cameraTargetZ' - state.cameraTarget.z) * cameraSpeed
+
+    let cameraTarget' = { x: cameraTargetInterpolatedX', y: cameraTargetInterpolatedY', z: cameraTargetInterpolatedZ' }
+
+    -- camera position
+    let cameraPosition = state.cameraPosition
+    let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
+
+    let theta = negate playingSceneState.cameraYaw - pi * 0.5
+    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
+    let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
+    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
+
+    let firstPersonCameraPositionX = position'.x
+    let firstPersonCameraPositionY = position'.y + eyeHeight
+    let firstPersonCameraPositionZ = position'.z
+
+    let cameraPositionX = if playingSceneState.firstPersonView then firstPersonCameraPositionX else thirdPersonCameraPositionX
+    let cameraPositionY = if playingSceneState.firstPersonView then firstPersonCameraPositionY else thirdPersonCameraPositionY
+    let cameraPositionZ = if playingSceneState.firstPersonView then firstPersonCameraPositionZ else thirdPersonCameraPositionZ
+
+    let cameraPositionInterpolatedX = cameraPosition.x + (cameraPositionX - cameraPosition.x) * cameraSpeed
+    let cameraPositionInterpolatedY = cameraPosition.y + (cameraPositionY - cameraPosition.y) * cameraSpeed
+    let cameraPositionInterpolatedZ = cameraPosition.z + (cameraPositionZ - cameraPosition.z) * cameraSpeed
+
+    -- final state
+
+
+    let sceneState =  playingSceneState {
+                cameraYaw = playingSceneState.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
+                cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
+                cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
+                position = position',
+                velocity = velocity,
+                playerRotation = playerRotation',
+                animation = animation',
+                landing = max 0 (landingCount - 1)
+            }
+
+
+    let state' = state {
+
+                sceneState = PlayingSceneState sceneState,
+
+                cameraTarget = cameraTarget',
+                cameraPosition = { x:cameraPositionInterpolatedX, y: cameraPositionInterpolatedY, z: cameraPositionInterpolatedZ },
+                totalFrames = state.totalFrames + 1,
+                skyboxRotation = state.skyboxRotation + options.skyboxRotationSpeed * deltaTime
+            }
+
+    pure (Tuple (State state') sceneState)
 
 update :: forall eff. Ref State
                    -> Engine
@@ -249,8 +240,8 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                 when (playingSceneState'.animation /= playingSceneState.animation) do
                     playAnimation playingSceneState'.animation playingSceneState
 
-                playerRotationVector <- createVector3 0.0 state'.playerRotation 0.0
-                positionVector <- createVector3 state'.position.x state'.position.y state'.position.z
+                playerRotationVector <- createVector3 0.0 playingSceneState'.playerRotation 0.0
+                positionVector <- createVector3 playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
                 for_ playingSceneState.playerMeshes \mesh -> void do
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh

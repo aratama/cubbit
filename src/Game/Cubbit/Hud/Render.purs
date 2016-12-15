@@ -9,6 +9,7 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Unit (unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
+import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..))
 import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState))
 import Halogen (ComponentHTML)
@@ -28,7 +29,7 @@ icon :: forall p i. String -> HTML p i
 icon name = i [class_ (ClassName ("fa fa-" <> name))] []
 
 render :: State -> ComponentHTML Query
-render (State state) = div [
+render (State state@{ config: Config config }) = div [
     id_ "content",
     Properties.key "root-content",
     class_ (ClassName "content-layer"),
@@ -69,7 +70,7 @@ render (State state) = div [
             ] [
                 div [class_ (ClassName "button first-person-view"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
-                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if state.mute then "volume-off" else "volume-up"],
+                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if config.mute then "volume-off" else "volume-up"],
                 div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery ToggleDebugLayer unit)] [icon "gear"],
                 div [class_ (ClassName "button home"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
             ],
