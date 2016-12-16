@@ -37,7 +37,7 @@ initializeHud :: forall eff. State -> Ref State -> Options -> HTMLElement -> Sce
 initializeHud (State state@{ config: Config config }) ref options body scene cursor materials sounds = do
     runUI (ui (State state) ref options scene cursor materials sounds config.mute) body
 
-queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects (console :: CONSOLE | eff))) -> (Unit -> Query Unit) -> Eff ((HudEffects (console :: CONSOLE | eff))) Unit
+queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects eff)) -> (Unit -> Query Unit) -> Eff (HudEffects eff) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))
 
 

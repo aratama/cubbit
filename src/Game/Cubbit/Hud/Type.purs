@@ -1,5 +1,6 @@
 module Game.Cubbit.Hud.Type (Query(..), HudEffects, PlayingSceneQuery(..)) where
 
+import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM.Event.Event (Event)
 import DOM.Event.KeyboardEvent (KeyboardEvent)
@@ -42,6 +43,7 @@ data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | Home
 
 type HudEffects eff = HalogenEffects (
+    console :: CONSOLE,
     ajax :: AJAX,
     babylon :: BABYLON,
     storage :: STORAGE,

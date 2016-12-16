@@ -1,16 +1,25 @@
-module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, stopAllSounds, setBGMVolume, setSEVolume) where
+module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, stopBGM, setBGMVolume, setSEVolume, playBGM) where
 
+import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind)
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, runAff)
+import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Console (CONSOLE, errorShow)
+import Control.Monad.Eff.Timer (TIMER)
+import Data.Array ((..))
+import Data.Int (toNumber)
 import Data.Traversable (for_)
 import Data.Unit (Unit)
+import Game.Cubbit.Aff (wait)
+import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Types (Effects)
 import Graphics.Babylon.Aff.Sound (loadSound)
-import Graphics.Babylon.Sound (defaultCreateSoundOptions, setVolume, stop)
+import Graphics.Babylon.Sound (defaultCreateSoundOptions, play, setVolume, stop)
 import Graphics.Babylon.Types (BABYLON, Scene, Sound)
-import Prelude (($), (<>))
+import Prelude (($), (<>), (/), (*), (-))
 
 type Sounds = {
     yourNatural :: Sound,
@@ -88,5 +97,21 @@ setBGMVolume volume sounds = for_ sounds.bgms (setVolume volume)
 setSEVolume :: forall eff. Number -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setSEVolume volume sounds = for_ sounds.ses (setVolume volume)
 
-stopAllSounds :: forall eff. Sounds -> Eff (babylon :: BABYLON | eff) Unit
-stopAllSounds sounds = for_ sounds.all stop
+playBGM :: forall eff. Sound -> Int -> Sounds -> Eff (console :: CONSOLE, timer :: TIMER, babylon :: BABYLON | eff) Unit
+playBGM sound volume sounds = void $ runAff errorShow pure do
+    stopBGMAff volume sounds
+    liftEff do
+        setVolume (toNumber volume / toNumber sliderMaxValue) sound
+        play sound
+
+stopBGMAff :: forall eff. Int -> Sounds -> Aff (timer :: TIMER, babylon :: BABYLON | eff) Unit
+stopBGMAff volume sounds = do
+    let playVolume = toNumber volume / toNumber sliderMaxValue
+    for_ (0 .. 9) \i -> do
+        liftEff (for_ sounds.bgms (setVolume (playVolume * (toNumber (10 - i) / 10.0))))
+        wait 100
+    wait 1000
+    liftEff (for_ sounds.bgms stop)
+
+stopBGM :: forall eff. Int -> Sounds -> Eff (console :: CONSOLE, timer :: TIMER, babylon :: BABYLON | eff) Unit
+stopBGM volume sounds = void (runAff errorShow pure (stopBGMAff volume sounds))

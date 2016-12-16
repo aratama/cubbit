@@ -16,22 +16,23 @@ import Data.Ord (max, min)
 import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
+import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
 import Game.Cubbit.Config (Config(Config), writeConfig)
+import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.Hud.Type (Query(..), HudEffects, PlayingSceneQuery(..))
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (Sounds, setBGMVolume, setMute, stopAllSounds,setSEVolume)
-import Game.Cubbit.Constants (sliderMaxValue)
+import Game.Cubbit.Sounds (Sounds, setBGMVolume, setMute, stopBGM, setSEVolume, playBGM)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
-import Graphics.Babylon.Sound (play)
+import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (ComponentDSL, liftAff, liftEff, put)
 import Halogen.Query (get)
@@ -199,14 +200,16 @@ eval scene cursor materials (Options options) ref sounds query = case query of
             sceneState = nextScene
         })
         liftEff do
-            stopAllSounds sounds
-            State state <- readRef ref
+            State state@{ config: Config config } <- readRef ref
+            stopBGM config.bgmVolume sounds
+
             for_ state.playerMeshes \mesh -> void do
                 setIsVisible true mesh
         wait 1000
         liftEff do
             play sounds.forestSound
-            play sounds.rye
+            State { config: Config config } <- readRef ref
+            playBGM sounds.rye config.bgmVolume sounds
         modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
 
 
@@ -420,15 +423,19 @@ eval scene cursor materials (Options options) ref sounds query = case query of
                         let nextScene = TitleSceneState {
                                     position: 0.0
                                 }
+
                         liftEff $ play sounds.warpSound
                         modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
                         wait 1000
                         liftEff do
-                            stopAllSounds sounds
+                            State { config: Config config } <- readRef ref
+                            stopBGM config.bgmVolume sounds
+                            stop sounds.forestSound
                         modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
                         wait 1000
                         liftEff do
-                            play sounds.cleaning
+                            State { config: Config config } <- readRef ref
+                            playBGM sounds.cleaning config.bgmVolume sounds
                         modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
         pure next
 
@@ -443,9 +450,6 @@ modifyAppState ref f = do
     put state'
 
 
-
-wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
-wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))
 
 
 offsetX :: MouseEvent -> Int
