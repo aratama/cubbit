@@ -1,4 +1,4 @@
-module Game.Cubbit.Hud.Eval (eval) where
+module Game.Cubbit.Hud.Eval (eval, repaint) where
 
 import Control.Alt (void)
 import Control.Alternative (when)
@@ -19,20 +19,18 @@ import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
 import Game.Cubbit.Config (Config(Config), writeConfig)
 import Game.Cubbit.Control (pickBlock)
-import Game.Cubbit.Hud.Type (Query(..), HudEffects, PlayingSceneQuery(..))
-import Game.Cubbit.Materials (Materials)
+import Game.Cubbit.Hud.Type (HudEffects, PlayingSceneQuery(..), Query(..))
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (Sounds, setBGMVolume, setMute, stopBGM, setSEVolume, playBGM)
+import Game.Cubbit.Sounds (playBGM, setBGMVolume, setMute, setSEVolume, stopBGM)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..), ResourceProgress(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, stop)
-import Graphics.Babylon.Types (Mesh, Scene)
-import Halogen (ComponentDSL, liftEff, put)
-import Halogen.Query (get)
+import Halogen (ComponentDSL, HalogenIO, liftEff, put)
+import Halogen.Query (action)
 import Math (pi)
 import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=), (/))
 import Unsafe.Coerce (unsafeCoerce)
@@ -40,14 +38,11 @@ import Unsafe.Coerce (unsafeCoerce)
 eval :: forall eff. Ref State -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval ref query = do
 
-    State state <- liftEff $ readRef ref
-    case state.res of
+    State currentState <- liftEff $ readRef ref
+    case currentState.res of
 
         Loading progress -> case query of
 
-            (PeekState f) -> do
-                s <- get
-                pure (f s)
             (PreventDefault e next) -> pure next
             (Nop e next) -> pure next
             (StopPropagation e next) -> pure next
@@ -62,14 +57,6 @@ eval ref query = do
             (Start next) -> pure next
             (ToggleMute next) -> pure next
             (PlayingSceneQuery playingSceneQuery next) -> pure next
-            (Progress progress next) -> do
-                State state <- liftEff $ readRef ref
-                let state' = State state {
-                            res = Loading progress
-                        }
-                liftEff $ writeRef ref state'
-                put state'
-                pure next
             (Repaint state next) -> do
                 liftEff $ writeRef ref state
                 put state
@@ -86,16 +73,10 @@ eval ref query = do
 
 
             case query of
-                (Repaint state next) -> do
-                    liftEff $ writeRef ref state
-                    put state
+                (Repaint state' next) -> do
+                    liftEff $ writeRef ref state'
+                    put state'
                     pure next
-
-                (Progress _ next) -> pure next
-
-                (PeekState f) -> do
-                    s <- get
-                    pure (f s)
 
                 (PreventDefault e next) -> do
                     liftEff (preventDefault e)
@@ -500,7 +481,10 @@ modifyAppState ref f = do
     put state'
 
 
+type Driver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
+repaint :: forall eff. Driver eff -> State -> Aff (HudEffects eff) Unit
+repaint driver state = driver.query $ action $ Repaint state
 
 offsetX :: MouseEvent -> Int
 offsetX e = (unsafeCoerce e).offsetX

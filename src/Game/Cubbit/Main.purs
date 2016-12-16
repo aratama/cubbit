@@ -5,13 +5,7 @@ import Control.Bind (bind)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
-import Control.Monad.Eff.Exception (error) as EXP
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
-import Control.Monad.Error.Class (throwError)
-import Control.Monad.Except (runExcept)
-import DOM (DOM)
-import Data.Either (Either(..))
-import Data.Foreign (Foreign)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe, toNullable)
@@ -21,24 +15,23 @@ import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
-import Game.Cubbit.Hud.Type (Query(..))
 import Game.Cubbit.Hud.Driver (initializeHud)
+import Game.Cubbit.Hud.Eval (repaint)
+import Game.Cubbit.Hud.Type (Query(..))
 import Game.Cubbit.MeshBuilder (createChunkMesh)
-import Game.Cubbit.Option (Options(Options), readOptions)
+import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
 import Game.Cubbit.Terrain (emptyTerrain)
-import Game.Cubbit.Types (Effects, SceneState(TitleSceneState), State(State), ResourceProgress(..))
+import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(TitleSceneState), State(State))
 import Game.Cubbit.Update (update)
 import Graphics.Babylon.Engine (runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
-import Graphics.Babylon.Types (VertexDataProps)
 import Graphics.Babylon.Util (querySelectorCanvas)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Halogen.Query (action)
-import Network.HTTP.Affjax (get)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (<>))
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -101,8 +94,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 liftEff $ modifyRef incref (_ + 1)
                 count <- liftEff $ readRef incref
                 liftEff $ log $ show count <> " / " <> show resourceCount
-                driver.query $ action $ Progress count
-                pure unit
+
+                State state <- liftEff $ readRef ref
+                repaint driver $ State state {
+                    res = Loading count
+                }
 
 
         res <- loadResources canvasGL inc
@@ -117,7 +113,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let shadowMap = res.shadowMap
         Options options <- pure res.options
 
-        driver.query $ action $ Repaint $ State initialState { res = Complete res }
+        repaint driver $ State initialState { res = Complete res }
 
         liftEff do
 

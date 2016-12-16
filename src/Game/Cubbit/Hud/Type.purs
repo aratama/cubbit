@@ -13,17 +13,13 @@ import Graphics.Babylon.Types (BABYLON)
 import Halogen (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 
-
-
 data Query a = PlayingSceneQuery PlayingSceneQuery a
              | PreventDefault Event a
              | Nop Event a
              | ToggleMute a
              | Start a
-             | PeekState (State -> a)
              | ShowConfig a
              | CloseConfig a
-
              | SetBGMVolume Int a
              | SetSEVolume Int a
              | StopPropagation Event a
@@ -31,8 +27,6 @@ data Query a = PlayingSceneQuery PlayingSceneQuery a
              | ToggleVertexColor a
              | SetShadowArea Int a
              | SetChunkArea Int a
-
-             | Progress Int a
              | Repaint State a
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
