@@ -6,13 +6,14 @@ import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import Data.Array (replicate, (..))
 import Data.Functor (map, mapFlipped)
 import Data.Maybe (Maybe(..), isNothing)
+import Data.Traversable (for)
 import Data.Unit (unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..))
-import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState))
+import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState), ResourceProgress(..))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h2, img, p, prop, text)
 import Halogen.HTML.Elements (i, p_, a)
@@ -33,176 +34,186 @@ icon :: forall p i. String -> HTML p i
 icon name = i [class_ (ClassName ("fa fa-" <> name))] []
 
 render :: State -> ComponentHTML Query
-render (State state@{ config: Config config }) = div [
-    id_ "content",
-    Properties.key "root-content",
-    class_ (ClassName "content-layer"),
-    onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
-    tabIndex 0,
-    unsafeCoerce (autofocus true),
-    onKeyDown \e -> Just (PlayingSceneQuery (OnKeyDown e) unit),
-    onKeyUp \e -> Just (PlayingSceneQuery (OnKeyUp e) unit),
-    onMouseMove \e -> Just (PlayingSceneQuery (SetMousePosition e) unit),
-    onMouseDown \e -> Just (PlayingSceneQuery (OnMouseClick e) unit),
-    onWheel \e -> Just (PlayingSceneQuery (Zoom e) unit)
-] [
-
-    div [Properties.key "content-inner"] case state.sceneState of
-
-        TitleSceneState titleSceneState -> [
-            img [
-                class_ (ClassName "content-layer"),
-                src "image/title.png",
-                Properties.key "image/title.png",
-                onClick \e -> Just (Start unit)
-            ],
-
-            div [
-                class_ (ClassName "show-config"),
-                onClick \e -> Just (ShowConfig unit)
-            ] [icon "gear"]
+render (State state@{ config: Config config }) = case state.res of
+    Loading progress ->  div [
+            id_ "content",
+            Properties.key "root-content",
+            class_ (ClassName "content-layer")
+        ] [
+            img [class_ (ClassName "content-layer"), src "image/loading.png"],
+            div [class_ (ClassName "progress")] $ mapFlipped (0 .. 16) \i ->
+                div [class_ (ClassName ("cell" <> if i <= progress then " fill" else ""))] []
         ]
+    Complete _ -> div [
+            id_ "content",
+            Properties.key "root-content",
+            class_ (ClassName "content-layer"),
+            onContextMenu (\e -> Just (action (PreventDefault (mouseEventToEvent e)))),
+            tabIndex 0,
+            unsafeCoerce (autofocus true),
+            onKeyDown \e -> Just (PlayingSceneQuery (OnKeyDown e) unit),
+            onKeyUp \e -> Just (PlayingSceneQuery (OnKeyUp e) unit),
+            onMouseMove \e -> Just (PlayingSceneQuery (SetMousePosition e) unit),
+            onMouseDown \e -> Just (PlayingSceneQuery (OnMouseClick e) unit),
+            onWheel \e -> Just (PlayingSceneQuery (Zoom e) unit)
+        ] [
 
-        PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
-            img [
-                Properties.key "image/screenshade.png",
-                id_ "screen-shade",
-                class_ (ClassName "content-layer"),
-                src "image/screenshade.png"
-            ],
+            div [Properties.key "content-inner"] case state.sceneState of
 
-            div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
+                TitleSceneState titleSceneState -> [
+                    img [
+                        class_ (ClassName "content-layer"),
+                        src "image/title.png",
+                        Properties.key "image/title.png",
+                        onClick \e -> Just (Start unit)
+                    ],
 
-            div [id_ "life"] (replicate playingSceneState.life (div [class_ (ClassName "active")] [icon "heart"]) <> replicate (playingSceneState.maxLife - playingSceneState.life) (icon "heart")),
+                    div [
+                        class_ (ClassName "show-config"),
+                        onClick \e -> Just (ShowConfig unit)
+                    ] [icon "gear"]
+                ]
+
+                PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
+                    img [
+                        Properties.key "image/screenshade.png",
+                        id_ "screen-shade",
+                        class_ (ClassName "content-layer"),
+                        src "image/screenshade.png"
+                    ],
+
+                    div [id_ "cursor-position"] [text $ "cursor: (" <> show index.x <> ", " <> show index.y <> ", " <> show index.z <> ")"],
+
+                    div [id_ "life"] (replicate playingSceneState.life (div [class_ (ClassName "active")] [icon "heart"]) <> replicate (playingSceneState.maxLife - playingSceneState.life) (icon "heart")),
 
 
-            p [id_ "message-box-top"] [],
-            p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
-            div [
-                id_ "right-panel",
-                suppressMouseMove,
-                suppressMouseDown
-            ] [
-                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
-                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
-                div [class_ (ClassName "button"), onClick \e -> Just (ToggleMute unit)] [icon if config.mute then "volume-off" else "volume-up"],
-                div [class_ (ClassName "button"), onClick \e -> Just (ShowConfig unit)] [icon "gear"],
-                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
-            ],
-
-
-            if playingSceneState.centerPanelVisible
-                then div [
-                        id_ "center-panel-outer",
-                        onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible false) unit),
+                    p [id_ "message-box-top"] [],
+                    p [id_ "message-box"] [text $ "Cubbit×Cubbit Playable Demo"],
+                    div [
+                        id_ "right-panel",
                         suppressMouseMove,
                         suppressMouseDown
-                    ] [div [id_ "center-panel"] []]
-                else text "",
+                    ] [
+                        div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
+                        div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
+                        div [class_ (ClassName "button"), onClick \e -> Just (ToggleMute unit)] [icon if config.mute then "volume-off" else "volume-up"],
+                        div [class_ (ClassName "button"), onClick \e -> Just (ShowConfig unit)] [icon "gear"],
+                        div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
+                    ],
 
+
+                    if playingSceneState.centerPanelVisible
+                        then div [
+                                id_ "center-panel-outer",
+                                onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible false) unit),
+                                suppressMouseMove,
+                                suppressMouseDown
+                            ] [div [id_ "center-panel"] []]
+                        else text "",
+
+
+                    div [
+                        id_ "hotbar",
+                        suppressMouseMove,
+                        suppressMouseDown
+                    ] [
+                        div [id_ "hotbar-lower"] [],
+                        div [id_ "hotbar-upper"] (hotbuttons playingSceneState)
+                    ],
+
+                    div [id_ "open-center-panel", onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible true) unit)] [icon "suitcase"]
+                ],
 
             div [
-                id_ "hotbar",
-                suppressMouseMove,
-                suppressMouseDown
+                class_ (ClassName ("content-layer config-root" <> if state.configVisible then " visible" else "")),
+                onClick \e -> Just (CloseConfig unit)
             ] [
-                div [id_ "hotbar-lower"] [],
-                div [id_ "hotbar-upper"] (hotbuttons playingSceneState)
+                div [
+                    class_ (ClassName "config-inner"),
+                    onClick \e -> Just (Nop (mouseEventToEvent e) unit)
+                ] [
+                    h2 [class_ (ClassName "config-heading")] [text "Sounds"],
+                    option "Mute" (toggle config.mute ToggleMute),
+                    option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
+                    option "SE Volume" (slider config.seVolume SetSEVolume),
+
+                    h2 [class_ (ClassName "config-heading")] [text "Graphics"],
+                    option "Shadow" (toggle config.shadow ToggleShadow),
+                    option "Shadow Area" (slider config.shadowArea SetShadowArea),
+                    option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
+
+                    h2 [class_ (ClassName "config-heading")] [text "Terrain"],
+                    option "Chunk Area" (slider config.chunkArea SetChunkArea),
+
+                    p_ [a [
+                        target "_blank",
+                        href "LICENSE.txt",
+                        onClick \e -> Just (StopPropagation (mouseEventToEvent e) unit)
+                    ] [text "License Attribution"]]
+                ]
             ],
 
-            div [id_ "open-center-panel", onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible true) unit)] [icon "suitcase"]
-        ],
-
-    div [
-        class_ (ClassName ("content-layer config-root" <> if state.configVisible then " visible" else "")),
-        onClick \e -> Just (CloseConfig unit)
-    ] [
-        div [
-            class_ (ClassName "config-inner"),
-            onClick \e -> Just (Nop (mouseEventToEvent e) unit)
-        ] [
-            h2 [class_ (ClassName "config-heading")] [text "Sounds"],
-            option "Mute" (toggle config.mute ToggleMute),
-            option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
-            option "SE Volume" (slider config.seVolume SetSEVolume),
-
-            h2 [class_ (ClassName "config-heading")] [text "Graphics"],
-            option "Shadow" (toggle config.shadow ToggleShadow),
-            option "Shadow Area" (slider config.shadowArea SetShadowArea),
-            option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
-
-            h2 [class_ (ClassName "config-heading")] [text "Terrain"],
-            option "Chunk Area" (slider config.chunkArea SetChunkArea),
-
-            p_ [a [
-                target "_blank",
-                href "LICENSE.txt",
-                onClick \e -> Just (StopPropagation (mouseEventToEvent e) unit)
-            ] [text "License Attribution"]]
+            div [
+                id_ "shadow",
+                class_ (ClassName ("content-layer" <> if isNothing state.nextScene then " hide" else "")),
+                Properties.key "shadow"
+            ] []
         ]
-    ],
 
-    div [
-        id_ "shadow",
-        class_ (ClassName ("content-layer" <> if isNothing state.nextScene then " hide" else "")),
-        Properties.key "shadow"
-    ] []
-]
+          where
+            suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
+            suppressMouseDown = onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
 
-  where
-    suppressMouseMove = onMouseMove \e -> Just (Nop (mouseEventToEvent e) unit)
-    suppressMouseDown = onMouseDown \e -> Just (Nop (mouseEventToEvent e) unit)
+            option caption ui = div [class_ (ClassName "config-option")] [
+                div [
+                    class_ (ClassName "config-caption")
+                ] [
+                    text caption
+                ],
+                ui
+            ]
 
-    option caption ui = div [class_ (ClassName "config-option")] [
-        div [
-            class_ (ClassName "config-caption")
-        ] [
-            text caption
-        ],
-        ui
-    ]
+            slider value action = div [
+                class_ (ClassName "config-slider")
+            ] (mapFlipped (0 .. sliderMaxValue) \i ->
+                div [
+                    class_ (ClassName ("config-slider-box " <> if i <= value then "fill" else "empty")),
+                    onClick \e -> Just (action i unit)
+                ] []
+            )
 
-    slider value action = div [
-        class_ (ClassName "config-slider")
-    ] (mapFlipped (0 .. sliderMaxValue) \i ->
-        div [
-            class_ (ClassName ("config-slider-box " <> if i <= value then "fill" else "empty")),
-            onClick \e -> Just (action i unit)
-        ] []
-    )
+            toggle value action = div [
+                class_ (ClassName ("config-toggle " <> if value then "on" else "off")),
+                onClick \e -> Just (action unit)
+            ] [text if value then "On" else "Off"]
 
-    toggle value action = div [
-        class_ (ClassName ("config-toggle " <> if value then "on" else "off")),
-        onClick \e -> Just (action unit)
-    ] [text if value then "On" else "Off"]
+            hotbuttons playingSceneState = map slot [
+                Just Move,
+                Just (Put grassBlock),
+                Just (Put woodBlock),
+                Just (Put waterBlock),
+                Just (Put leavesBlock),
+                Just (Put dirtBlock),
+                Nothing,
+                Just Remove
+            ]
 
-    hotbuttons playingSceneState = map slot [
-        Just Move,
-        Just (Put grassBlock),
-        Just (Put woodBlock),
-        Just (Put waterBlock),
-        Just (Put leavesBlock),
-        Just (Put dirtBlock),
-        Nothing,
-        Just Remove
-    ]
+              where
 
-      where
+                tool Move = "toolicon/bow.svg"
+                tool (Put t) | t == grassBlock = "toolicon/grass.svg"
+                             | t == woodBlock = "toolicon/wood.svg"
+                             | t == waterBlock = "toolicon/water.svg"
+                             | t == leavesBlock = "toolicon/leaves.svg"
+                             | t == dirtBlock = "toolicon/dirt.svg"
+                             | otherwise = "toolicon/grass.svg"
+                tool Remove = "toolicon/pickaxe.svg"
 
-        tool Move = "toolicon/bow.svg"
-        tool (Put t) | t == grassBlock = "toolicon/grass.svg"
-                     | t == woodBlock = "toolicon/wood.svg"
-                     | t == waterBlock = "toolicon/water.svg"
-                     | t == leavesBlock = "toolicon/leaves.svg"
-                     | t == dirtBlock = "toolicon/dirt.svg"
-                     | otherwise = "toolicon/grass.svg"
-        tool Remove = "toolicon/pickaxe.svg"
-
-        slot (Just mode) = div [
-            slotClass (playingSceneState.mode == mode),
-            onClick \e -> Just (PlayingSceneQuery (SetMode mode) unit)
-        ] [img [src (tool mode)]]
-        slot Nothing = div [slotClass false] []
+                slot (Just mode) = div [
+                    slotClass (playingSceneState.mode == mode),
+                    onClick \e -> Just (PlayingSceneQuery (SetMode mode) unit)
+                ] [img [src (tool mode)]]
+                slot Nothing = div [slotClass false] []
 
 
 

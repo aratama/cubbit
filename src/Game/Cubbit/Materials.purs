@@ -4,7 +4,6 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
 import Game.Cubbit.Option (Options(Options))
-import Game.Cubbit.Types (Effects)
 import Graphics.Babylon.BaseTexture (setHasAlpha)
 import Graphics.Babylon.Color3 (createColor3)
 import Graphics.Babylon.Material (setAlpha)
@@ -12,7 +11,7 @@ import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.ShaderMaterial (createShaderMaterial, setColor3, setFloats, setTexture, setVector3, shaderMaterialToMaterial)
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setDiffuseColor, setDiffuseTexture, setSpecularColor, setUseAlphaFromDiffuseTexture, standardMaterialToMaterial)
 import Graphics.Babylon.Texture (createTexture, defaultCreateTextureOptions, textureToBaseTexture)
-import Graphics.Babylon.Types (Material, Mesh, Scene, Texture)
+import Graphics.Babylon.Types (BABYLON, Material, Mesh, Scene, Texture)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
 import Prelude (negate, (/))
@@ -25,7 +24,7 @@ type Materials = {
     outlineMaterial :: Material
 }
 
-initializeMaterials :: forall eff. Scene -> Mesh -> Texture -> Texture -> Options -> Eff (Effects eff) Materials
+initializeMaterials :: forall eff. Scene -> Mesh -> Texture -> Texture -> Options -> Eff (babylon :: BABYLON | eff) Materials
 initializeMaterials scene skybox texture alphaTexture (Options options) = do
 
     setHasAlpha true (textureToBaseTexture alphaTexture)

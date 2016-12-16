@@ -28,6 +28,27 @@ html, body {
     cursor: default;
 }
 
+.progress {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    bottom: 10px;
+}
+
+.progress .cell {
+    width: 16px;
+    height: 16px;
+    border: solid 1px white;
+    border-radius: 4px;
+    margin: 1px;
+}
+
+.progress .cell.fill {
+    background-color: white;
+}
+
 
 .content-layer {
     width   : 1280px;

@@ -31,7 +31,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..), PlayingSceneState)
+import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..), PlayingSceneState, ResourceProgress(..))
 import Game.Cubbit.Vec (vec, vecAdd, vecZero)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -229,6 +229,10 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
         deltaTime <- getDeltaTime engine
 
+        let playerMeshes = case state.res of
+                Loading _ -> []
+                Complete res -> res.playerMeshes
+
         State state'@{ config: Config config } <- case state.sceneState of
 
             TitleSceneState titleSceneState -> do
@@ -246,11 +250,11 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                 Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
 
                 when (playingSceneState'.animation /= playingSceneState.animation) do
-                    playAnimation playingSceneState'.animation state.playerMeshes
+                    playAnimation playingSceneState'.animation playerMeshes
 
                 playerRotationVector <- createVector3 0.0 playingSceneState'.playerRotation 0.0
                 positionVector <- createVector3 playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
-                for_ state.playerMeshes \mesh -> void do
+                for_ playerMeshes \mesh -> void do
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh
                     setVisibility (if playingSceneState.firstPersonView then 0.0 else 1.0) mesh
@@ -391,7 +395,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                             MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                             _ -> Nothing
                         ) <$> neighbors)
-                setRenderList (meshes <> state.playerMeshes) shadowMap
+                setRenderList (meshes <> playerMeshes) shadowMap
             else do
                 setRenderList [] shadowMap
 

@@ -4,7 +4,6 @@ import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff, runAff)
-import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE, errorShow)
@@ -15,7 +14,6 @@ import Data.Traversable (for_)
 import Data.Unit (Unit)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.Constants (sliderMaxValue)
-import Game.Cubbit.Types (Effects)
 import Graphics.Babylon.Aff.Sound (loadSound)
 import Graphics.Babylon.Sound (defaultCreateSoundOptions, play, setVolume, stop)
 import Graphics.Babylon.Types (BABYLON, Scene, Sound)
@@ -37,8 +35,8 @@ type Sounds = {
     all :: Array Sound
 }
 
-loadSounds :: forall eff. Scene -> Aff (Effects eff) Sounds
-loadSounds scene = do
+loadSounds :: forall eff. Scene -> Aff (babylon :: BABYLON | eff) Unit -> Aff (babylon :: BABYLON | eff) Sounds
+loadSounds scene inc = do
 
     -- jingle
     yourNatural <- load "sound/Your_natural.mp3" true
@@ -86,7 +84,10 @@ loadSounds scene = do
     }
 
   where
-    load url loop = loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }
+    load url loop = do
+        sound <- loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }
+        inc
+        pure sound
 
 setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setMute mute sounds = for_ sounds.all (setVolume (if mute then 0.0 else 1.0))

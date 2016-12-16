@@ -24,18 +24,18 @@ import Halogen.HTML (HTML)
 import Halogen.VirtualDOM.Driver (runUI)
 import Prelude (pure, ($))
 
-ui :: forall eff. State -> Ref State -> Options -> Scene -> Mesh -> Materials -> Sounds-> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
-ui initialState ref options scene cursor materials sounds mute = component {
+ui :: forall eff. State -> Ref State -> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
+ui initialState ref mute = component {
     render,
-    eval: eval scene cursor materials options ref sounds,
+    eval: eval ref,
     initialState: initialState
 }
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 
-initializeHud :: forall eff. State -> Ref State -> Options -> HTMLElement -> Scene -> Mesh -> Materials -> Sounds -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud (State state@{ config: Config config }) ref options body scene cursor materials sounds = do
-    runUI (ui (State state) ref options scene cursor materials sounds config.mute) body
+initializeHud :: forall eff. State -> Ref State -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud (State state@{ config: Config config }) ref body = do
+    runUI (ui (State state) ref config.mute) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects eff)) -> (Unit -> Query Unit) -> Eff (HudEffects eff) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

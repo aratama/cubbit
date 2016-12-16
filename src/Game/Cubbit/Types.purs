@@ -14,6 +14,7 @@ import Data.Nullable (Nullable)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.BlockType (BlockType)
 import Game.Cubbit.Config (Config)
+import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON)
@@ -67,12 +68,14 @@ data SceneState = TitleSceneState TitleSceneState
                 | PlayingSceneState PlayingSceneState
 
 
+data ResourceProgress = Loading Int | Complete Resources
+
 newtype State = State {
     config :: Config,
+    res :: ResourceProgress,
 
     configVisible :: Boolean,
 
-    playerMeshes :: Array AbstractMesh,
 
     sceneState :: SceneState,
     nextScene ::Maybe SceneState,
