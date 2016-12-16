@@ -146,11 +146,13 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let initialState =  State {
                 config: Config config,
 
+
+                configVisible: false,
+
                 playerMeshes: playerMeshes,
 
                 sceneState: TitleSceneState {
-                    position: 0.0,
-                    configVisible: false
+                    position: 0.0
                 },
                 nextScene: Nothing,
                 skyboxRotation: 0.0,

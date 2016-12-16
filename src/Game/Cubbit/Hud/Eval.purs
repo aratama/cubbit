@@ -64,11 +64,7 @@ eval scene cursor materials (Options options) ref sounds query = case query of
     (ShowConfig next) -> do
 
         modifyAppState ref (\(State state) -> State state {
-            sceneState = case state.sceneState of
-                TitleSceneState titleSceneState -> TitleSceneState titleSceneState {
-                    configVisible = true
-                }
-                PlayingSceneState playingSceneState -> PlayingSceneState playingSceneState
+            configVisible = true
         })
         liftEff $ play sounds.switchSound
 
@@ -77,11 +73,7 @@ eval scene cursor materials (Options options) ref sounds query = case query of
     (CloseConfig next) -> do
 
         modifyAppState ref (\(State state) -> State state {
-            sceneState = case state.sceneState of
-                TitleSceneState titleSceneState -> TitleSceneState titleSceneState {
-                    configVisible = false
-                }
-                PlayingSceneState playingSceneState -> PlayingSceneState playingSceneState
+            configVisible = false
         })
         liftEff $ play sounds.switchSound
 
@@ -328,14 +320,7 @@ eval scene cursor materials (Options options) ref sounds query = case query of
                                             }
 
 
-                    (ToggleDebugLayer) -> do
-                        liftEff do
-                            modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })
 
-                            State state <- readRef ref
-                            if state.debugLayer
-                                then getDebugLayer scene >>= DebugLayer.show true true Nothing
-                                else getDebugLayer scene >>= DebugLayer.hide
 
                     (OnMouseClick e) -> do
                         liftEff do
@@ -391,6 +376,13 @@ eval scene cursor materials (Options options) ref sounds query = case query of
                                 "e" -> go _ { eKey = _ }
                                 "t" -> go _ { tKey = _ }
                                 "g" -> go _ { gKey = _ }
+                                "1" -> do
+                                    modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })
+                                    State state <- readRef ref
+                                    if state.debugLayer
+                                        then getDebugLayer scene >>= DebugLayer.show true true Nothing
+                                        else getDebugLayer scene >>= DebugLayer.hide
+
                                 _ -> pure unit
                             preventDefault (keyboardEventToEvent e)
                             stopPropagation (keyboardEventToEvent e)
@@ -426,8 +418,7 @@ eval scene cursor materials (Options options) ref sounds query = case query of
 
                     Home -> do
                         let nextScene = TitleSceneState {
-                                    position: 0.0,
-                                    configVisible: false
+                                    position: 0.0
                                 }
                         liftEff $ play sounds.warpSound
                         modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })

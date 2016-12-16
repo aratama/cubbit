@@ -35,7 +35,6 @@ data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | TogglePointerLock
                          | SetMousePosition MouseEvent
                          | OnMouseClick MouseEvent
-                         | ToggleDebugLayer
                          | Zoom MouseEvent
                          | OnKeyDown KeyboardEvent
                          | OnKeyUp KeyboardEvent

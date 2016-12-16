@@ -5,9 +5,11 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
+import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take)
+import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
@@ -77,7 +79,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let jumpVelocity = if isLanding && state.spaceKey && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
 
-    let speed = options.moveSpeed * deltaTime
+    let speed = options.moveSpeed
 
     let moveFactor = if isLanding then 1.0 else 0.2
 
@@ -90,7 +92,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
     let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
-    let velocityY = playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
+    let velocityY = if isLanding && not state.spaceKey then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
     let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
     let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
 
@@ -103,7 +105,11 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                     else (atan2 velocity.x velocity.z) - pi
             ) else playingSceneState.playerRotation
 
-    let playerPosition = vecAdd playingSceneState.position velocity
+    let playerPosition = {
+                x: playingSceneState.position.x + velocity.x * deltaTime,
+                y: playingSceneState.position.y + velocity.y * deltaTime,
+                z: playingSceneState.position.z + velocity.z * deltaTime
+            }
 
 
 
@@ -137,9 +143,10 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let eyeHeight = options.eyeHeight
 
-    let thirdPersonCameraTargetX = position'.x
+    let thirdPersonCameraTargetoffset = 20.0
+    let thirdPersonCameraTargetX = position'.x             + velocityX * thirdPersonCameraTargetoffset
     let thirdPersonCameraTargetY = position'.y + eyeHeight
-    let thirdPersonCameraTargetZ = position'.z
+    let thirdPersonCameraTargetZ = position'.z             + velocityZ * thirdPersonCameraTargetoffset
 
     let playerRotationTheta = negate playingSceneState.playerRotation - pi * 0.5
     let firstPersonCameraTargetX = position'.x + cos playerRotationTheta * cos playingSceneState.playerPitch
@@ -161,9 +168,9 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
 
     let theta = negate playingSceneState.cameraYaw - pi * 0.5
-    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
+    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocityX * thirdPersonCameraTargetoffset
     let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
-    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange
+    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocityZ * thirdPersonCameraTargetoffset
 
     let firstPersonCameraPositionX = position'.x
     let firstPersonCameraPositionY = position'.y + eyeHeight
@@ -281,11 +288,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                 pure (State state')
 
-
-
-
         writeRef ref (State state')
-
 
         -- update camera
         let cameraPosition = state'.cameraPosition

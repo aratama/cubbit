@@ -1,14 +1,14 @@
 
 {
     "eyeHeight": 1.4,
-    "gravity": -0.0005,
+    "gravity": -0.00002,
     "fogDensity": 0.005,
     "maximumLoadedChunks": 2197,
     "shadowMapSize": 4096,
     "skyboxRotationSpeed": 0.00002,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
-    "jumpVelocity": 0.18,
+    "jumpVelocity": 0.008,
     "initialWorldSize": 3,
     "moveSpeed": 0.004,
     "cameraTargetSpeed": 0.1,

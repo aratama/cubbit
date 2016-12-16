@@ -39,8 +39,7 @@ data Mode = Move | Put BlockType | Remove
 
 
 type TitleSceneState = {
-    position :: Number,
-    configVisible :: Boolean
+    position :: Number
 }
 
 type PlayingSceneState = {
@@ -70,6 +69,8 @@ data SceneState = TitleSceneState TitleSceneState
 
 newtype State = State {
     config :: Config,
+
+    configVisible :: Boolean,
 
     playerMeshes :: Array AbstractMesh,
 

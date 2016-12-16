@@ -60,36 +60,7 @@ render (State state@{ config: Config config }) = div [
             div [
                 class_ (ClassName "show-config"),
                 onClick \e -> Just (ShowConfig unit)
-            ] [text "Configurations"],
-
-            div [
-                class_ (ClassName ("content-layer config-root" <> if titleSceneState.configVisible then " visible" else "")),
-                onClick \e -> Just (CloseConfig unit)
-            ] [
-                div [
-                    class_ (ClassName "config-inner"),
-                    onClick \e -> Just (Nop (mouseEventToEvent e) unit)
-                ] [
-                    h2 [class_ (ClassName "config-heading")] [text "Sounds"],
-                    option "Mute" (toggle config.mute ToggleMute),
-                    option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
-                    option "SE Volume" (slider config.seVolume SetSEVolume),
-
-                    h2 [class_ (ClassName "config-heading")] [text "Graphics"],
-                    option "Shadow" (toggle config.shadow ToggleShadow),
-                    option "Shadow Area" (slider config.shadowArea SetShadowArea),
-                    option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
-
-                    h2 [class_ (ClassName "config-heading")] [text "Terrain"],
-                    option "Chunk Area" (slider config.chunkArea SetChunkArea),
-
-                    p_ [a [
-                        target "_blank",
-                        href "LICENSE.txt",
-                        onClick \e -> Just (StopPropagation (mouseEventToEvent e) unit)
-                    ] [text "License Attribution"]]
-                ]
-            ]
+            ] [icon "gear"]
         ]
 
         PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
@@ -112,11 +83,11 @@ render (State state@{ config: Config config }) = div [
                 suppressMouseMove,
                 suppressMouseDown
             ] [
-                div [class_ (ClassName "button first-person-view"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
-                div [class_ (ClassName "button mute"), onClick \e -> Just (ToggleMute unit)] [icon if config.mute then "volume-off" else "volume-up"],
-                div [class_ (ClassName "button initialize-position"), onClick \e -> Just (PlayingSceneQuery ToggleDebugLayer unit)] [icon "gear"],
-                div [class_ (ClassName "button home"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
+                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery TogglePointerLock unit)] [icon "eye"],
+                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery (SetPosition { x: 0.0, y: 30.0, z: 0.0 }) unit)] [icon "plane"],
+                div [class_ (ClassName "button"), onClick \e -> Just (ToggleMute unit)] [icon if config.mute then "volume-off" else "volume-up"],
+                div [class_ (ClassName "button"), onClick \e -> Just (ShowConfig unit)] [icon "gear"],
+                div [class_ (ClassName "button"), onClick \e -> Just (PlayingSceneQuery Home unit)] [icon "home"]
             ],
 
 
@@ -141,6 +112,36 @@ render (State state@{ config: Config config }) = div [
 
             div [id_ "open-center-panel", onClick \e -> Just (PlayingSceneQuery (SetCenterPanelVisible true) unit)] [icon "suitcase"]
         ],
+
+    div [
+        class_ (ClassName ("content-layer config-root" <> if state.configVisible then " visible" else "")),
+        onClick \e -> Just (CloseConfig unit)
+    ] [
+        div [
+            class_ (ClassName "config-inner"),
+            onClick \e -> Just (Nop (mouseEventToEvent e) unit)
+        ] [
+            h2 [class_ (ClassName "config-heading")] [text "Sounds"],
+            option "Mute" (toggle config.mute ToggleMute),
+            option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
+            option "SE Volume" (slider config.seVolume SetSEVolume),
+
+            h2 [class_ (ClassName "config-heading")] [text "Graphics"],
+            option "Shadow" (toggle config.shadow ToggleShadow),
+            option "Shadow Area" (slider config.shadowArea SetShadowArea),
+            option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
+
+            h2 [class_ (ClassName "config-heading")] [text "Terrain"],
+            option "Chunk Area" (slider config.chunkArea SetChunkArea),
+
+            p_ [a [
+                target "_blank",
+                href "LICENSE.txt",
+                onClick \e -> Just (StopPropagation (mouseEventToEvent e) unit)
+            ] [text "License Attribution"]]
+        ]
+    ],
+
     div [
         id_ "shadow",
         class_ (ClassName ("content-layer" <> if isNothing state.nextScene then " hide" else "")),
