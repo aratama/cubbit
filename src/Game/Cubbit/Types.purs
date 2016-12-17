@@ -11,6 +11,7 @@ import DOM.WebStorage (STORAGE)
 import Data.Eq (class Eq)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable)
+import Data.Set (Set)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.BlockType (BlockType)
 import Game.Cubbit.Config (Config)
@@ -96,17 +97,7 @@ newtype State = State {
     minimap :: Boolean,
     debugLayer :: Boolean,
     mousePosition :: { x :: Int, y :: Int },
-    spaceKey :: Boolean,
-    wKey :: Boolean,
-    sKey :: Boolean,
-    aKey :: Boolean,
-    dKey :: Boolean,
-    qKey :: Boolean,
-    eKey :: Boolean,
-    rKey :: Boolean,
-    fKey :: Boolean,
-    tKey :: Boolean,
-    gKey :: Boolean
+    keys :: Set String
 }
 
 

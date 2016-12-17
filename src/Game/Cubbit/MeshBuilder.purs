@@ -72,9 +72,12 @@ loadDefaultChunk ref index = do
                 z: ci.z,
                 index,
                 blocks,
+
                 standardMaterialMesh: MeshNotLoaded,
                 waterMaterialMesh: MeshNotLoaded,
-                transparentMaterialMesh: MeshNotLoaded
+                transparentMaterialMesh: MeshNotLoaded,
+
+                bodies: []
             } state.terrain
             pure true
 
@@ -127,9 +130,12 @@ createChunkMesh ref materials scene index (Options options) (Config config) = do
                 z: ci.z,
                 index,
                 blocks,
+
                 standardMaterialMesh,
                 waterMaterialMesh,
-                transparentMaterialMesh
+                transparentMaterialMesh,
+
+                bodies: []
             } state.terrain
 
             pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
@@ -169,8 +175,8 @@ editBlock ref materials scene globalBlockIndex block (Options options) (Config c
             let eci = runChunkIndex editChunkIndex
 
             let refreash dx dy dz = do
-                    chunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
-                    case chunkMaybe of
+                    targetChunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
+                    case targetChunkMaybe of
                         Nothing -> pure unit
                         Just chunkData -> updateChunkMesh ref materials scene chunkData (Options options) (Config config)
 
@@ -206,9 +212,12 @@ updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config conf
         z: ci.z,
         index,
         blocks: chunkWithMesh.blocks,
+
         standardMaterialMesh: MeshLoaded standardMaterialMesh,
         waterMaterialMesh: MeshLoaded waterMaterialMesh,
-        transparentMaterialMesh: MeshLoaded transparentMaterialMesh
+        transparentMaterialMesh: MeshLoaded transparentMaterialMesh,
+
+        bodies: []
     }
     insertChunk mesh state.terrain
 

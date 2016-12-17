@@ -14,6 +14,7 @@ import Data.Ord (max, min)
 import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
+import Data.Set (insert, delete)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
@@ -29,7 +30,7 @@ import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer)
 import Graphics.Babylon.Sound (play, stop)
-import Halogen (ComponentDSL, HalogenIO, liftEff, put)
+import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (action)
 import Math (pi)
 import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=), (/), (<$))
@@ -361,51 +362,22 @@ eval ref query = do
                                             }
 
 
-                                    (OnKeyDown e) -> do
-                                        let go f = void do modifyRef ref \(State state) -> State (f state true)
-                                        liftEff do
-                                            case key e of
-                                                " " -> go _ { spaceKey = _ }
-                                                "w" -> go _ { wKey = _ }
-                                                "s" -> go _ { sKey = _ }
-                                                "a" -> go _ { aKey = _ }
-                                                "d" -> go _ { dKey = _ }
-                                                "r" -> go _ { rKey = _ }
-                                                "f" -> go _ { fKey = _ }
-                                                "q" -> go _ { qKey = _ }
-                                                "e" -> go _ { eKey = _ }
-                                                "t" -> go _ { tKey = _ }
-                                                "g" -> go _ { gKey = _ }
-                                                "1" -> do
-                                                    modifyRef ref (\(State state) -> State state { debugLayer = not state.debugLayer })
-                                                    State state <- readRef ref
-                                                    if state.debugLayer
-                                                        then getDebugLayer scene >>= DebugLayer.show true true Nothing
-                                                        else getDebugLayer scene >>= DebugLayer.hide
+                                    (OnKeyDown e) -> liftEff do
+                                        modifyRef ref \(State state) -> State state { keys = insert (key e) state.keys }
+                                        case key e of
+                                            "1" -> do
+                                                State state <- readRef ref
+                                                if state.debugLayer
+                                                    then getDebugLayer scene >>= DebugLayer.show true true Nothing
+                                                    else getDebugLayer scene >>= DebugLayer.hide
+                                            _ -> pure unit
+                                        preventDefault (keyboardEventToEvent e)
+                                        stopPropagation (keyboardEventToEvent e)
 
-                                                _ -> pure unit
-                                            preventDefault (keyboardEventToEvent e)
-                                            stopPropagation (keyboardEventToEvent e)
-
-                                    (OnKeyUp e) -> do
-                                        let go f = void do modifyRef ref \(State state) -> State (f state false)
-                                        liftEff do
-                                            case key e of
-                                                " " -> go _ { spaceKey = _ }
-                                                "w" -> go _ { wKey = _ }
-                                                "s" -> go _ { sKey = _ }
-                                                "a" -> go _ { aKey = _ }
-                                                "d" -> go _ { dKey = _ }
-                                                "r" -> go _ { rKey = _ }
-                                                "f" -> go _ { fKey = _ }
-                                                "q" -> go _ { qKey = _ }
-                                                "e" -> go _ { eKey = _ }
-                                                "t" -> go _ { tKey = _ }
-                                                "g" -> go _ { gKey = _ }
-                                                _ -> pure unit
-                                            preventDefault (keyboardEventToEvent e)
-                                            stopPropagation (keyboardEventToEvent e)
-
+                                    (OnKeyUp e) -> liftEff do
+                                        modifyRef ref \(State state) -> State state { keys = delete (key e) state.keys }
+                                        preventDefault (keyboardEventToEvent e)
+                                        stopPropagation (keyboardEventToEvent e)
 
                                     (SetCenterPanelVisible visible) -> do
 

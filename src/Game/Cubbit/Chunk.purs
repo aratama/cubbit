@@ -12,6 +12,8 @@ import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Types (BABYLON, Mesh, VertexDataProps)
 import Prelude (pure, bind)
 
+import Graphics.Cannon (Body)
+
 newtype Chunk = Chunk {
     index :: ChunkIndex,
     blocks :: Boxel.BoxelMap BlockType
@@ -32,9 +34,12 @@ type ChunkWithMesh = {
     z :: Int,
     index :: ChunkIndex,
     blocks :: Boxel.BoxelMap BlockType,
+
     standardMaterialMesh :: MeshLoadingState,
     waterMaterialMesh :: MeshLoadingState,
-    transparentMaterialMesh :: MeshLoadingState
+    transparentMaterialMesh :: MeshLoadingState,
+
+    bodies :: Array (Body String)
 }
 
 newtype VertexDataPropsData = VertexDataPropsData {

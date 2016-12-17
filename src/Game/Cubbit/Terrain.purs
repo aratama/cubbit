@@ -1,5 +1,5 @@
 module Game.Cubbit.Terrain (
- Terrain(..), emptyTerrain,
+ Terrain(..), createTerrain,
  globalPositionToChunkIndex, globalPositionToLocalIndex, globalPositionToGlobalIndex, globalIndexToChunkIndex, globalIndexToLocalIndex,
  lookupSolidBlockByVec, lookupSolidBlock, insertChunk, lookupChunk, chunkCount, getChunkMap, lookupBlockByVec, isSolidBlock
 ) where
@@ -30,8 +30,8 @@ newtype Terrain = Terrain {
 getChunkMap :: Terrain -> ChunkMap
 getChunkMap (Terrain t) = t.map
 
-emptyTerrain :: forall eff. Int -> Eff eff Terrain
-emptyTerrain seed = do
+createTerrain :: forall eff. Int -> Eff eff Terrain
+createTerrain seed = do
     map <- createChunkMap
     pure (Terrain { map, noise: createNoise seed })
 

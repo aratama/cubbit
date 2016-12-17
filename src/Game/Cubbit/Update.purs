@@ -8,7 +8,7 @@ import Control.Monad.Eff (Eff, runPure)
 import Control.Monad.Eff.Console (logShow)
 import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef, writeRef)
 import DOM (DOM)
-import Data.Array (catMaybes, drop, take)
+import Data.Array (catMaybes, drop, take, any)
 import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
@@ -18,6 +18,7 @@ import Data.Ord (min, max)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
+import Data.Set (member)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
@@ -56,11 +57,11 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let rot =  negate if playingSceneState.firstPersonView then (playingSceneState.playerRotation + pi) else  playingSceneState.cameraYaw
 
-    let keyStep key = if key then 1.0 else 0.0
+    let keyStep key = if member key state.keys then 1.0 else 0.0
 
     let keyVector = {
-            x: keyStep state.dKey - keyStep state.aKey,
-            z: keyStep state.wKey - keyStep state.sKey
+            x: keyStep "d" - keyStep "a",
+            z: keyStep "w" - keyStep "s"
         }
 
     let rotatedKeyVector = {
@@ -77,7 +78,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             Just block | isSolidBlock block -> true
             _ -> false
 
-    let jumpVelocity = if isLanding && state.spaceKey && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
+    let jumpVelocity = if isLanding && member " " state.keys && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
 
     let speed = options.moveSpeed
 
@@ -92,7 +93,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
     let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
-    let velocityY = if isLanding && not state.spaceKey then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
+    let velocityY = if isLanding && not (member " " state.keys) then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
     let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
     let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
 
@@ -116,7 +117,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let animation' = if 0 < playingSceneState.landing
             then "land"
             else if isLanding
-                then (if state.wKey || state.sKey || state.aKey || state.dKey then "run" else "idle")
+                then (if any (\k -> member k state.keys) ["w", "s", "a", "d"] then "run" else "idle")
                 else "jump"
 
     let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
@@ -188,9 +189,9 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
     let sceneState =  playingSceneState {
-                cameraYaw = playingSceneState.cameraYaw + ((if state.qKey then 1.0 else 0.0) - (if state.eKey then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if state.rKey then 1.0 else 0.0) - (if state.fKey then 1.0 else 0.0)) * options.cameraRotationSpeed)),
-                cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if state.gKey then 1.0 else 0.0) - (if state.tKey then 1.0 else 0.0)) * options.cameraZoomSpeed)),
+                cameraYaw = playingSceneState.cameraYaw + ((if member "q" state.keys then 1.0 else 0.0) - (if member "e" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed,
+                cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if member "r" state.keys then 1.0 else 0.0) - (if member "f" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed)),
+                cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if member "g" state.keys then 1.0 else 0.0) - (if member "t" state.keys then 1.0 else 0.0)) * options.cameraZoomSpeed)),
                 position = position',
                 velocity = velocity,
                 playerRotation = playerRotation',

@@ -10,6 +10,7 @@ import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
+import Data.Set (empty)
 import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Config (Config(Config), readConfig)
@@ -21,7 +22,7 @@ import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
-import Game.Cubbit.Terrain (emptyTerrain)
+import Game.Cubbit.Terrain (createTerrain)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(TitleSceneState), State(State))
 import Game.Cubbit.Update (update)
 import Graphics.Babylon.Engine (runRenderLoop)
@@ -45,13 +46,12 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         Config config <- liftEff $ readConfig
 
         -- initialize game state
-        initialTerrain <- liftEff $ emptyTerrain 0
+        let terrainSeed = 0
+        initialTerrain <- liftEff $ createTerrain terrainSeed
         let initialState =  {
                 config: Config config,
                 res: Loading 0,
                 configVisible: false,
-
-
                 sceneState: TitleSceneState {
                     position: 0.0
                 },
@@ -59,25 +59,13 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 skyboxRotation: 0.0,
                 terrain: initialTerrain,
                 updateIndex: toNullable Nothing,
-
                 cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
                 cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
-
                 mousePosition: { x: 0, y: 0 },
                 debugLayer: false,
                 minimap: false,
                 totalFrames: 0,
-                spaceKey: false,
-                wKey: false,
-                sKey: false,
-                aKey: false,
-                dKey: false,
-                qKey: false,
-                eKey: false,
-                rKey: false,
-                fKey: false,
-                tKey: false,
-                gKey: false
+                keys: empty
             }
 
         ref <- liftEff $ newRef $ State initialState
@@ -132,8 +120,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             world <- CANNON.createWorld
             boxSize <- CANNON.createVec3 0.5 0.5 0.5
             boxShape <- CANNON.createBox boxSize
-            body <- CANNON.createBody CANNON.defaultBodyProps
-            CANNON.addBody body world
+            boxBody <- CANNON.createBody CANNON.defaultBodyProps
+            CANNON.addBody boxBody world
 
             -- start game loop
             engine # runRenderLoop do
