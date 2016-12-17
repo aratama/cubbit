@@ -1,5 +1,5 @@
 --module Game.Cubbit.Hud.Driver (HudDriver, initializeHud, queryToHud, peekState) where
-module Game.Cubbit.Hud.Driver (HudDriver, initializeHud, queryToHud) where
+module Game.Cubbit.Hud.Driver (initializeHud, queryToHud) where
 
 import Control.Alt (void)
 import Control.Monad.Aff (Aff, runAff)
@@ -13,7 +13,7 @@ import Data.Void (Void)
 import Game.Cubbit.Config (Config(Config))
 import Game.Cubbit.Hud.Eval (eval)
 import Game.Cubbit.Hud.Render (render)
-import Game.Cubbit.Hud.Type (HudEffects, Query)
+import Game.Cubbit.Hud.Type (HudEffects, Query, HudDriver)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options)
 import Game.Cubbit.Sounds (Sounds)
@@ -31,7 +31,7 @@ ui initialState ref mute = component {
     initialState: initialState
 }
 
-type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
+
 
 initializeHud :: forall eff. State -> Ref State -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
 initializeHud (State state@{ config: Config config }) ref body = do
