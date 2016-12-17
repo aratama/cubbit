@@ -17,7 +17,8 @@ import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (AbstractMesh, BABYLON)
+import Graphics.Babylon.Types (BABYLON)
+import Graphics.Cannon.Type (CANNON)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -29,7 +30,8 @@ type CoreEffects eff = (
     ref :: REF,
     ajax :: AJAX,
     storage :: STORAGE,
-    timer :: TIMER | eff)
+    timer :: TIMER,
+    cannon :: CANNON | eff)
 
 type Effects eff =  CoreEffects (
     dom :: DOM,

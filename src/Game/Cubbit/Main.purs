@@ -10,14 +10,13 @@ import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Show (show)
-import Data.Unit (Unit, unit)
+import Data.Unit (Unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Hud.Eval (repaint)
-import Game.Cubbit.Hud.Type (Query(..))
 import Game.Cubbit.MeshBuilder (createChunkMesh)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
@@ -29,9 +28,9 @@ import Graphics.Babylon.Engine (runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
+import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addBody, step) as CANNON
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Halogen.Query (action)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (<>))
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -83,25 +82,21 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
         ref <- liftEff $ newRef $ State initialState
 
-        -- initialize hud
+        -- initialize ui
         driver <- initializeHud (State initialState) ref body
 
-
-        -- resources
+        -- load resources
         incref <- liftEff $ newRef 0
-
         let inc = do
                 liftEff $ modifyRef incref (_ + 1)
                 count <- liftEff $ readRef incref
                 liftEff $ log $ show count <> " / " <> show resourceCount
-
                 State state <- liftEff $ readRef ref
                 repaint driver $ State state {
                     res = Loading count
                 }
-
-
         res <- loadResources canvasGL inc
+        repaint driver $ State initialState { res = Complete res }
         let engine = res.engine
         let scene = res.scene
         let playerMeshes = res.playerMeshes
@@ -113,7 +108,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let shadowMap = res.shadowMap
         Options options <- pure res.options
 
-        repaint driver $ State initialState { res = Complete res }
 
         liftEff do
 
@@ -125,13 +119,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         let index = chunkIndex x 0 z
                         createChunkMesh ref materials scene index (Options options) (Config config)
 
-            -- start game loop
-            engine # runRenderLoop do
-                update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
-                render scene
-
             -- focus
-
             focus "content"
 
             -- start bgm
@@ -139,3 +127,17 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setBGMVolume (toNumber config.bgmVolume / toNumber sliderMaxValue) sounds
             setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
             play sounds.cleaning
+
+            -- cannon
+            world <- CANNON.createWorld
+            boxSize <- CANNON.createVec3 0.5 0.5 0.5
+            boxShape <- CANNON.createBox boxSize
+            body <- CANNON.createBody CANNON.defaultBodyProps
+            CANNON.addBody body world
+
+            -- start game loop
+            engine # runRenderLoop do
+                update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
+                render scene
+
+                CANNON.step (1.0 / 60.0) 0.0 10 world
