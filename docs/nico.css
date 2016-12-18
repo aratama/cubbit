@@ -1,0 +1,13 @@
+#renderCanvas {
+    width   : 816px;
+    height  : 624px;
+}
+
+.content-layer {
+    width   : 816px;
+    height  : 624px;
+}
+
+.config-root {
+    left: 816px;
+}

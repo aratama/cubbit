@@ -18,7 +18,7 @@ import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Hud.Eval (repaint)
-import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
@@ -105,7 +105,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 forE (-initialWorldSize) initialWorldSize \x -> do
                     forE (-initialWorldSize) initialWorldSize \z -> void do
                         let index = chunkIndex x 0 z
-                        createChunkMesh ref materials scene index (Options options) (Config config)
+                        generateChunk ref materials scene index (Options options) (Config config)
 
             -- focus
             focus "content"

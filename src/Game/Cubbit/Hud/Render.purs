@@ -3,6 +3,7 @@ module Game.Cubbit.Hud.Render (render) where
 import DOM.Event.Event (Event)
 import DOM.Event.MouseEvent (MouseEvent)
 import DOM.Event.Types (EventType(..), mouseEventToEvent)
+import DOM.Event.WheelEvent (WheelEvent)
 import Data.Array (replicate, (..))
 import Data.Functor (map, mapFlipped)
 import Data.Maybe (Maybe(..), isNothing)
@@ -222,8 +223,8 @@ styleStr :: forall i r. String -> IProp (style :: I | r) i
 styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
 
 
-onWheel :: forall r i. (MouseEvent -> Maybe i) -> IProp (onMouseDown :: I | r) i
-onWheel = handler (EventType "wheel") <<< mouseHandler
+onWheel :: forall r i. (WheelEvent -> Maybe i) -> IProp (onMouseDown :: I | r) i
+onWheel = handler (EventType "wheel") <<< unsafeCoerce
 
 mouseHandler :: forall i. (MouseEvent -> Maybe i) -> Event -> Maybe i
 mouseHandler = unsafeCoerce

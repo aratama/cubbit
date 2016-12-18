@@ -6,6 +6,7 @@ import Control.Monad.Eff.Timer (TIMER)
 import DOM.Event.Event (Event)
 import DOM.Event.KeyboardEvent (KeyboardEvent)
 import DOM.Event.MouseEvent (MouseEvent)
+import DOM.Event.WheelEvent (WheelEvent)
 import DOM.WebStorage (STORAGE)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
@@ -39,7 +40,7 @@ data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | TogglePointerLock
                          | SetMousePosition MouseEvent
                          | OnMouseClick MouseEvent
-                         | Zoom MouseEvent
+                         | Zoom WheelEvent
                          | OnKeyDown KeyboardEvent
                          | OnKeyUp KeyboardEvent
                          | SetCenterPanelVisible Boolean

@@ -40,8 +40,8 @@ loadSounds scene inc = do
 
     -- jingle
     yourNatural <- load "sound/Your_natural.mp3" true
-    rye <- load "sound/ライ麦畑で朝食を.mp3" true
-    cleaning <- load "sound/クリーニング・ストリーム.mp3" true
+    rye <- load "sound/rye.mp3" true
+    cleaning <- load "sound/cleaningstream.mp3" true
 
     -- environment
     forestSound <- load "sound/forest.mp3" true

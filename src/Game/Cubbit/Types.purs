@@ -100,13 +100,6 @@ newtype State = State {
     keys :: Set String
 }
 
-
-
-
-
-
-
 foreign import data ForeachIndex :: *
-
 
 derive instance eqMode :: Eq Mode

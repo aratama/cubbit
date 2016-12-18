@@ -71,7 +71,7 @@ html, body {
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
-#renderCanvas, #canvas2d {
+#renderCanvas {
     width   : 1280px;
     height  : 720px;
     touch-action: none;
@@ -366,20 +366,25 @@ html, body {
     background-color: #cdb27b;
     border: solid 20px white;
     color: white;
-    width: 800px;
-    height: 500px;
+    width: 600px;
+    height: 400px;
     position: absolute;
     margin: auto;
     left: 0px;
     right: 0px;
     top: 0px;
     bottom: 0px;
-    padding: 30px;
+    padding: 10px;
     border-radius: 12px;
 }
 
 .config-root .config-heading {
-    font-size: x-large;
+    font-size: large;
+    margin-top: 4px;
+    margin-bottom: 0px;
+    padding: 4px;
+    color: #cdb27b;
+    background-color: white;
 }
 
 .config-root .config-bgm-volume {

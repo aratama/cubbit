@@ -9,14 +9,15 @@
     "lint": "eslint src",
     "prebuild": "psc bower_components/purescript-*/src/**/*.purs ../purescript-cannon/src/**/*.purs src/**/*.purs",
     "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
-    "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./public/icon.ico --asar",
+    "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./res/icon.ico --asar",
     "prezip": "npm run electron",
     "zip": "bestzip ./docs/cubbit-win32-x64.zip ./cubbit-win32-x64",
     "server": "start http-server public",
     "publish": "cpx public/**/*.* docs",
     "postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/lib/babylon.custom.js -o docs/lib/babylon.custom.js",
     "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs",
-    "license": "node res/license.js"
+    "license": "node res/license.js",
+    "nicogame": "node res/nico.js"
   },
   "author": "aratama",
   "license": "UNLICENSED",
@@ -27,6 +28,10 @@
     "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
-    "eslint": "^3.11.1"
+    "bestzip": "^1.1.3",
+    "cpx": "^1.5.0",
+    "eslint": "^3.11.1",
+    "glob": "^7.1.1",
+    "rimraf": "^2.5.4"
   }
 }

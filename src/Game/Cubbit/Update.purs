@@ -28,7 +28,7 @@ import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
 import Game.Cubbit.Hud.Type (Query(..), QueryA(..), PlayingSceneQuery(..))
 import Game.Cubbit.Materials (Materials)
-import Game.Cubbit.MeshBuilder (createChunkMesh)
+import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
@@ -341,7 +341,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                     -- let ci = runChunkIndex index
 
-                    createChunkMesh ref materials scene index (Options options) state.config
+                    generateChunk ref materials scene index (Options options) state.config
 
                     --State st <- readRef ref
                     --size <- chunkCount st.terrain

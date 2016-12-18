@@ -7,14 +7,15 @@ import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import DOM.Event.Event (preventDefault, stopPropagation)
 import DOM.Event.KeyboardEvent (key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
+import DOM.Event.WheelEvent (WheelEvent, wheelEventToEvent)
 import Data.BooleanAlgebra (not)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(Nothing, Just))
 import Data.Ord (max, min)
+import Data.Set (insert, delete)
 import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
-import Data.Set (insert, delete)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
@@ -341,7 +342,7 @@ eval ref query = do
                                                         picked <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
                                                         case picked of
                                                             Nothing -> pure unit
-                                                            Just blockIndex -> editBlock ref materials scene blockIndex block (Options options) state.config
+                                                            Just blockIndex -> editBlock ref blockIndex block
 
                                                 case playingSceneState.mode of
                                                     Put blockType -> do
@@ -360,6 +361,8 @@ eval ref query = do
                                                     cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + (toNumber (deltaY e) * options.cameraZoomSpeed)))
                                                 }
                                             }
+                                            preventDefault (wheelEventToEvent e)
+                                            stopPropagation (wheelEventToEvent e)
 
 
                                     (OnKeyDown e) -> liftEff do
@@ -427,6 +430,6 @@ offsetX e = (unsafeCoerce e).offsetX
 offsetY :: MouseEvent -> Int
 offsetY e = (unsafeCoerce e).offsetY
 
-deltaY :: MouseEvent -> Int
+deltaY :: WheelEvent -> Int
 deltaY e = (unsafeCoerce e).deltaY
 
