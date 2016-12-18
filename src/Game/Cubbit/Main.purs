@@ -6,12 +6,16 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef)
+import DOM.Event.EventTarget (addEventListener, eventListener)
+import DOM.Event.Types (EventType(..))
+import DOM.HTML (window)
+import DOM.HTML.Types (windowToEventTarget)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe, toNullable)
-import Data.Show (show)
 import Data.Set (empty)
-import Data.Unit (Unit)
+import Data.Show (show)
+import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
@@ -25,7 +29,7 @@ import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
 import Game.Cubbit.Terrain (createTerrain)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(TitleSceneState), State(State))
 import Game.Cubbit.Update (update)
-import Graphics.Babylon.Engine (runRenderLoop)
+import Graphics.Babylon.Engine (runRenderLoop, resize)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
@@ -122,6 +126,12 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             boxShape <- CANNON.createBox boxSize
             boxBody <- CANNON.createBody CANNON.defaultBodyProps
             CANNON.addBody boxBody world
+
+            -- resize
+            win <- window
+            addEventListener (EventType "resize") (eventListener $ \e -> do
+                resize engine
+            ) false (windowToEventTarget win)
 
             -- start game loop
             engine # runRenderLoop do
