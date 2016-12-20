@@ -34,10 +34,10 @@ import Graphics.Babylon.Engine (runRenderLoop, resize)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
-import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody, step, setTag, getTag, getPosition, setPosition, runVec3, setGravity) as CANNON
+import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody, step, setTag, getTag, getPosition, setPosition, runVec3, setGravity, setVelocity, getVelocity, createMaterial, setFixedRotation, updateMassProperties) as CANNON
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (<>))
+import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (-), (<>))
 
 main :: forall eff. Eff (Effects eff) Unit
 main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
@@ -125,19 +125,26 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             -- test collesion
             -- cannon
             world <- CANNON.createWorld
-            gravity <- CANNON.createVec3 0.0 (-3.8) 0.0
+            gravity <- CANNON.createVec3 0.0 (-9.8) 0.0
             CANNON.setGravity gravity world
 
             playerBox <- do
                 size <- CANNON.createVec3 0.5 0.5 0.5
                 shape <- CANNON.createBox size
-                pos <- CANNON.createVec3 5.5 17.0 5.5
-                body <- CANNON.createBody CANNON.defaultBodyProps {
-                    mass = 1.0
+                pos <- CANNON.createVec3 2.5 17.0 2.5
+                mat <- CANNON.createMaterial {
+                    friction: 0.0000,
+                    restitution: 0.0
                 }
-                CANNON.addShape shape Nothing Nothing body 
+                body <- CANNON.createBody CANNON.defaultBodyProps {
+                    mass = 1.0,
+                    material = mat
+                }
+                CANNON.addShape shape Nothing Nothing body
                 CANNON.setPosition pos body
                 CANNON.setTag (Just "player") body
+                CANNON.setFixedRotation true body
+                CANNON.updateMassProperties body
                 CANNON.addBody body world
                 pure body
 
@@ -175,12 +182,36 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 update ref engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
                 render scene
 
-                CANNON.step (1.0 / 60.0) 0.0 10 world
-                pos <- CANNON.getPosition playerBox >>= CANNON.runVec3
-                modifyRef ref \(State state) -> State state {
-                    sceneState = case state.sceneState of
-                        TitleSceneState t -> TitleSceneState t
-                        PlayingSceneState p -> PlayingSceneState p {
-                            position = pos
+                State state <- readRef ref
+                case state.sceneState of
+                    TitleSceneState t -> pure unit
+                    PlayingSceneState p -> do
+
+                        log ("py: " <> show p.position.y)
+                        log ("vy: " <> show p.velocity.y)
+
+                        v <- CANNON.getVelocity playerBox >>= CANNON.runVec3
+                        velocity <- CANNON.createVec3 p.velocity.x v.y p.velocity.z
+                        CANNON.setVelocity velocity playerBox
+
+
+                        CANNON.step (1.0 / 60.0) 0.0 10 world
+
+                        pos <- CANNON.getPosition playerBox >>= CANNON.runVec3
+                        vel <- CANNON.getVelocity playerBox >>= CANNON.runVec3
+                        modifyRef ref \(State state) -> State state {
+                            sceneState = PlayingSceneState p {
+                                position = { x: pos.x, y: pos.y - 0.5, z: pos.z },
+                                velocity = vel
+                            }
                         }
-                }
+
+
+
+
+
+
+
+
+
+

@@ -9,13 +9,13 @@ exports.buildCollesionBoxes = function(chunk) {
 
             var CHUNK_SIZE = 16;
 
-            var nx = CHUNK_SIZE;
-            var ny = CHUNK_SIZE;
-            var nz = CHUNK_SIZE;
+            var CHUNK_SIZE = CHUNK_SIZE;
+            var CHUNK_SIZE = CHUNK_SIZE;
+            var CHUNK_SIZE = CHUNK_SIZE;
 
-            var sx = 0.5;
-            var sy = 0.5;
-            var sz = 0.5;
+            var sx = 1.0;
+            var sy = 1.0;
+            var sz = 1.0;
 
 
 
@@ -28,9 +28,9 @@ exports.buildCollesionBoxes = function(chunk) {
 
 
             // Prepare map
-            for (var i = 0; i !== nx; i++) {
-                for (var j = 0; j !== ny; j++) {
-                    for (var k = 0; k !== nz; k++) {
+            for (var i = 0; i !== CHUNK_SIZE; i++) {
+                for (var j = 0; j !== CHUNK_SIZE; j++) {
+                    for (var k = 0; k !== CHUNK_SIZE; k++) {
                         map.push(true);
                         boxified.push(false);
                     }
@@ -41,9 +41,9 @@ exports.buildCollesionBoxes = function(chunk) {
 
 
             //// copy data
-            for (var i = 0; i !== nx; i++) {
-                for (var j = 0; j !== ny; j++) {
-                    for (var k = 0; k !== nz; k++) {
+            for (var i = 0; i !== CHUNK_SIZE; i++) {
+                for (var j = 0; j !== CHUNK_SIZE; j++) {
+                    for (var k = 0; k !== CHUNK_SIZE; k++) {
                         var index = getBoxIndex(i, j, k);
                         map[index] = blocks[index] !== 0;
                     }
@@ -55,13 +55,13 @@ exports.buildCollesionBoxes = function(chunk) {
 
             // User must manually update the map for the first time.
             function contains(xi, yi, zi){
-                return  xi >= 0 && xi < nx &&
-                        yi >= 0 && yi < ny &&
-                        zi >= 0 && zi < nz;
+                return  xi >= 0 && xi < CHUNK_SIZE &&
+                        yi >= 0 && yi < CHUNK_SIZE &&
+                        zi >= 0 && zi < CHUNK_SIZE;
             }
 
             function getBoxIndex(xi, yi, zi) {
-                return xi + nx * yi + nx * ny * zi;
+                return CHUNK_SIZE * CHUNK_SIZE * xi + CHUNK_SIZE * yi + zi;
             }
 
             function setFilled(xi, yi, zi, filled) {
@@ -86,9 +86,9 @@ exports.buildCollesionBoxes = function(chunk) {
                 var box;
 
                 // 1. Get a filled box that we haven't boxified yet
-                for (var i = 0; !box && i < nx; i++) {
-                    for (var j = 0; !box && j < ny; j++) {
-                        for (var k = 0; !box && k < nz; k++) {
+                for (var i = 0; !box && i < CHUNK_SIZE; i++) {
+                    for (var j = 0; !box && j < CHUNK_SIZE; j++) {
+                        for (var k = 0; !box && k < CHUNK_SIZE; k++) {
                             if (isFilled(i, j, k) && ! isBoxified(i, j, k)) {
                                 box = new CANNON.Body({
                                     mass: 0
@@ -112,12 +112,12 @@ exports.buildCollesionBoxes = function(chunk) {
                     var xi = box.xi,
                         yi = box.yi,
                         zi = box.zi;
-                    box.nx = nx, // merge=1 means merge just with the self box
-                        box.ny = ny,
-                        box.nz = nz;
+                    box.nx = CHUNK_SIZE, // merge=1 means merge just with the self box
+                        box.ny = CHUNK_SIZE,
+                        box.nz = CHUNK_SIZE;
 
                     // Merge in x
-                    for (var i = xi; i < nx + 1; i++) {
+                    for (var i = xi; i < CHUNK_SIZE + 1; i++) {
                         if ( ! isFilled(i, yi, zi) || (isBoxified(i, yi, zi) && contains(i, yi, zi))) {
                             // Can't merge this box. Make sure we limit the mergeing
                             box.nx = i - xi;
@@ -125,25 +125,25 @@ exports.buildCollesionBoxes = function(chunk) {
                         }
                     }
 
-                    // Merge in y
+                    // Merge in Z
                     var found = false;
                     for (var i = xi; !found && i < xi + box.nx; i++) {
-                        for (var j = yi; !found && j < ny + 1; j++) {
-                            if (!isFilled(i, j, zi) || (isBoxified(i, j, zi) && contains(i, j, zi))) {
+                        for (var j = zi; !found && j < CHUNK_SIZE + 1; j++) {
+                            if ( ! isFilled(i, yi, j) || (isBoxified(i,yi, j) && contains(i, yi, j))) {
                                 // Can't merge this box. Make sure we limit the mergeing
-                                if (box.ny > j - yi) box.ny = j - yi;
+                                if (box.nz > j - zi) box.nz = j - zi;
                             }
                         }
                     }
 
-                    // Merge in z
+                    // Merge in Y
                     found = false;
                     for (var i = xi; !found && i < xi + box.nx; i++) {
-                        for (var j = yi; !found && j < yi + box.ny; j++) {
-                            for (var k = zi; k < nz + 1; k++) {
-                                if (!isFilled(i, j, k) || (isBoxified(i, j, k) && contains(i, j, k))) {
+                        for (var j = zi; !found && j < zi + box.nz; j++) {
+                            for (var k = yi; k < CHUNK_SIZE + 1; k++) {
+                                if ( ! isFilled(i, k, j) || (isBoxified(i, k, j) && contains(i, k, j))) {
                                     // Can't merge this box. Make sure we limit the mergeing
-                                    if (box.nz > k - zi) box.nz = k - zi;
+                                    if (box.ny > k - yi) box.ny = k - yi;
                                 }
                             }
                         }
@@ -183,6 +183,11 @@ exports.buildCollesionBoxes = function(chunk) {
                     b.yi * sy + b.ny * sy * 0.5,
                     b.zi * sz + b.nz * sz * 0.5
                 );
+
+                b.material = new CANNON.Material({
+                    friction: 0.0,
+                    restitution: 0.0
+                });
 
                 // Replace box shapes
                 b.addShape(new CANNON.Box(new CANNON.Vec3(b.nx * sx * 0.5, b.ny * sy * 0.5, b.nz * sz * 0.5)));

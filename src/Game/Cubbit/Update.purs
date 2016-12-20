@@ -88,14 +88,22 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let gravityAccelerator = if isLanding then 0.0 else options.gravity * deltaTime
 
     let moveVectorLength = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z)
-    let normalizedMoveX = if isLanding then rotatedKeyVector.x / moveVectorLength * speed else playingSceneState.velocity.x
-    let normalizedMoveZ = if isLanding then rotatedKeyVector.z / moveVectorLength * speed else playingSceneState.velocity.z
+
+    --let normalizedMoveX = if isLanding && 0.0 < moveVectorLength then rotatedKeyVector.x / moveVectorLength * speed else playingSceneState.velocity.x
+    --let normalizedMoveZ = if isLanding && 0.0 < moveVectorLength then rotatedKeyVector.z / moveVectorLength * speed else playingSceneState.velocity.z
+    let normalizedMoveX = if 0.0 < moveVectorLength then rotatedKeyVector.x / moveVectorLength * speed else 0.0
+    let normalizedMoveZ = if 0.0 < moveVectorLength then rotatedKeyVector.z / moveVectorLength * speed else 0.0
 
 
-    let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
-    let velocityY = if isLanding && not (member " " state.keys) then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
-    let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
-    let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
+    --let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
+    --let velocityY = if isLanding && not (member " " state.keys) then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
+    --let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
+    -- let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
+    let velocity = {
+                x: normalizedMoveX,
+                y: playingSceneState.velocity.y,
+                z: normalizedMoveZ
+            }
 
     -- playerRotation == 0   =>    -z direction
     let playerRotation' = if isLanding
@@ -123,13 +131,14 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
     blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
 
+{-}
     let position' = case blockMaybe of
                         Just block | isSolidBlock block -> playerPosition {
                             y = Int.toNumber (globalIndex.y) + 1.001
                         }
                         _ -> playerPosition
-
-
+-}
+    let position' = playingSceneState.position
 
 
     footHoldBlockMaybe' <- lookupBlockByVec { x: position'.x, y: position'.y - 0.01, z: position'.z } state.terrain
@@ -144,10 +153,12 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let eyeHeight = options.eyeHeight
 
-    let thirdPersonCameraTargetoffset = 20.0
-    let thirdPersonCameraTargetX = position'.x             + velocityX * thirdPersonCameraTargetoffset
+--    let thirdPersonCameraTargetoffset = 20.0
+    let thirdPersonCameraTargetoffset = 0.0
+
+    let thirdPersonCameraTargetX = position'.x             + velocity.x * thirdPersonCameraTargetoffset
     let thirdPersonCameraTargetY = position'.y + eyeHeight
-    let thirdPersonCameraTargetZ = position'.z             + velocityZ * thirdPersonCameraTargetoffset
+    let thirdPersonCameraTargetZ = position'.z             + velocity.z * thirdPersonCameraTargetoffset
 
     let playerRotationTheta = negate playingSceneState.playerRotation - pi * 0.5
     let firstPersonCameraTargetX = position'.x + cos playerRotationTheta * cos playingSceneState.playerPitch
@@ -169,9 +180,10 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let cameraPositionChunkIndex = globalPositionToChunkIndex cameraPosition.x cameraPosition.y cameraPosition.z
 
     let theta = negate playingSceneState.cameraYaw - pi * 0.5
-    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocityX * thirdPersonCameraTargetoffset
+
+    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.x * thirdPersonCameraTargetoffset
     let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
-    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocityZ * thirdPersonCameraTargetoffset
+    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.z * thirdPersonCameraTargetoffset
 
     let firstPersonCameraPositionX = position'.x
     let firstPersonCameraPositionY = position'.y + eyeHeight
@@ -196,7 +208,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
                 -- position = position',
-                -- velocity = velocity,
+                velocity = velocity,
 
 
 

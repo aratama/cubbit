@@ -60,6 +60,23 @@ exports._createBlockMapJS = function(references) {
                     return Math.floor(r * maxHeight);
                 }
 
+/*
+                if(cx == 0 && cy == 0 && cz == 0){
+                    for (var lz = 0; lz <= chunkSize - 1; lz++) {
+                        for (var lx = 0; lx <= chunkSize - 1; lx++) {
+                            var h = lx < 4 ? 4 : 5;
+                            for (var ly = 0; ly < h; ly++) {
+                                put(lx, ly, lz, grassBlock);
+                            }
+                        }
+                    }
+                    return stmap;
+                }
+*/
+
+
+
+
                 // terrain
                 for (var lz = 0; lz <= chunkSize - 1; lz++) {
                     for (var lx = 0; lx <= chunkSize - 1; lx++) {
