@@ -1,6 +1,9 @@
-module Game.Cubbit.Collesion where
+module Game.Cubbit.Collesion (BodyTag, buildCollesionBoxes) where
 
 import Control.Monad.Eff (Eff)
+import Game.Cubbit.Chunk (ChunkWithMesh)
+import Game.Cubbit.Terrain (Terrain(..))
+import Graphics.Cannon.Type (Body, CANNON, World)
 import Prelude ((<=), (&&), (-), (+), pure, bind)
 
 newtype AABB = AABB {
@@ -26,3 +29,6 @@ move aabb dx dy dz map = do
   where
     move' a dx' dy' dz' = pure a
 
+type BodyTag = String
+
+foreign import buildCollesionBoxes :: forall eff. ChunkWithMesh -> World BodyTag -> Eff (cannon :: CANNON | eff) (Array (Body BodyTag))

@@ -192,8 +192,14 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                 cameraYaw = playingSceneState.cameraYaw + ((if member "q" state.keys then 1.0 else 0.0) - (if member "e" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed,
                 cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if member "r" state.keys then 1.0 else 0.0) - (if member "f" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed)),
                 cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if member "g" state.keys then 1.0 else 0.0) - (if member "t" state.keys then 1.0 else 0.0)) * options.cameraZoomSpeed)),
-                position = position',
-                velocity = velocity,
+
+
+
+                -- position = position',
+                -- velocity = velocity,
+
+
+
                 playerRotation = playerRotation',
                 animation = animation',
                 landing = max 0 (landingCount - 1)

@@ -17,6 +17,7 @@ import Data.Set (empty)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.Collesion (buildCollesionBoxes)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
@@ -26,14 +27,14 @@ import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
-import Game.Cubbit.Terrain (createTerrain)
-import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(TitleSceneState), State(State))
+import Game.Cubbit.Terrain (createTerrain, lookupChunk)
+import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update)
 import Graphics.Babylon.Engine (runRenderLoop, resize)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
-import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addBody, step) as CANNON
+import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody, step, setTag, getTag, getPosition, setPosition, runVec3, setGravity) as CANNON
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (<>))
@@ -44,7 +45,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
     Just canvasGL -> runHalogenAff do
 
         -- NOTE: have to do awaitBody before getting options
-        body <- awaitBody
+        bodyElement <- awaitBody
 
         -- config
         Config config <- liftEff $ readConfig
@@ -75,7 +76,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         ref <- liftEff $ newRef $ State initialState
 
         -- initialize ui
-        driver <- initializeHud (State initialState) ref body
+        driver <- initializeHud (State initialState) ref bodyElement
 
         -- load resources
         incref <- liftEff $ newRef 0
@@ -103,6 +104,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
         liftEff do
 
+
+
+
+
+
             -- load initial chunks
             do
                 let initialWorldSize = options.initialWorldSize
@@ -110,6 +116,42 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                     forE (-initialWorldSize) initialWorldSize \z -> void do
                         let index = chunkIndex x 0 z
                         generateChunk ref materials scene index (Options options) (Config config)
+
+
+
+            ----------------------------------------------------------------------------------
+            ----------------------------------------------------------------------------------
+            --------------------------------------------------------------------------------
+            -- test collesion
+            -- cannon
+            world <- CANNON.createWorld
+            gravity <- CANNON.createVec3 0.0 (-3.8) 0.0
+            CANNON.setGravity gravity world
+
+            playerBox <- do
+                size <- CANNON.createVec3 0.5 0.5 0.5
+                shape <- CANNON.createBox size
+                pos <- CANNON.createVec3 5.5 17.0 5.5
+                body <- CANNON.createBody CANNON.defaultBodyProps {
+                    mass = 1.0
+                }
+                CANNON.addShape shape Nothing Nothing body 
+                CANNON.setPosition pos body
+                CANNON.setTag (Just "player") body
+                CANNON.addBody body world
+                pure body
+
+            centerChunkMaybe <- lookupChunk (chunkIndex 0 0 0) initialState.terrain
+            case centerChunkMaybe of
+                Nothing -> pure unit
+                Just chunk -> do
+                    cannonBodies <- buildCollesionBoxes chunk world
+                    pure unit
+
+            ----------------------------------------------------------------
+            ------------------------------------------------------------------------
+            ---------------------------------------------------------------------------
+
 
             -- focus
             focus "content"
@@ -120,12 +162,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
             play sounds.cleaning
 
-            -- cannon
-            world <- CANNON.createWorld
-            boxSize <- CANNON.createVec3 0.5 0.5 0.5
-            boxShape <- CANNON.createBox boxSize
-            boxBody <- CANNON.createBody CANNON.defaultBodyProps
-            CANNON.addBody boxBody world
+
 
             -- resize
             win <- window
@@ -139,3 +176,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 render scene
 
                 CANNON.step (1.0 / 60.0) 0.0 10 world
+                pos <- CANNON.getPosition playerBox >>= CANNON.runVec3
+                modifyRef ref \(State state) -> State state {
+                    sceneState = case state.sceneState of
+                        TitleSceneState t -> TitleSceneState t
+                        PlayingSceneState p -> PlayingSceneState p {
+                            position = pos
+                        }
+                }
