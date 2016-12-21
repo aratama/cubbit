@@ -1,24 +1,22 @@
-module Game.Cubbit.Update (update) where
+module Game.Cubbit.Update (update, updateBabylon) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
-import Control.Monad.Eff.Console (logShow)
-import Control.Monad.Eff.Ref (Ref, modifyRef, newRef, readRef, writeRef)
+import Control.Monad.Eff.Ref (Ref)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take, any)
-import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
 import Data.Nullable (Nullable, toNullable)
 import Data.Ord (min, max)
+import Data.Set (member)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
-import Data.Set (member)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
@@ -33,7 +31,6 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..), PlayingSceneState, ResourceProgress(..))
-import Game.Cubbit.Vec (vec, vecAdd, vecZero)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -46,7 +43,7 @@ import Graphics.Babylon.Scene (pickWithRay)
 import Graphics.Babylon.ShadowGenerator (setRenderList)
 import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
-import Graphics.Babylon.Types (Engine, Mesh, Scene, ShadowMap, TargetCamera)
+import Graphics.Babylon.Types (BABYLON, Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
@@ -92,16 +89,9 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let moveVectorLength = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z)
 
-    --let normalizedMoveX = if isLanding && 0.0 < moveVectorLength then rotatedKeyVector.x / moveVectorLength * speed else playingSceneState.velocity.x
-    --let normalizedMoveZ = if isLanding && 0.0 < moveVectorLength then rotatedKeyVector.z / moveVectorLength * speed else playingSceneState.velocity.z
     let normalizedMoveX = if 0.0 < moveVectorLength then rotatedKeyVector.x / moveVectorLength * speed else 0.0
     let normalizedMoveZ = if 0.0 < moveVectorLength then rotatedKeyVector.z / moveVectorLength * speed else 0.0
 
-
-    --let velocityX = if isLanding then (if stopped then playingSceneState.velocity.x * 0.5 else normalizedMoveX) else playingSceneState.velocity.x
-    --let velocityY = if isLanding && not (member " " state.keys) then 0.0 else playingSceneState.velocity.y + jumpVelocity + gravityAccelerator
-    --let velocityZ = if isLanding then (if stopped then playingSceneState.velocity.z * 0.5 else normalizedMoveZ) else playingSceneState.velocity.z
-    -- let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
     let velocity = {
                 x: normalizedMoveX,
                 y: playingSceneState.velocity.y + jumpVelocity,
@@ -134,13 +124,6 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
     blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
 
-{-}
-    let position' = case blockMaybe of
-                        Just block | isSolidBlock block -> playerPosition {
-                            y = Int.toNumber (globalIndex.y) + 1.001
-                        }
-                        _ -> playerPosition
--}
     let position' = playingSceneState.position
 
 
@@ -156,8 +139,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let eyeHeight = options.eyeHeight
 
---    let thirdPersonCameraTargetoffset = 20.0
-    let thirdPersonCameraTargetoffset = 0.0
+    let thirdPersonCameraTargetoffset = 2.0
 
     let thirdPersonCameraTargetX = position'.x             + velocity.x * thirdPersonCameraTargetoffset
     let thirdPersonCameraTargetY = position'.y + eyeHeight
@@ -208,12 +190,8 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                 cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if member "r" state.keys then 1.0 else 0.0) - (if member "f" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed)),
                 cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if member "g" state.keys then 1.0 else 0.0) - (if member "t" state.keys then 1.0 else 0.0)) * options.cameraZoomSpeed)),
 
-
-
                 -- position = position',
                 velocity = velocity,
-
-
 
                 playerRotation = playerRotation',
                 animation = animation',
@@ -234,22 +212,15 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     pure (Tuple (State state') sceneState)
 
 update :: forall eff. Ref State
-                   -> Engine
+                   -> State
+                   -> Number
                    -> Scene
-                   -> Materials
                    -> Sounds
-                   -> ShadowMap
                    -> Mesh
-                   -> TargetCamera
                    -> Options
-                   -> Mesh
                    -> HalogenIO Query Void (Aff (Effects eff))
-                   -> Eff (Effects eff) Unit
-update ref engine scene materials sounds shadowMap cursor camera (Options options) skybox driver = do
-
-        State state@{ terrain: Terrain terrain } <- readRef ref
-
-        deltaTime <- getDeltaTime engine
+                   -> Eff (Effects eff) State
+update ref (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cursor options driver = do
 
         let playerMeshes = case state.res of
                 Loading _ -> []
@@ -269,7 +240,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
             PlayingSceneState playingSceneState -> do
 
-                Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
+                Tuple (State state') playingSceneState' <- pure $ calcurateNextState options deltaTime (State state) playingSceneState
 
                 when (playingSceneState'.animation /= playingSceneState.animation) do
                     playAnimation playingSceneState'.animation playerMeshes
@@ -314,16 +285,44 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                 pure (State state')
 
-        writeRef ref (State state')
+        --writeRef ref (State state')
+
+
+        pure (State state')
+
+
+
+
+updateBabylon :: forall eff. State
+                   -> Engine
+                   -> Scene
+                   -> Materials
+                   -> Sounds
+                   -> ShadowMap
+                   -> Mesh
+                   -> TargetCamera
+                   -> Options
+                   -> Mesh
+                   -> HalogenIO Query Void (Aff (babylon :: BABYLON | eff))
+                   -> Eff (babylon :: BABYLON | eff)  State
+updateBabylon (State state@{ terrain: Terrain terrain }) engine scene materials sounds shadowMap cursor camera (Options options) skybox driver = do
+
+        Config config <- pure state.config
+
+        deltaTime <- getDeltaTime engine
+
+        let playerMeshes = case state.res of
+                Loading _ -> []
+                Complete res -> res.playerMeshes
 
         -- update camera
-        let cameraPosition = state'.cameraPosition
-        let cameraPositionChunkIndex = globalPositionToChunkIndex state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
+        let cameraPosition = state.cameraPosition
+        let cameraPositionChunkIndex = globalPositionToChunkIndex state.cameraPosition.x state.cameraPosition.y state.cameraPosition.z
 
-        cameraPositionVector <- createVector3 state'.cameraPosition.x state'.cameraPosition.y state'.cameraPosition.z
-        cameraTargetVector <- createVector3 state'.cameraTarget.x state'.cameraTarget.y state'.cameraTarget.z
+        cameraPositionVector <- createVector3 state.cameraPosition.x state.cameraPosition.y state.cameraPosition.z
+        cameraTargetVector <- createVector3 state.cameraTarget.x state.cameraTarget.y state.cameraTarget.z
 
-        cameraPositionBlockMaybe <- lookupBlockByVec cameraPosition state'.terrain
+        cameraPositionBlockMaybe <- lookupBlockByVec cameraPosition state.terrain
         cameraPosition''  <- case cameraPositionBlockMaybe of
 
             Just block | isSolidBlock block -> do
@@ -347,14 +346,12 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
         Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
         setTarget cameraTargetVector camera
 
-        skyboxRotationVector <- createVector3 0.0 state'.skyboxRotation 0.0
+        skyboxRotationVector <- createVector3 0.0 state.skyboxRotation 0.0
         setRotation skyboxRotationVector (meshToAbstractMesh skybox)
 
 
         -- load chunks
-        do
-            let costLimit = 100
-            costRef <- newRef 0
+        nextState <- do
 
             let ci = runChunkIndex cameraPositionChunkIndex
 
@@ -362,13 +359,12 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
 
                     -- let ci = runChunkIndex index
 
-                    generateChunk ref materials scene index (Options options) state.config
+                    generateChunk (State state) materials scene index (Options options) state.config
 
                     --State st <- readRef ref
                     --size <- chunkCount st.terrain
                     --log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
                     --log $ "total chunks:" <> show (size + 1)
-
 
             let loadDistance = 3 + config.chunkArea
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
@@ -386,10 +382,10 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                         loadAndGenerateChunk index
                         pure 100
 
-
-            modifyRef ref \(State st) -> State st {
+            pure $ State state {
                 updateIndex = toNullable (Just nextIndex)
             }
+
 
         -- unload chunks
         do
@@ -422,7 +418,7 @@ update ref engine scene materials sounds shadowMap cursor camera (Options option
                 setRenderList [] shadowMap
 
 
-
+        pure nextState
 
 
 

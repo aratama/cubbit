@@ -54,9 +54,8 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
-generateChunk :: forall eff. Ref State -> Materials -> Scene -> ChunkIndex -> Options -> Config -> Eff (ref :: REF, babylon :: BABYLON | eff) Boolean
-generateChunk ref materials scene index (Options options) (Config config) = do
-    State state@{ terrain: Terrain terrain } <- readRef ref
+generateChunk :: forall eff. State -> Materials -> Scene -> ChunkIndex -> Options -> Config -> Eff (babylon :: BABYLON | eff) Boolean
+generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (Options options) (Config config) = do
     case state.res of
         Loading _ -> pure false
         Complete res -> do
@@ -108,7 +107,7 @@ generateChunk ref materials scene index (Options options) (Config config) = do
 
                     let gen vertices mat gruop = if 0 < length vertices.indices
                             then do
-                                mesh <- generateMesh index (VertexDataProps vertices) mat scene (Options options) (Config config)
+                                mesh <- generateMesh index (VertexDataProps vertices) mat scene (Config config)
                                 setRenderingGroupId gruop (meshToAbstractMesh mesh)
                                 pure (MeshLoaded mesh)
                             else do
@@ -134,14 +133,14 @@ generateChunk ref materials scene index (Options options) (Config config) = do
 
                     pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
 
-generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Options -> Config -> Eff (babylon :: BABYLON | eff) Mesh
-generateMesh index verts mat scene (Options options) (Config config) = do
+generateMesh :: forall eff. ChunkIndex -> VertexDataProps -> Material -> Scene -> Config -> Eff (babylon :: BABYLON | eff) Mesh
+generateMesh index verts mat scene (Config config) = do
     let rci = runChunkIndex index
     let cx = rci.x
     let cy = rci.y
     let cz = rci.z
     terrainMesh <- createMesh "terrain" scene
-    applyToMesh terrainMesh false =<< createVertexData (verts)
+    applyToMesh terrainMesh false =<< createVertexData verts
     setRenderingGroupId terrainRenderingGroup (meshToAbstractMesh terrainMesh)
     setReceiveShadows config.shadow (meshToAbstractMesh terrainMesh)
     setUseVertexColors config.vertexColor (meshToAbstractMesh terrainMesh)
@@ -197,9 +196,9 @@ updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config conf
         Nothing -> pure unit
         Just chunkData -> disposeChunk chunkData
 
-    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.blockMaterial scene (Options options) (Config config)
-    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterMaterial scene (Options options) (Config config)
-    transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene (Options options) (Config config)
+    standardMaterialMesh <- generateMesh index verts.standardMaterialBlocks materials.blockMaterial scene (Config config)
+    waterMaterialMesh <- generateMesh index verts.waterMaterialBlocks materials.waterMaterial scene (Config config)
+    transparentMaterialMesh <- generateMesh index verts.transparentMaterialVertexData materials.bushMaterial scene (Config config)
 
     let ci = runChunkIndex index
     mesh <- pure {
