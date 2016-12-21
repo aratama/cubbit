@@ -214,15 +214,15 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
 
-update :: forall eff. State
-                   -> Number
+update :: forall eff. Number
                    -> Scene
                    -> Sounds
                    -> Mesh
                    -> Options
                    -> HalogenIO Query Void (Aff (Effects eff))
+                   -> State
                    -> Eff (Effects eff) State
-update (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cursor options driver = do
+update deltaTime scene sounds cursor options driver (State state@{ terrain: Terrain terrain }) = do
 
         let playerMeshes = case state.res of
                 Loading _ -> []
@@ -290,8 +290,7 @@ update (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cursor 
 
 
 
-updateBabylon :: forall eff. State
-                   -> Engine
+updateBabylon :: forall eff. Number
                    -> Scene
                    -> Materials
                    -> Sounds
@@ -301,12 +300,11 @@ updateBabylon :: forall eff. State
                    -> Options
                    -> Mesh
                    -> HalogenIO Query Void (Aff (babylon :: BABYLON | eff))
+                   -> State
                    -> Eff (babylon :: BABYLON | eff)  State
-updateBabylon (State state@{ terrain: Terrain terrain }) engine scene materials sounds shadowMap cursor camera (Options options) skybox driver = do
+updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options options) skybox driver (State state@{ terrain: Terrain terrain }) = do
 
         Config config <- pure state.config
-
-        deltaTime <- getDeltaTime engine
 
         let playerMeshes = case state.res of
                 Loading _ -> []

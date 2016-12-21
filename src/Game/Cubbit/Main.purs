@@ -17,7 +17,7 @@ import Data.Set (empty)
 import Data.Show (show)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
-import Game.Cubbit.Collesion (buildCollesionBoxes)
+import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
@@ -27,7 +27,7 @@ import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
-import Game.Cubbit.Terrain (Terrain(..), createTerrain, lookupChunk)
+import Game.Cubbit.Terrain (Terrain, createTerrain, lookupChunk)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
@@ -35,12 +35,12 @@ import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Util (querySelectorCanvas)
-import Graphics.Cannon (World)
-import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody, step, setTag, getTag, getPosition, setPosition, runVec3, setGravity, setVelocity, getVelocity, createMaterial, setFixedRotation, updateMassProperties, createSphere) as CANNON
+import Graphics.Cannon (World, addBody, createVec3, createWorld, setGravity)
 import Graphics.Cannon.Type (CANNON)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (-), (<>))
+import Prelude (negate, void, (#), ($), (+), (/), (<$>), (<>), (>>=))
+
 
 main :: forall eff. Eff (Effects eff) Unit
 main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
@@ -106,13 +106,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
 
         liftEff do
-
-
-
-
-
-
-            -- load initial chunks
+            -- load initial chunks --
             do
                 let initialWorldSize = options.initialWorldSize
                 forE (-initialWorldSize) initialWorldSize \x -> do
@@ -122,43 +116,13 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         generateChunk (State state) materials scene index (Options options) (Config config)
 
 
+            -- cannon --
+            world <- createWorld
+            gravity <- createVec3 0.0 options.gravity 0.0
+            setGravity gravity world
 
-            ----------------------------------------------------------------------------------
-            ----------------------------------------------------------------------------------
-            --------------------------------------------------------------------------------
-            -- test collesion
-            -- cannon
-            world <- CANNON.createWorld
-            gravity <- CANNON.createVec3 0.0 options.gravity 0.0
-            CANNON.setGravity gravity world
-
-            playerBox <- do
-                size <- CANNON.createVec3 0.5 0.5 0.5
-                pos <- CANNON.createVec3 2.5 17.0 2.5
-                mat <- CANNON.createMaterial {
-                    friction: 0.0000,
-                    restitution: 0.0
-                }
-
-                body <- CANNON.createBody CANNON.defaultBodyProps {
-                    mass = 1.0,
-                    material = mat
-                }
-
-                upper <- CANNON.createSphere 0.4
-                upperOffset <- CANNON.createVec3 0.0 (1.2) 0.0
-                CANNON.addShape upper (Just upperOffset) Nothing body
-                lower <- CANNON.createSphere 0.4
-                lowerOffset <- CANNON.createVec3 0.0 (0.4) 0.0
-                CANNON.addShape lower (Just lowerOffset) Nothing body
-
-                CANNON.setPosition pos body
-                CANNON.setTag (Just "player") body
-                CANNON.setFixedRotation true body
-                CANNON.updateMassProperties body
-                CANNON.addBody body world
-                pure body
-
+            playerBox <- createPlayerCollesion
+            addBody playerBox world
 
             forE (-1) 2 \x -> do
                 forE (-1) 2 \z -> void do
@@ -169,11 +133,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                             cannonBodies <- buildCollesionBoxes chunk world
                             pure unit
 
-            ----------------------------------------------------------------
-            ------------------------------------------------------------------------
-            ---------------------------------------------------------------------------
-
-
             -- focus
             focus "content"
 
@@ -182,8 +141,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setBGMVolume (toNumber config.bgmVolume / toNumber sliderMaxValue) sounds
             setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
             play sounds.cleaning
-
-
 
             -- resize
             win <- window
@@ -194,45 +151,17 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             -- start game loop
             engine # runRenderLoop do
                 deltaTime <- getDeltaTime engine
-                State state <- readRef ref
-                State state' <- update (State state) deltaTime scene sounds cursor (Options options) driver
-                State state'' <- updateBabylon (State state') engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
-                writeRef ref (State state'')
+                readRef ref >>=
+                    update deltaTime scene sounds cursor (Options options) driver >>=
+                        updateBabylon deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
+                            updatePhysics deltaTime playerBox world >>=
+                                writeRef ref
+
                 render scene
 
-                deltaTimeInMilliseconds <- getDeltaTime engine
-
-                State state <- readRef ref
-                case state.sceneState of
-                    TitleSceneState t -> pure unit
-                    PlayingSceneState p -> do
-
-                        log ("py: " <> show p.position.y)
-                        log ("vy: " <> show p.velocity.y)
-
-                        -- apply state to cannon world
-                        pos <- CANNON.createVec3 p.position.x p.position.y p.position.z
-                        CANNON.setPosition pos playerBox
-                        velocity <- CANNON.createVec3 p.velocity.x p.velocity.y p.velocity.z
-                        CANNON.setVelocity velocity playerBox
-
-                        -- step the world
-                        CANNON.step (1.0 / 60.0) (1000.0 / deltaTimeInMilliseconds) 10 world
-
-                        -- read stepped world state
-                        pos <- CANNON.getPosition playerBox >>= CANNON.runVec3
-                        vel <- CANNON.getVelocity playerBox >>= CANNON.runVec3
-                        modifyRef ref \(State state) -> State state {
-                            sceneState = PlayingSceneState p {
-                                position = { x: pos.x, y: pos.y, z: pos.z },
-                                velocity = vel
-                            }
-                        }
 
 
-
-
-buildCollesionBodies :: forall a eff. World String -> Terrain -> Int -> Int -> Int -> Eff (cannon :: CANNON, babylon :: BABYLON | eff) Unit
+buildCollesionBodies :: forall eff. World String -> Terrain -> Int -> Int -> Int -> Eff (cannon :: CANNON, babylon :: BABYLON | eff) Unit
 buildCollesionBodies world terrain x y z = do
     centerChunkMaybe <- lookupChunk (chunkIndex x y z) terrain
     case centerChunkMaybe of
