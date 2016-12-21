@@ -4,17 +4,15 @@ import Control.Alt (void)
 import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Console (error)
-import Control.Monad.Eff.Ref (REF, Ref, readRef)
-import DOM (DOM)
+import Control.Monad.Eff.Console (CONSOLE, error)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(..), isNothing)
 import Data.Ord (abs, min)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, runBlockIndex)
-import Game.Cubbit.Terrain (Terrain(..), globalPositionToGlobalIndex, lookupSolidBlockByVec)
-import Game.Cubbit.Types (Effects, Mode(Move, Remove, Put), State(State), PlayingSceneState)
+import Game.Cubbit.Terrain (Terrain, globalPositionToGlobalIndex, lookupSolidBlockByVec)
+import Game.Cubbit.Types (Mode(Move, Remove, Put))
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, getSkeleton)
 import Graphics.Babylon.Mesh (setPosition)
 import Graphics.Babylon.Node (getName)
@@ -26,7 +24,7 @@ import Graphics.Babylon.Vector3 (createVector3, runVector3)
 import Math (round)
 import Prelude (($), (+), (-), (/=), (<>), (==))
 
-playAnimation :: forall eff. String -> Array AbstractMesh -> Eff (Effects eff) Unit
+playAnimation :: forall eff. String -> Array AbstractMesh -> Eff (babylon :: BABYLON, console :: CONSOLE | eff) Unit
 playAnimation name playerMeshes = do
     for_ playerMeshes \mesh -> void do
         skeletonMaybe <- getSkeleton mesh
@@ -37,7 +35,7 @@ playAnimation name playerMeshes = do
                 when (isNothing animatable) do
                     error ("playAnimation: animation named \"" <> name <> "\" not found.")
 
-pickBlock :: forall e. Scene -> Mesh -> Mode -> Terrain -> Int -> Int -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | e) (Maybe BlockIndex)
+pickBlock :: forall e. Scene -> Mesh -> Mode -> Terrain -> Int -> Int -> Eff (babylon :: BABYLON | e) (Maybe BlockIndex)
 pickBlock scene cursor mode terrain  screenX screenY = do
     let predicate mesh = do
             let name = getName (abstractMeshToNode mesh)

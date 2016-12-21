@@ -195,8 +195,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             engine # runRenderLoop do
                 deltaTime <- getDeltaTime engine
                 State state <- readRef ref
-                State state' <- update ref (State state) deltaTime scene sounds cursor (Options options) driver
-                writeRef ref (State state')
+                State state' <- update (State state) deltaTime scene sounds cursor (Options options) driver
                 State state'' <- updateBabylon (State state') engine scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver
                 writeRef ref (State state'')
                 render scene

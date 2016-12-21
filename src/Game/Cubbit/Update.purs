@@ -5,7 +5,6 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
-import Control.Monad.Eff.Ref (Ref)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take, any)
 import Data.Foldable (for_)
@@ -211,8 +210,11 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     pure (Tuple (State state') sceneState)
 
-update :: forall eff. Ref State
-                   -> State
+
+
+
+
+update :: forall eff. State
                    -> Number
                    -> Scene
                    -> Sounds
@@ -220,13 +222,13 @@ update :: forall eff. Ref State
                    -> Options
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> Eff (Effects eff) State
-update ref (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cursor options driver = do
+update (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cursor options driver = do
 
         let playerMeshes = case state.res of
                 Loading _ -> []
                 Complete res -> res.playerMeshes
 
-        State state'@{ config: Config config } <- case state.sceneState of
+        case state.sceneState of
 
             TitleSceneState titleSceneState -> do
                 let state' = state {
@@ -284,11 +286,6 @@ update ref (State state@{ terrain: Terrain terrain }) deltaTime scene sounds cur
                             else pure unit
 
                 pure (State state')
-
-        --writeRef ref (State state')
-
-
-        pure (State state')
 
 
 
@@ -355,16 +352,7 @@ updateBabylon (State state@{ terrain: Terrain terrain }) engine scene materials 
 
             let ci = runChunkIndex cameraPositionChunkIndex
 
-            let loadAndGenerateChunk index = do
-
-                    -- let ci = runChunkIndex index
-
-                    generateChunk (State state) materials scene index (Options options) state.config
-
-                    --State st <- readRef ref
-                    --size <- chunkCount st.terrain
-                    --log $ "load chunk: " <> show ci.x <> "," <> show ci.y <> ", " <> show ci.z
-                    --log $ "total chunks:" <> show (size + 1)
+            let loadAndGenerateChunk index = generateChunk (State state) materials scene index (Options options) state.config
 
             let loadDistance = 3 + config.chunkArea
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
