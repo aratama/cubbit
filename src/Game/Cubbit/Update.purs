@@ -52,6 +52,9 @@ import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
 
+epsiron :: Number
+epsiron = 0.1
+
 calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Tuple State PlayingSceneState
 calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState = runPure do
 
@@ -72,7 +75,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let stopped = rotatedKeyVector.x == 0.0 && rotatedKeyVector.z == 0.0
 
     let position = playingSceneState.position
-    footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - 0.01, z: position.z } state.terrain
+    footHoldBlockMaybe <- lookupBlockByVec { x: position.x, y: position.y - epsiron, z: position.z } state.terrain
 
     let isLanding = case footHoldBlockMaybe of
             Just block | isSolidBlock block -> true
@@ -101,7 +104,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     -- let velocity = if 0 < playingSceneState.landing then vecZero else vec velocityX velocityY velocityZ
     let velocity = {
                 x: normalizedMoveX,
-                y: playingSceneState.velocity.y,
+                y: playingSceneState.velocity.y + jumpVelocity,
                 z: normalizedMoveZ
             }
 

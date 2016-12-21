@@ -8,7 +8,7 @@
     "skyboxRotationSpeed": 0.00002,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
-    "jumpVelocity": 0.008,
+    "jumpVelocity": 8,
     "initialWorldSize": 3,
     "moveSpeed": 10.004,
     "cameraTargetSpeed": 0.1,

@@ -179,9 +179,9 @@ exports.buildCollesionBoxes = function(chunk) {
             for (var i = 0; i < boxes.length; i++) {
                 var b = boxes[i];
                 b.position.set(
-                    b.xi * sx + b.nx * sx * 0.5,
-                    b.yi * sy + b.ny * sy * 0.5,
-                    b.zi * sz + b.nz * sz * 0.5
+                    CHUNK_SIZE * chunk.x + b.xi * sx + b.nx * sx * 0.5,
+                    CHUNK_SIZE * chunk.y + b.yi * sy + b.ny * sy * 0.5,
+                    CHUNK_SIZE * chunk.z + b.zi * sz + b.nz * sz * 0.5
                 );
 
                 b.material = new CANNON.Material({

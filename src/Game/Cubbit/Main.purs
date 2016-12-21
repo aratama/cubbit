@@ -34,7 +34,10 @@ import Graphics.Babylon.Engine (runRenderLoop, resize)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
-import Graphics.Cannon (createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody, step, setTag, getTag, getPosition, setPosition, runVec3, setGravity, setVelocity, getVelocity, createMaterial, setFixedRotation, updateMassProperties) as CANNON
+import Graphics.Cannon (
+    createWorld, createBox, createVec3, defaultBodyProps, createBody, addShape, addBody,
+    step, setTag, getTag, getPosition, setPosition, runVec3, setGravity, setVelocity,
+    getVelocity, createMaterial, setFixedRotation, updateMassProperties, createSphere) as CANNON
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Prelude (negate, void, (#), ($), (/), (<$>), (>>=), (+), (-), (<>))
@@ -130,17 +133,24 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             playerBox <- do
                 size <- CANNON.createVec3 0.5 0.5 0.5
-                shape <- CANNON.createBox size
                 pos <- CANNON.createVec3 2.5 17.0 2.5
                 mat <- CANNON.createMaterial {
                     friction: 0.0000,
                     restitution: 0.0
                 }
+
                 body <- CANNON.createBody CANNON.defaultBodyProps {
                     mass = 1.0,
                     material = mat
                 }
-                CANNON.addShape shape Nothing Nothing body
+
+                upper <- CANNON.createSphere 0.4
+                upperOffset <- CANNON.createVec3 0.0 (1.2) 0.0
+                CANNON.addShape upper (Just upperOffset) Nothing body
+                lower <- CANNON.createSphere 0.4
+                lowerOffset <- CANNON.createVec3 0.0 (0.4) 0.0
+                CANNON.addShape lower (Just lowerOffset) Nothing body
+
                 CANNON.setPosition pos body
                 CANNON.setTag (Just "player") body
                 CANNON.setFixedRotation true body
@@ -148,12 +158,15 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 CANNON.addBody body world
                 pure body
 
-            centerChunkMaybe <- lookupChunk (chunkIndex 0 0 0) initialState.terrain
-            case centerChunkMaybe of
-                Nothing -> pure unit
-                Just chunk -> do
-                    cannonBodies <- buildCollesionBoxes chunk world
-                    pure unit
+
+            forE (-1) 2 \x -> do
+                forE (-1) 2 \z -> void do
+                    centerChunkMaybe <- lookupChunk (chunkIndex x 0 z) initialState.terrain
+                    case centerChunkMaybe of
+                        Nothing -> pure unit
+                        Just chunk -> do
+                            cannonBodies <- buildCollesionBoxes chunk world
+                            pure unit
 
             ----------------------------------------------------------------
             ------------------------------------------------------------------------
@@ -190,18 +203,21 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         log ("py: " <> show p.position.y)
                         log ("vy: " <> show p.velocity.y)
 
-                        v <- CANNON.getVelocity playerBox >>= CANNON.runVec3
-                        velocity <- CANNON.createVec3 p.velocity.x v.y p.velocity.z
+                        -- apply state to cannon world
+                        pos <- CANNON.createVec3 p.position.x p.position.y p.position.z
+                        CANNON.setPosition pos playerBox
+                        velocity <- CANNON.createVec3 p.velocity.x p.velocity.y p.velocity.z
                         CANNON.setVelocity velocity playerBox
 
-
+                        -- step the world
                         CANNON.step (1.0 / 60.0) 0.0 10 world
 
+                        -- read stepped world state
                         pos <- CANNON.getPosition playerBox >>= CANNON.runVec3
                         vel <- CANNON.getVelocity playerBox >>= CANNON.runVec3
                         modifyRef ref \(State state) -> State state {
                             sceneState = PlayingSceneState p {
-                                position = { x: pos.x, y: pos.y - 0.5, z: pos.z },
+                                position = { x: pos.x, y: pos.y, z: pos.z },
                                 velocity = vel
                             }
                         }
