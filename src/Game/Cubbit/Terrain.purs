@@ -8,6 +8,7 @@ import Control.Bind (bind, pure)
 import Control.Monad.Eff (Eff)
 import Data.EuclideanRing (mod)
 import Data.Int (floor, toNumber)
+import Data.Map (Map, empty)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
@@ -19,12 +20,14 @@ import Game.Cubbit.ChunkMap (ChunkMap, createChunkMap, insert, lookup, size)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
 import Game.Cubbit.Vec (Vec)
+import Graphics.Cannon.Type (Body)
 import PerlinNoise (Noise, createNoise)
 import Prelude ((*), (+), (-), (/), (==), (/=), (&&))
 
 newtype Terrain = Terrain {
     map :: ChunkMap,
-    noise :: Noise
+    noise :: Noise,
+    bodies :: Map ChunkIndex (Array (Body String))
 }
 
 getChunkMap :: Terrain -> ChunkMap
@@ -33,7 +36,7 @@ getChunkMap (Terrain t) = t.map
 createTerrain :: forall eff. Int -> Eff eff Terrain
 createTerrain seed = do
     map <- createChunkMap
-    pure (Terrain { map, noise: createNoise seed })
+    pure (Terrain { map, noise: createNoise seed, bodies: empty })
 
 chunkCount :: forall eff. Terrain -> Eff eff Int
 chunkCount (Terrain t) = size t.map

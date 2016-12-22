@@ -1,16 +1,16 @@
 "use strict";
 
-exports._createBlockMapJS = function(references) {
+exports._createBlockMapJS = function(imports) {
     return function(noise) {
         return function(index) {
 
-            var chunkSize = references.chunkSize;
-            var terrainScale = references.terrainScale;
-            var waterBlockHeight = references.waterBlockHeight;
-            var maxHeight = references.maxHeight;
-            var simplex2 = references.simplex2;
-            var blockTypes = references.blockTypes;
-            var runChunkIndex = references.runChunkIndex;
+            var chunkSize = imports.chunkSize;
+            var terrainScale = imports.terrainScale;
+            var waterBlockHeight = imports.waterBlockHeight;
+            var maxHeight = imports.maxHeight;
+            var simplex2 = imports.simplex2;
+            var blockTypes = imports.blockTypes;
+            var runChunkIndex = imports.runChunkIndex;
 
             var airBlock = blockTypes.airBlock;
             var grassBlock = blockTypes.grassBlock;

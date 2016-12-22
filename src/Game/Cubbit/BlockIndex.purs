@@ -3,9 +3,11 @@ module Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex, eqBlockInd
 import Control.Alternative (pure)
 import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Class (class AsForeign, class IsForeign)
+import Data.Ord (class Ord, compare)
+import Data.Ordering (Ordering)
 import Prelude (class Eq, class Show)
 
-foreign import data BlockIndex :: *
+newtype BlockIndex = BlockIndex Int
 
 foreign import blockIndex :: Int -> Int -> Int -> BlockIndex
 
@@ -26,4 +28,7 @@ instance eq_BlockIndex :: Eq BlockIndex where
 
 instance show_BlockIndex :: Show BlockIndex where
     show = showBlockIndex
+
+instance ordBlockIndex :: Ord BlockIndex where
+    compare (BlockIndex a) (BlockIndex b) = compare a b
 

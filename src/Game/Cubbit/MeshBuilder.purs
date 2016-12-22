@@ -79,9 +79,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
 
                                     standardMaterialMesh: MeshNotLoaded,
                                     waterMaterialMesh: MeshNotLoaded,
-                                    transparentMaterialMesh: MeshNotLoaded,
-
-                                    bodies: Nothing
+                                    transparentMaterialMesh: MeshNotLoaded
                                 } state.terrain
                                 pure true
 
@@ -126,9 +124,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
 
                         standardMaterialMesh,
                         waterMaterialMesh,
-                        transparentMaterialMesh,
-
-                        bodies: Nothing
+                        transparentMaterialMesh
                     } state.terrain
 
                     pure (0 < (length standardMaterialBlocks.indices + length waterMaterialBlocks.indices) )
@@ -210,9 +206,7 @@ updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config conf
 
         standardMaterialMesh: MeshLoaded standardMaterialMesh,
         waterMaterialMesh: MeshLoaded waterMaterialMesh,
-        transparentMaterialMesh: MeshLoaded transparentMaterialMesh,
-
-        bodies: Nothing
+        transparentMaterialMesh: MeshLoaded transparentMaterialMesh
     }
     insertChunk mesh state.terrain
 

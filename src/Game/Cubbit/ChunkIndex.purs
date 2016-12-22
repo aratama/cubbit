@@ -2,7 +2,7 @@ module Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex, chunkIndex
 
 import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
 import Data.Generic (class Generic, gCompare, gEq)
-import Data.Ord (class Ord, abs, max)
+import Data.Ord (class Ord, abs, compare, max)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex, eqBlockIndex, showBlockIndex)
 import Prelude (class Eq, class Show, show, (-), (<$>), eq, (==))
 
@@ -34,3 +34,6 @@ instance eqChunkIndex :: Eq ChunkIndex where
 
 instance showChunkIndex :: Show ChunkIndex where
     show (ChunkIndex a) = showBlockIndex a
+
+instance ordChunkIndex :: Ord ChunkIndex where
+    compare (ChunkIndex a) (ChunkIndex b) = compare a b

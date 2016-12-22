@@ -10,13 +10,20 @@ import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
 import DOM.HTML.Types (windowToEventTarget)
+import Data.Array (length)
+import Data.Foldable (sum)
 import Data.Int (toNumber)
+import Data.List (List, catMaybes, filter, (..))
+import Data.Map (fromFoldable, lookup, toList)
 import Data.Maybe (Maybe(..))
+import Data.Monoid (mempty)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Set (empty)
 import Data.Show (show)
+import Data.Traversable (for, for_)
+import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
-import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
@@ -27,19 +34,19 @@ import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
-import Game.Cubbit.Terrain (Terrain, createTerrain, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(..), createTerrain, globalPositionToChunkIndex, lookupChunk)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Sound (play)
-import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Util (querySelectorCanvas)
 import Graphics.Cannon (World, addBody, createVec3, createWorld, setGravity)
-import Graphics.Cannon.Type (CANNON)
+import Graphics.Cannon.Type (Body, CANNON)
+import Graphics.Cannon.World (removeBody)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, void, (#), ($), (+), (/), (<$>), (<>), (>>=))
+import Prelude (negate, void, (#), ($), (+), (-), (/), (<$>), (<>), (>>=), (<), (<=))
 
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -124,14 +131,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             playerBox <- createPlayerCollesion
             addBody playerBox world
 
-            forE (-1) 2 \x -> do
-                forE (-1) 2 \z -> void do
-                    centerChunkMaybe <- lookupChunk (chunkIndex x 0 z) initialState.terrain
-                    case centerChunkMaybe of
-                        Nothing -> pure unit
-                        Just chunk -> do
-                            cannonBodies <- buildCollesionBoxes chunk world
-                            pure unit
+            terrain <- buildCollesionTerrain initialState.terrain world (chunkIndex 0 0 0)
+            modifyRef ref \(State state) -> State state { terrain = terrain }
 
             -- focus
             focus "content"
@@ -157,17 +158,60 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                             updatePhysics deltaTime playerBox world >>=
                                 writeRef ref
 
+                do
+                    State s <- readRef ref
+                    case s.sceneState of
+                        PlayingSceneState p -> do
+                            let index = globalPositionToChunkIndex p.position.x p.position.y p.position.z
+                            Terrain t <- buildCollesionTerrain s.terrain world index
+                            log $ "boxes: " <> (show $ sum $ (\(Tuple k v) -> length v) <$> toList t.bodies)
+                            modifyRef ref \(State state) -> State state { terrain = Terrain t }
+                        _ -> pure unit
+
                 render scene
 
 
 
-buildCollesionBodies :: forall eff. World String -> Terrain -> Int -> Int -> Int -> Eff (cannon :: CANNON, babylon :: BABYLON | eff) Unit
-buildCollesionBodies world terrain x y z = do
-    centerChunkMaybe <- lookupChunk (chunkIndex x y z) terrain
-    case centerChunkMaybe of
-        Just chunk@{ bodies: Nothing } -> do
-            cannonBodies <- buildCollesionBoxes chunk world
-            pure unit
+buildCollesionTerrain :: forall eff. Terrain -> World String -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
+buildCollesionTerrain (Terrain terrain) world index = do
+    let ri = runChunkIndex index
+    let xi = ri.x
+    let yi = ri.y
+    let zi = ri.z
 
-        _ -> pure unit
+    let bodyMap = toList terrain.bodies
+
+    let externals = filter (\(Tuple k v) -> 1 < chunkIndexDistance k index) bodyMap
+    for_ externals \(Tuple _ bodyLists) -> do
+        for_ bodyLists \body -> do
+            removeBody body world
+
+    let internals :: List (Tuple ChunkIndex (Array (Body String)))
+        internals = filter (\(Tuple k v) -> chunkIndexDistance k index <= 1) bodyMap
+
+    let internalsMap = fromFoldable internals
+
+
+    let indices :: List ChunkIndex
+        indices = do
+            x <- (xi - 1) .. (xi + 1)
+            y <- (yi - 1) .. (yi + 1)
+            z <- (zi - 1) .. (zi + 1)
+            let i = chunkIndex x y z
+            case lookup i internalsMap of
+                Just bodies -> mempty
+                Nothing -> pure i
+
+    newBodies <- for indices \i -> do
+        centerChunkMaybe <- lookupChunk i (Terrain terrain)
+        case centerChunkMaybe of
+            Nothing -> pure Nothing
+            Just chunk -> do
+                cannonBodies <- buildCollesionBoxes chunk world
+                pure (Just (Tuple i cannonBodies))
+
+    pure $ Terrain terrain {
+        bodies = fromFoldable (internals <> catMaybes newBodies)
+    }
+
 

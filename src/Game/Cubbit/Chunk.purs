@@ -37,9 +37,7 @@ type ChunkWithMesh = {
 
     standardMaterialMesh :: MeshLoadingState,
     waterMaterialMesh :: MeshLoadingState,
-    transparentMaterialMesh :: MeshLoadingState,
-
-    bodies :: Maybe (Array (Body String))
+    transparentMaterialMesh :: MeshLoadingState
 }
 
 newtype VertexDataPropsData = VertexDataPropsData {
