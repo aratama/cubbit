@@ -3,12 +3,14 @@ module Game.Cubbit.Resources (Resources, loadResources, resourceCount) where
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Eff.Ref (REF, modifyRef, newRef, readRef)
 import Control.Monad.Except (runExcept, throwError)
 import DOM (DOM)
+import DOM.HTML.Types (HTMLElement)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Show (show)
@@ -58,7 +60,7 @@ type Resources = {
 
 -- Note: Keep the number up-to-date
 resourceCount :: Int
-resourceCount = 20
+resourceCount = 21
 
 
 
@@ -87,6 +89,12 @@ loadResources canvasGL inc = do
             inc
             pure (res.response :: String)
 
+
+    -- load images
+    loadImage' "./image/loading.png"
+    loadImage' "./image/title.png"
+    loadImage' "./image/screenshade.png"
+
     -- load options
     response <- get "options.json"
     Options options <- case runExcept (readOptions response.response) of
@@ -104,9 +112,6 @@ loadResources canvasGL inc = do
         setFogColor fogColor sce
         setCollisionsEnabled true sce
         pure sce
-
-    loadImage' "./image/title.png"
-    loadImage' "./image/screenshade.png"
 
     texture <- loadTexture' "./image/texture.png" scene defaultCreateTextureOptions
     alphaTexture <- loadTexture' "./image/alpha.png" scene defaultCreateTextureOptions
@@ -208,3 +213,7 @@ loadResources canvasGL inc = do
         pure {
             options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds
         }
+
+
+
+foreign import loadScript :: forall eff. String -> Eff (dom :: DOM | eff) Unit

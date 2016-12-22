@@ -7,10 +7,11 @@ import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRec, tailRecM, tailRecM2)
+import DOM (DOM)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
-import DOM.HTML.Types (windowToEventTarget)
+import DOM.HTML.Types (HTMLElement, windowToEventTarget)
 import Data.Array (length)
 import Data.Foldable (sum)
 import Data.Int (toNumber)
@@ -178,6 +179,4 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         _ -> pure unit
 
                 render scene
-
-
 
