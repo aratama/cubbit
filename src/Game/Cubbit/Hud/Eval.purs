@@ -10,7 +10,7 @@ import DOM.Event.MouseEvent (MouseEvent, buttons)
 import DOM.Event.WheelEvent (WheelEvent, wheelEventToEvent)
 import Data.BooleanAlgebra (not)
 import Data.Int (toNumber)
-import Data.Maybe (Maybe(Nothing, Just))
+import Data.Maybe (Maybe(..))
 import Data.Ord (max, min)
 import Data.Set (insert, delete)
 import Data.Traversable (for_)
@@ -26,7 +26,7 @@ import Game.Cubbit.Hud.Type (HudEffects, PlayingSceneQuery(..), Query(..), Query
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (playBGM, setBGMVolume, setMute, setSEVolume, stopBGM)
+import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
 import Game.Cubbit.Terrain (globalIndexToChunkIndex)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..), ResourceProgress(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
@@ -205,17 +205,15 @@ eval ref query = do
                             sceneState = nextScene
                         })
                         liftEff do
-                            State state@{ config: Config config } <- readRef ref
-                            stopBGM config.bgmVolume sounds
-
                             for_ playerMeshes \mesh -> void do
                                 setIsVisible true mesh
                         wait 1000
                         liftEff do
                             play sounds.forestSound
-                            State { config: Config config } <- readRef ref
-                            playBGM sounds.rye config.bgmVolume sounds
-                        modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
+                        modifyAppState ref (\(State state) -> State state {
+                            nextScene = Nothing,
+                            nextBGM = Just sounds.rye
+                        })
 
 
 
@@ -407,15 +405,13 @@ eval ref query = do
                                         modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
                                         wait 1000
                                         liftEff do
-                                            State { config: Config config } <- readRef ref
-                                            stopBGM config.bgmVolume sounds
                                             stop sounds.forestSound
                                         modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
                                         wait 1000
-                                        liftEff do
-                                            State { config: Config config } <- readRef ref
-                                            playBGM sounds.cleaning config.bgmVolume sounds
-                                        modifyAppState ref (\(State state) -> State state { nextScene = Nothing })
+                                        modifyAppState ref (\(State state) -> State state {
+                                            nextScene = Nothing,
+                                            nextBGM = Just sounds.cleaning
+                                        })
 
 
 

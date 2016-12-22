@@ -2,7 +2,7 @@ module Game.Cubbit.Option (Options(Options), readOptions) where
 
 import Data.Foreign (F, Foreign)
 import Data.Foreign.Generic (readGeneric, defaultOptions)
-import Data.Generic (class Generic)
+import Data.Generic.Rep (class Generic)
 
 newtype Options = Options {
     eyeHeight :: Number,
@@ -32,7 +32,7 @@ newtype Options = Options {
     landingDuration :: Int
 }
 
-derive instance genericOptions :: Generic Options
+derive instance genericOptions :: Generic Options _
 
 readOptions :: Foreign -> F Options
-readOptions = readGeneric defaultOptions { unwrapNewtypes = true }
+readOptions = readGeneric defaultOptions { unwrapSingleConstructors = true }

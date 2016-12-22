@@ -18,7 +18,7 @@ import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (BABYLON)
+import Graphics.Babylon.Types (BABYLON, Sound)
 import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
@@ -99,7 +99,10 @@ newtype State = State {
     minimap :: Boolean,
     debugLayer :: Boolean,
     mousePosition :: { x :: Int, y :: Int },
-    keys :: Set String
+    keys :: Set String,
+    bgm :: Maybe Sound,
+    nextBGM :: Maybe Sound,
+    volume :: Number
 }
 
 foreign import data ForeachIndex :: *

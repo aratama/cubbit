@@ -1,4 +1,4 @@
-module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, stopBGM, setBGMVolume, setSEVolume, playBGM) where
+module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, setBGMVolume, setSEVolume) where
 
 import Control.Alt (void)
 import Control.Alternative (pure)
@@ -98,21 +98,4 @@ setBGMVolume volume sounds = for_ sounds.bgms (setVolume volume)
 setSEVolume :: forall eff. Number -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setSEVolume volume sounds = for_ sounds.ses (setVolume volume)
 
-playBGM :: forall eff. Sound -> Int -> Sounds -> Eff (console :: CONSOLE, timer :: TIMER, babylon :: BABYLON | eff) Unit
-playBGM sound volume sounds = void $ runAff errorShow pure do
-    stopBGMAff volume sounds
-    liftEff do
-        setVolume (toNumber volume / toNumber sliderMaxValue) sound
-        play sound
 
-stopBGMAff :: forall eff. Int -> Sounds -> Aff (timer :: TIMER, babylon :: BABYLON | eff) Unit
-stopBGMAff volume sounds = do
-    let playVolume = toNumber volume / toNumber sliderMaxValue
-    for_ (0 .. 9) \i -> do
-        liftEff (for_ sounds.bgms (setVolume (playVolume * (toNumber (10 - i) / 10.0))))
-        wait 100
-    wait 1000
-    liftEff (for_ sounds.bgms stop)
-
-stopBGM :: forall eff. Int -> Sounds -> Eff (console :: CONSOLE, timer :: TIMER, babylon :: BABYLON | eff) Unit
-stopBGM volume sounds = void (runAff errorShow pure (stopBGMAff volume sounds))

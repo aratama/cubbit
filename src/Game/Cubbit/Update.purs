@@ -5,6 +5,7 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
+import Control.Monad.Eff.Timer (TIMER, setTimeout)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take, any)
 import Data.Foldable (for_)
@@ -21,6 +22,7 @@ import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeCh
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Config (Config(..))
+import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
 import Game.Cubbit.Hud.Type (Query(..), QueryA(..), PlayingSceneQuery(..))
@@ -39,7 +41,7 @@ import Graphics.Babylon.PickingInfo (getPickedPoint)
 import Graphics.Babylon.Ray (createRayWithLength)
 import Graphics.Babylon.Scene (pickWithRay)
 import Graphics.Babylon.ShadowGenerator (setRenderList)
-import Graphics.Babylon.Sound (play, stop)
+import Graphics.Babylon.Sound (play, setVolume, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (BABYLON, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
@@ -303,9 +305,9 @@ updateBabylon :: forall eff. Number
                    -> TargetCamera
                    -> Options
                    -> Mesh
-                   -> HalogenIO Query Void (Aff (babylon :: BABYLON | eff))
+                   -> HalogenIO Query Void (Aff (babylon :: BABYLON, timer :: TIMER | eff))
                    -> State
-                   -> Eff (babylon :: BABYLON | eff)  State
+                   -> Eff (babylon :: BABYLON, timer :: TIMER | eff)  State
 updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options options) skybox driver (State state@{ terrain: Terrain terrain }) = do
 
         Config config <- pure state.config
@@ -372,9 +374,36 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
                         loadAndGenerateChunk index
                         pure 100
 
+
+
+            case state.bgm, state.nextBGM, state.volume of
+                Just bgm, Just next, 0.0 -> void do
+                    stop bgm
+                    setTimeout 1000 $ play next
+                Nothing, Just next, 0.0 -> play next
+                _, _, _ -> pure unit
+
             pure $ State state {
-                updateIndex = toNullable (Just nextIndex)
+                updateIndex = toNullable (Just nextIndex),
+
+                bgm = case state.nextBGM, state.volume of
+                    Just next, 0.0 -> Just next
+                    _, _ -> state.bgm,
+
+                nextBGM = case state.nextBGM, state.volume of
+                    Just next, 0.0 -> Nothing
+                    _, _ -> state.nextBGM,
+
+                volume = case state.nextBGM of
+                    Just _ -> max 0.0 $ state.volume - 0.02
+                    _ -> 1.0
             }
+
+        -- update volumes
+        do
+            let v = (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
+            for_ sounds.bgms $ setVolume v
+
 
 
         -- unload chunks

@@ -85,7 +85,10 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 debugLayer: false,
                 minimap: false,
                 totalFrames: 0,
-                keys: empty
+                keys: empty,
+                bgm: Nothing,
+                nextBGM: Nothing,
+                volume: 1.0
             }
 
         ref <- liftEff $ newRef $ State initialState
@@ -117,7 +120,13 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         Options options <- pure res.options
 
 
+
+
         liftEff do
+            modifyRef ref \(State state) -> State state {
+                nextBGM = Just sounds.cleaning
+            }
+
             -- load initial chunks --
             do
                 let initialWorldSize = options.initialWorldSize
@@ -151,7 +160,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             setMute config.mute sounds
             setBGMVolume (toNumber config.bgmVolume / toNumber sliderMaxValue) sounds
             setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
-            play sounds.cleaning
+
 
             -- resize
             win <- window
