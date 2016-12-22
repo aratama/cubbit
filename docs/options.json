@@ -1,16 +1,16 @@
 
 {
     "eyeHeight": 1.4,
-    "gravity": -0.00002,
+    "gravity": -1.0,
     "fogDensity": 0.005,
     "maximumLoadedChunks": 2197,
     "shadowMapSize": 4096,
     "skyboxRotationSpeed": 0.00002,
     "enableWaterMaterial": false,
     "chunkUnloadSpeed": 10,
-    "jumpVelocity": 0.008,
+    "jumpVelocity": 2,
     "initialWorldSize": 3,
-    "moveSpeed": 0.004,
+    "moveSpeed": 0.6,
     "cameraTargetSpeed": 0.1,
     "cameraRotationSpeed": 0.04,
     "cameraZoomSpeed": 0.02,
@@ -23,6 +23,6 @@
     "cameraVertialSensitivity": 0.004,
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002,
-    "landingVelocityLimit": -0.3,
+    "landingVelocityLimit": -1.5,
     "landingDuration": 40
 }
