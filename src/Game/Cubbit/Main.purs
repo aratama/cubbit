@@ -25,7 +25,7 @@ import Data.Traversable (for, for_)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
-import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion)
+import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion, buildCollesionTerrain)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
@@ -61,6 +61,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         -- config
         Config config <- liftEff $ readConfig
 
+        world <- liftEff $ createWorld
+
         -- initialize game state
         let terrainSeed = 0
         initialTerrain <- liftEff $ createTerrain terrainSeed
@@ -75,6 +77,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 skyboxRotation: 0.0,
                 terrain: initialTerrain,
                 updateIndex: toNullable Nothing,
+                world,
                 cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
                 cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
                 mousePosition: { x: 0, y: 0 },
@@ -125,7 +128,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
 
             -- cannon --
-            world <- createWorld
+
             gravity <- createVec3 0.0 options.gravity 0.0
             setGravity gravity world
 
@@ -170,53 +173,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         PlayingSceneState p -> do
                             let index = globalPositionToChunkIndex p.position.x p.position.y p.position.z
                             Terrain t <- buildCollesionTerrain s.terrain world index
-                            log $ "boxes: " <> (show $ sum $ (\(Tuple k v) -> length v) <$> toList t.bodies)
+                            -- log $ "boxes: " <> (show $ sum $ (\(Tuple k v) -> length v) <$> toList t.bodies)
                             modifyRef ref \(State state) -> State state { terrain = Terrain t }
                         _ -> pure unit
 
                 render scene
 
-
-
-buildCollesionTerrain :: forall eff. Terrain -> World String -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
-buildCollesionTerrain (Terrain terrain) world index = do
-    let ri = runChunkIndex index
-    let xi = ri.x
-    let yi = ri.y
-    let zi = ri.z
-
-    let bodyMap = toList terrain.bodies
-
-    let externals = filter (\(Tuple k v) -> 1 < chunkIndexDistance k index) bodyMap
-    for_ externals \(Tuple _ bodyLists) -> do
-        for_ bodyLists \body -> do
-            removeBody body world
-
-    let internals :: List (Tuple ChunkIndex (Array (Body String)))
-        internals = filter (\(Tuple k v) -> chunkIndexDistance k index <= 1) bodyMap
-
-    let internalsMap = fromFoldable internals
-
-
-    let indices :: List ChunkIndex
-        indices = do
-            x <- (xi - 1) .. (xi + 1)
-            y <- (yi - 1) .. (yi + 1)
-            z <- (zi - 1) .. (zi + 1)
-            let i = chunkIndex x y z
-            case lookup i internalsMap of
-                Just bodies -> mempty
-                Nothing -> pure i
-
-
-    chunks <- catMaybes <$> for indices (\i -> lookupChunk i (Terrain terrain))
-
-    case chunks of
-        Nil -> pure $ Terrain terrain
-        Cons chunk _ -> do
-            cannonBodies <- buildCollesionBoxes chunk world
-            pure $ Terrain terrain {
-                bodies = fromFoldable (Tuple chunk.index cannonBodies : internals)
-            }
 
 

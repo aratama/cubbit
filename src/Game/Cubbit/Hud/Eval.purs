@@ -19,6 +19,7 @@ import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
+import Game.Cubbit.Collesion (updateChunkCollesion)
 import Game.Cubbit.Config (Config(Config), writeConfig)
 import Game.Cubbit.Control (pickBlock)
 import Game.Cubbit.Hud.Type (HudEffects, PlayingSceneQuery(..), Query(..), QueryA(..), HudDriver)
@@ -26,6 +27,7 @@ import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Sounds (playBGM, setBGMVolume, setMute, setSEVolume, stopBGM)
+import Game.Cubbit.Terrain (globalIndexToChunkIndex)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..), ResourceProgress(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
@@ -342,7 +344,12 @@ eval ref query = do
                                                         picked <- pickBlock scene cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
                                                         case picked of
                                                             Nothing -> pure unit
-                                                            Just blockIndex -> editBlock ref blockIndex block
+                                                            Just blockIndex -> do
+                                                                editBlock ref blockIndex block
+                                                                terrain' <- updateChunkCollesion state.terrain state.world (globalIndexToChunkIndex blockIndex)
+                                                                modifyRef ref \(State state) -> State state {
+                                                                    terrain = terrain'
+                                                                }
 
                                                 case playingSceneState.mode of
                                                     Put blockType -> do

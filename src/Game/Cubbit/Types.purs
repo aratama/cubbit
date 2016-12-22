@@ -19,7 +19,7 @@ import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
-import Graphics.Cannon.Type (CANNON)
+import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
 
@@ -87,6 +87,8 @@ newtype State = State {
     terrain :: Terrain,
     skyboxRotation :: Number,
     updateIndex :: Nullable ForeachIndex,
+
+    world :: World String,
 
     -- camera
     cameraPosition :: Vec,

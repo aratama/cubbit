@@ -6,7 +6,7 @@ exports._buildCollesionBoxes = function(imports){
             return function() {
 
                 //console.profile("collesion");
-                console.time("collesion");
+                //console.time("collesion");
 
                 var localIndex = imports.localIndex;
                 var chunkSize = imports.chunkSize;
@@ -168,8 +168,8 @@ exports._buildCollesionBoxes = function(imports){
 
 
                 //console.profileEnd("collesion");
-                console.timeEnd("collesion");
-                console.log(boxes.length);
+                //console.timeEnd("collesion");
+                //console.log(boxes.length);
 
                 return boxes;
             }

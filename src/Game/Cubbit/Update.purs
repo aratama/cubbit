@@ -33,7 +33,6 @@ import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
-import Graphics.Babylon.Engine (getDeltaTime)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, setPosition)
 import Graphics.Babylon.Node (getName)
 import Graphics.Babylon.PickingInfo (getPickedPoint)
@@ -42,7 +41,7 @@ import Graphics.Babylon.Scene (pickWithRay)
 import Graphics.Babylon.ShadowGenerator (setRenderList)
 import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
-import Graphics.Babylon.Types (BABYLON, Engine, Mesh, Scene, ShadowMap, TargetCamera)
+import Graphics.Babylon.Types (BABYLON, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
@@ -88,13 +87,16 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let moveVectorLength = sqrt (rotatedKeyVector.x * rotatedKeyVector.x + rotatedKeyVector.z * rotatedKeyVector.z)
 
-    let normalizedMoveX = if 0.0 < moveVectorLength then rotatedKeyVector.x / moveVectorLength * speed else 0.0
-    let normalizedMoveZ = if 0.0 < moveVectorLength then rotatedKeyVector.z / moveVectorLength * speed else 0.0
-
-    let velocity = {
-                x: normalizedMoveX,
+    let velocity = if 0.0 < moveVectorLength && playingSceneState.landing == 0
+            then {
+                x: rotatedKeyVector.x / moveVectorLength * speed,
                 y: playingSceneState.velocity.y + jumpVelocity,
-                z: normalizedMoveZ
+                z: rotatedKeyVector.z / moveVectorLength * speed
+            }
+            else {
+                x: 0.0,
+                y: playingSceneState.velocity.y + jumpVelocity,
+                z: 0.0
             }
 
     -- playerRotation == 0   =>    -z direction
@@ -131,7 +133,9 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             Just block | isSolidBlock block -> true
             _ -> false
 
-    let landingCount = if isLanding' && playingSceneState.velocity.y < options.landingVelocityLimit then options.landingDuration else playingSceneState.landing
+    let landingCount = if isLanding' && playingSceneState.velocity.y < options.landingVelocityLimit
+            then options.landingDuration
+            else playingSceneState.landing
 
     -- camera view target
     let cameraSpeed = if playingSceneState.firstPersonView then 0.5 else options.cameraTargetSpeed

@@ -13,6 +13,7 @@ import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.Types (Mode, State)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
+import Graphics.Cannon (CANNON)
 import Halogen (HalogenEffects, HalogenIO)
 import Network.HTTP.Affjax (AJAX)
 
@@ -51,6 +52,7 @@ type HudEffects eff = HalogenEffects (
     ajax :: AJAX,
     babylon :: BABYLON,
     storage :: STORAGE,
-    timer :: TIMER | eff)
+    timer :: TIMER,
+    cannon :: CANNON | eff)
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
