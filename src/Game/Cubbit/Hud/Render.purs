@@ -13,6 +13,7 @@ import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, wo
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
+import Game.Cubbit.Resources (resourceCount)
 import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState), ResourceProgress(..))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h2, img, p, prop, text)
@@ -43,7 +44,7 @@ render (State state@{ config: Config config }) = case state.res of
             class_ (ClassName "content-layer")
         ] [
             img [class_ (ClassName "content-layer"), src "image/loading.png"],
-            div [class_ (ClassName "progress")] $ mapFlipped (0 .. 16) \i ->
+            div [class_ (ClassName "progress")] $ mapFlipped (0 .. resourceCount) \i ->
                 div [class_ (ClassName ("cell" <> if i <= progress then " fill" else ""))] []
         ]
     Complete _ -> div [

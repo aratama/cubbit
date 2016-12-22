@@ -39,7 +39,7 @@ import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCamer
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Canvas, Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3)
-import Network.HTTP.Affjax (AJAX, get)
+import Network.HTTP.Affjax (AJAX, AffjaxResponse, get)
 import Prelude (negate, void, ($), (/))
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -58,7 +58,9 @@ type Resources = {
 
 -- Note: Keep the number up-to-date
 resourceCount :: Int
-resourceCount = 15
+resourceCount = 20
+
+
 
 loadResources :: forall eff. Canvas
         -> Aff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON | eff) Unit
@@ -79,6 +81,11 @@ loadResources canvasGL inc = do
             mesh <- loadMesh name dir file s p
             inc
             pure mesh
+
+    let loadText url = do
+            res <- get url
+            inc
+            pure (res.response :: String)
 
     -- load options
     response <- get "options.json"
@@ -103,8 +110,15 @@ loadResources canvasGL inc = do
 
     texture <- loadTexture' "./image/texture.png" scene defaultCreateTextureOptions
     alphaTexture <- loadTexture' "./image/alpha.png" scene defaultCreateTextureOptions
+
     loadTexture' "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
     playerMeshes <- loadMesh' "" "./alice/" "alice.babylon" scene pure
+    loadText "./alice/cellShading.fragment.fx"
+    loadText "./alice/cellShading.vertex.fx"
+    loadText "./alice/outline.fragment.fx"
+    loadText "./alice/outline.vertex.fx"
+    loadText "./alice/alice.babylon.manifest"
+
     sounds <- loadSounds scene inc
 
     cursor <- liftEff do
