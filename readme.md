@@ -1,7 +1,7 @@
 
 # Cubbit×Cubbit
 
-![screenshot](https://rawgit.com/aratama/cubbit/master/res/screenshot/torii.png)
+![screenshot](https://rawgit.com/aratama/cubbit/master/res/screenshot/screenshot4.png)
 
 Minecraft-like sandbox game project written in PureScript. See [the article](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Ja) for more information.
 
