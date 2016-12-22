@@ -8135,98 +8135,98 @@ var PS = {};
   exports["ordChunkIndex"] = ordChunkIndex;
 })(PS["Game.Cubbit.ChunkIndex"] = PS["Game.Cubbit.ChunkIndex"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.abstractMeshToNode = function(mesh){
-      return mesh;
-  };
-
-  exports.dispose = function(doNotRecurse){
-      return function(mesh){
-          return function(){
-              mesh.dispose(doNotRecurse);
-          };
-      };
-  };
-
-
-  exports.setIsPickable = function(isPickable){
-      return function(mesh){
-          return function(){
-              mesh.isPickable = isPickable;
-          };
-      };
-  };
-
-  exports.setPosition = function(position){
-      return function(mesh){
-          return function(){
-              mesh.position = position;
-          };
-      };
-  };
-
-  exports.setRotation = function(rotation){
-      return function(mesh){
-          return function(){
-              mesh.rotation = rotation;
-          };
-      };
-  };
-
-  exports.setIsVisible = function(isVisible){
-      return function(mesh){
-          return function(){
-              mesh.isVisible = isVisible;
-          };
-      };
-  };
-
-  exports.setUseVertexColors  = function(useVertexColors ){
-      return function(mesh){
-          return function(){
-              mesh.useVertexColors  = useVertexColors ;
-          };
-      };
-  };
-
-  exports.setRenderingGroupId = function(value){
-      return function(mesh){
-          return function(){
-              mesh.renderingGroupId = value;
-          };
-      };
-  };
-
-  exports.setReceiveShadows = function(receiveShadows){
-      return function(mesh){
-          return function(){
-              mesh.receiveShadows = receiveShadows;
-          };
-      };
-  };
-
-  exports._getSkeleton = function(mesh){
-      return function(){
-          return mesh.skeleton;
-      };
-  };
-
-  exports.setMaterial = function(mat){
-      return function(mesh){
-          return function(){
-              mesh.material = mat;
-          };
-      };
-  };
-
-
-  exports.setVisibility = function(visibility){
-      return function(mesh){
-          return function(){
-              mesh.visibility = visibility;
-          };
-      };
+    "use strict";
+
+  exports.abstractMeshToNode = function(mesh){
+      return mesh;
+  };
+
+  exports.dispose = function(doNotRecurse){
+      return function(mesh){
+          return function(){
+              mesh.dispose(doNotRecurse);
+          };
+      };
+  };
+
+
+  exports.setIsPickable = function(isPickable){
+      return function(mesh){
+          return function(){
+              mesh.isPickable = isPickable;
+          };
+      };
+  };
+
+  exports.setPosition = function(position){
+      return function(mesh){
+          return function(){
+              mesh.position = position;
+          };
+      };
+  };
+
+  exports.setRotation = function(rotation){
+      return function(mesh){
+          return function(){
+              mesh.rotation = rotation;
+          };
+      };
+  };
+
+  exports.setIsVisible = function(isVisible){
+      return function(mesh){
+          return function(){
+              mesh.isVisible = isVisible;
+          };
+      };
+  };
+
+  exports.setUseVertexColors  = function(useVertexColors ){
+      return function(mesh){
+          return function(){
+              mesh.useVertexColors  = useVertexColors ;
+          };
+      };
+  };
+
+  exports.setRenderingGroupId = function(value){
+      return function(mesh){
+          return function(){
+              mesh.renderingGroupId = value;
+          };
+      };
+  };
+
+  exports.setReceiveShadows = function(receiveShadows){
+      return function(mesh){
+          return function(){
+              mesh.receiveShadows = receiveShadows;
+          };
+      };
+  };
+
+  exports._getSkeleton = function(mesh){
+      return function(){
+          return mesh.skeleton;
+      };
+  };
+
+  exports.setMaterial = function(mat){
+      return function(mesh){
+          return function(){
+              mesh.material = mat;
+          };
+      };
+  };
+
+
+  exports.setVisibility = function(visibility){
+      return function(mesh){
+          return function(){
+              mesh.visibility = visibility;
+          };
+      };
   };
 })(PS["Graphics.Babylon.AbstractMesh"] = PS["Graphics.Babylon.AbstractMesh"] || {});
 (function(exports) {
@@ -8257,49 +8257,49 @@ var PS = {};
   exports["setVisibility"] = $foreign.setVisibility;
 })(PS["Graphics.Babylon.AbstractMesh"] = PS["Graphics.Babylon.AbstractMesh"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createMesh = function(id){
-      return function(scene){
-          return function(){
-              return new BABYLON.Mesh(id, scene);
-          };
-      };
-  };
-
-  exports.meshToAbstractMesh = function(mesh){
-      return mesh;
-  };
-
-  exports.createBox = function(id){
-      return function(size){
-          return function(scene){
-              return function(){
-                  return BABYLON.Mesh.CreateBox(id, size, scene);
-              };
-          };
-      };
-  };
-
-  exports.setPosition = function(position){
-      return function(mesh){
-          return function(){
-              mesh.position = position;
-          };
-      };
-  };
-
-
-
-
-  exports.setInfiniteDistance = function(value){
-      return function(mesh){
-          return function(){
-              mesh.infiniteDistance = value;
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createMesh = function(id){
+      return function(scene){
+          return function(){
+              return new BABYLON.Mesh(id, scene);
+          };
+      };
+  };
+
+  exports.meshToAbstractMesh = function(mesh){
+      return mesh;
+  };
+
+  exports.createBox = function(id){
+      return function(size){
+          return function(scene){
+              return function(){
+                  return BABYLON.Mesh.CreateBox(id, size, scene);
+              };
+          };
+      };
+  };
+
+  exports.setPosition = function(position){
+      return function(mesh){
+          return function(){
+              mesh.position = position;
+          };
+      };
+  };
+
+
+
+
+  exports.setInfiniteDistance = function(value){
+      return function(mesh){
+          return function(){
+              mesh.infiniteDistance = value;
+          };
+      };
   };
 })(PS["Graphics.Babylon.Mesh"] = PS["Graphics.Babylon.Mesh"] || {});
 (function(exports) {
@@ -9433,7 +9433,8 @@ var PS = {};
   exports["genericConfig"] = genericConfig;
 })(PS["Game.Cubbit.Config"] = PS["Game.Cubbit.Config"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.3
+  "use strict";
   var Data_Foreign = PS["Data.Foreign"];
   var Data_Foreign_Generic = PS["Data.Foreign.Generic"];
   var Data_Generic_Rep = PS["Data.Generic.Rep"];
@@ -9537,14 +9538,14 @@ var PS = {};
   exports["genericOptions"] = genericOptions;
 })(PS["Game.Cubbit.Option"] = PS["Game.Cubbit.Option"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.setHasAlpha = function(hasAplha){
-      return function(mat){
-          return function(){
-              mat.hasAlpha = hasAplha;
-          };
-      };
+    "use strict";
+
+  exports.setHasAlpha = function(hasAplha){
+      return function(mat){
+          return function(){
+              mat.hasAlpha = hasAplha;
+          };
+      };
   };
 })(PS["Graphics.Babylon.BaseTexture"] = PS["Graphics.Babylon.BaseTexture"] || {});
 (function(exports) {
@@ -9557,18 +9558,18 @@ var PS = {};
   exports["setHasAlpha"] = $foreign.setHasAlpha;
 })(PS["Graphics.Babylon.BaseTexture"] = PS["Graphics.Babylon.BaseTexture"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createColor3 = function(r){
-      return function(g){
-          return function(b){
-              return function(){
-                  return new BABYLON.Color3(r, g, b);
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createColor3 = function(r){
+      return function(g){
+          return function(b){
+              return function(){
+                  return new BABYLON.Color3(r, g, b);
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Color3"] = PS["Graphics.Babylon.Color3"] || {});
 (function(exports) {
@@ -9580,38 +9581,38 @@ var PS = {};
   exports["createColor3"] = $foreign.createColor3;
 })(PS["Graphics.Babylon.Color3"] = PS["Graphics.Babylon.Color3"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.setFogEnabled = function(fogEnabled){
-      return function(material){
-          return function(){
-              material.fogEnabled = fogEnabled;
-          };
-      };
-  };
-
-  exports.setZOffset = function(value){
-      return function(mat){
-          return function(){
-              mat.zOffset = value;
-          };
-      };
-  };
-
-  exports.setWireframe = function(value){
-      return function(mat){
-          return function(){
-              mat.wireframe = value;
-          };
-      };
-  };
-
-  exports.setAlpha = function(value){
-      return function(mat){
-          return function(){
-              mat.alpha = value;
-          };
-      };
+    "use strict";
+
+  exports.setFogEnabled = function(fogEnabled){
+      return function(material){
+          return function(){
+              material.fogEnabled = fogEnabled;
+          };
+      };
+  };
+
+  exports.setZOffset = function(value){
+      return function(mat){
+          return function(){
+              mat.zOffset = value;
+          };
+      };
+  };
+
+  exports.setWireframe = function(value){
+      return function(mat){
+          return function(){
+              mat.wireframe = value;
+          };
+      };
+  };
+
+  exports.setAlpha = function(value){
+      return function(mat){
+          return function(){
+              mat.alpha = value;
+          };
+      };
   };
 })(PS["Graphics.Babylon.Material"] = PS["Graphics.Babylon.Material"] || {});
 (function(exports) {
@@ -9627,64 +9628,64 @@ var PS = {};
   exports["setZOffset"] = $foreign.setZOffset;
 })(PS["Graphics.Babylon.Material"] = PS["Graphics.Babylon.Material"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createShaderMaterial = function(name){
-      return function(scene){
-          return function(shaderPath){
-              return function(options){
-                  return function(){
-                      return new BABYLON.ShaderMaterial(name, scene, shaderPath, options);
-                  };
-              };
-          };
-      };
-  };
-
-  exports.shaderMaterialToMaterial = function(mat){
-      return mat;
-  };
-
-  exports.setTexture = function(name){
-      return function(tex){
-          return function(mat){
-              return function(){
-                  mat.setTexture(name, tex);
-              };
-          };
-      };
-  };
-
-  exports.setVector3 = function(name){
-      return function(vec){
-          return function(mat){
-              return function(){
-                  mat.setVector3(name, vec);
-              };
-          };
-      };
-  };
-
-  exports.setFloats = function(name){
-      return function(fs){
-          return function(mat){
-              return function(){
-                  mat.setFloats(name, fs);
-              };
-          };
-      };
-  };
-
-  exports.setColor3 = function(name){
-      return function(col){
-          return function(mat){
-              return function(){
-                  mat.setColor3(name, col);
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createShaderMaterial = function(name){
+      return function(scene){
+          return function(shaderPath){
+              return function(options){
+                  return function(){
+                      return new BABYLON.ShaderMaterial(name, scene, shaderPath, options);
+                  };
+              };
+          };
+      };
+  };
+
+  exports.shaderMaterialToMaterial = function(mat){
+      return mat;
+  };
+
+  exports.setTexture = function(name){
+      return function(tex){
+          return function(mat){
+              return function(){
+                  mat.setTexture(name, tex);
+              };
+          };
+      };
+  };
+
+  exports.setVector3 = function(name){
+      return function(vec){
+          return function(mat){
+              return function(){
+                  mat.setVector3(name, vec);
+              };
+          };
+      };
+  };
+
+  exports.setFloats = function(name){
+      return function(fs){
+          return function(mat){
+              return function(){
+                  mat.setFloats(name, fs);
+              };
+          };
+      };
+  };
+
+  exports.setColor3 = function(name){
+      return function(col){
+          return function(mat){
+              return function(){
+                  mat.setColor3(name, col);
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.ShaderMaterial"] = PS["Graphics.Babylon.ShaderMaterial"] || {});
 (function(exports) {
@@ -9702,76 +9703,76 @@ var PS = {};
   exports["shaderMaterialToMaterial"] = $foreign.shaderMaterialToMaterial;
 })(PS["Graphics.Babylon.ShaderMaterial"] = PS["Graphics.Babylon.ShaderMaterial"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createStandardMaterial = function(id){
-      return function(scene){
-          return function(){
-              return new BABYLON.StandardMaterial(id, scene);
-          };
-      };
-  };
-
-  exports.setDiffuseTexture = function(tex){
-      return function(mat){
-          return function(){
-              mat.diffuseTexture = tex;
-          };
-      };
-  };
-
-  exports.setReflectionTexture = function(tex){
-      return function(mat){
-          return function(){
-              mat.reflectionTexture = tex;
-          };
-      };
-  };
-
-  exports.standardMaterialToMaterial = function(mat){
-      return mat;
-  };
-
-  exports.setBackFaceCulling = function(value){
-      return function(mat){
-          return function(){
-              mat.backFaceCulling = value;
-          };
-      };
-  };
-
-  exports.setDisableLighting  = function(value){
-      return function(mat){
-          return function(){
-              mat.disableLighting = value;
-          };
-      };
-  };
-
-  exports.setDiffuseColor  = function(value){
-      return function(mat){
-          return function(){
-              mat.diffuseColor  = value;
-          };
-      };
-  };
-
-  exports.setSpecularColor = function(value){
-      return function(mat){
-          return function(){
-              mat.specularColor = value;
-          };
-      };
-  };
-
-  exports.setUseAlphaFromDiffuseTexture = function(useAlphaFromDiffuseTexture){
-      return function(mat){
-          return function(){
-              mat.useAlphaFromDiffuseTexture = useAlphaFromDiffuseTexture;
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createStandardMaterial = function(id){
+      return function(scene){
+          return function(){
+              return new BABYLON.StandardMaterial(id, scene);
+          };
+      };
+  };
+
+  exports.setDiffuseTexture = function(tex){
+      return function(mat){
+          return function(){
+              mat.diffuseTexture = tex;
+          };
+      };
+  };
+
+  exports.setReflectionTexture = function(tex){
+      return function(mat){
+          return function(){
+              mat.reflectionTexture = tex;
+          };
+      };
+  };
+
+  exports.standardMaterialToMaterial = function(mat){
+      return mat;
+  };
+
+  exports.setBackFaceCulling = function(value){
+      return function(mat){
+          return function(){
+              mat.backFaceCulling = value;
+          };
+      };
+  };
+
+  exports.setDisableLighting  = function(value){
+      return function(mat){
+          return function(){
+              mat.disableLighting = value;
+          };
+      };
+  };
+
+  exports.setDiffuseColor  = function(value){
+      return function(mat){
+          return function(){
+              mat.diffuseColor  = value;
+          };
+      };
+  };
+
+  exports.setSpecularColor = function(value){
+      return function(mat){
+          return function(){
+              mat.specularColor = value;
+          };
+      };
+  };
+
+  exports.setUseAlphaFromDiffuseTexture = function(useAlphaFromDiffuseTexture){
+      return function(mat){
+          return function(){
+              mat.useAlphaFromDiffuseTexture = useAlphaFromDiffuseTexture;
+          };
+      };
   };
 })(PS["Graphics.Babylon.StandardMaterial"] = PS["Graphics.Babylon.StandardMaterial"] || {});
 (function(exports) {
@@ -9792,34 +9793,34 @@ var PS = {};
   exports["standardMaterialToMaterial"] = $foreign.standardMaterialToMaterial;
 })(PS["Graphics.Babylon.StandardMaterial"] = PS["Graphics.Babylon.StandardMaterial"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createTexture = function(path){
-      return function(scene){
-          return function(options){
-              return function(){
-                  return new BABYLON.Texture(path, scene, options.noMipmap, options.invertY, options.samplingMode, options.onLoad, options.onError);
-              };
-          };
-      };
-  };
-
-  exports.tRILINEAR_SAMPLINGMODE = BABYLON.Texture.TRILINEAR_SAMPLINGMODE;
-
-  exports.textureToBaseTexture = function(tex){
-      return tex;
-  };
-
-  exports.sKYBOX_MODE = BABYLON.Texture.SKYBOX_MODE;
-
-  exports.setCoordinatesMode = function(value){
-      return function(tex){
-          return function(){
-              tex.coordinatesMode = value;
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createTexture = function(path){
+      return function(scene){
+          return function(options){
+              return function(){
+                  return new BABYLON.Texture(path, scene, options.noMipmap, options.invertY, options.samplingMode, options.onLoad, options.onError);
+              };
+          };
+      };
+  };
+
+  exports.tRILINEAR_SAMPLINGMODE = BABYLON.Texture.TRILINEAR_SAMPLINGMODE;
+
+  exports.textureToBaseTexture = function(tex){
+      return tex;
+  };
+
+  exports.sKYBOX_MODE = BABYLON.Texture.SKYBOX_MODE;
+
+  exports.setCoordinatesMode = function(value){
+      return function(tex){
+          return function(){
+              tex.coordinatesMode = value;
+          };
+      };
   };
 })(PS["Graphics.Babylon.Texture"] = PS["Graphics.Babylon.Texture"] || {});
 (function(exports) {
@@ -9844,38 +9845,38 @@ var PS = {};
   exports["textureToBaseTexture"] = $foreign.textureToBaseTexture;
 })(PS["Graphics.Babylon.Texture"] = PS["Graphics.Babylon.Texture"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createVector3 = function(x){
-      return function(y){
-          return function(z){
-              return function(){
-                  return new BABYLON.Vector3(x, y, z);
-              };
-          };
-      };
-  };
-
-  exports.subtract = function(v){
-      return function(r){
-          return function(){
-              return v.subtract(r);
-          };
-      };
-  };
-
-  exports.length = function(v){
-      return function(){
-          return v.length();
-      };
-  };
-
-  exports.runVector3 = function(v){
-      return function(){
-          return { x: v.x, y: v.y, z: v.z };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createVector3 = function(x){
+      return function(y){
+          return function(z){
+              return function(){
+                  return new BABYLON.Vector3(x, y, z);
+              };
+          };
+      };
+  };
+
+  exports.subtract = function(v){
+      return function(r){
+          return function(){
+              return v.subtract(r);
+          };
+      };
+  };
+
+  exports.length = function(v){
+      return function(){
+          return v.length();
+      };
+  };
+
+  exports.runVector3 = function(v){
+      return function(){
+          return { x: v.x, y: v.y, z: v.z };
+      };
   };
 })(PS["Graphics.Babylon.Vector3"] = PS["Graphics.Babylon.Vector3"] || {});
 (function(exports) {
@@ -9890,52 +9891,52 @@ var PS = {};
   exports["subtract"] = $foreign.subtract;
 })(PS["Graphics.Babylon.Vector3"] = PS["Graphics.Babylon.Vector3"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createWaterMaterial = function(name){
-      return function(scene){
-          return function(){
-              return new BABYLON.WaterMaterial(name, scene);
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createWaterMaterial = function(name){
+      return function(scene){
+          return function(){
+              return new BABYLON.WaterMaterial(name, scene);
+          };
+      };
+  };
+
+  exports.waterMaterialToMaterial = function(mat){
+      return mat;
+  };
+
+  exports.setBumpTexture = function(tex){
+      return function(mat){
+          return function(){
+              mat.bumpTexture = tex;
+          };
+      };
+  };
+
+  exports.addToRenderList = function(mesh){
+      return function(mat){
+          return function(){
+              mat.addToRenderList(mesh);
+          };
+      };
   };
 
-  exports.waterMaterialToMaterial = function(mat){
-      return mat;
+  exports.setWaveHeight = function(waveHeight){
+      return function(mat){
+          return function(){
+              mat.waveHeight = waveHeight;
+          };
+      };
   };
 
-  exports.setBumpTexture = function(tex){
-      return function(mat){
-          return function(){
-              mat.bumpTexture = tex;
-          };
-      };
-  };
-
-  exports.addToRenderList = function(mesh){
-      return function(mat){
-          return function(){
-              mat.addToRenderList(mesh);
-          };
-      };
-  };
-
-  exports.setWaveHeight = function(waveHeight){
-      return function(mat){
-          return function(){
-              mat.waveHeight = waveHeight;
-          };
-      };
-  };
-
-  exports.setWindForce = function(windForce){
-      return function(mat){
-          return function(){
-              mat.windForce = windForce;
-          };
-      };
+  exports.setWindForce = function(windForce){
+      return function(mat){
+          return function(){
+              mat.windForce = windForce;
+          };
+      };
   };
 })(PS["Graphics.Babylon.WaterMaterial"] = PS["Graphics.Babylon.WaterMaterial"] || {});
 (function(exports) {
@@ -10065,26 +10066,26 @@ var PS = {};
   exports["initializeMaterials"] = initializeMaterials;
 })(PS["Game.Cubbit.Materials"] = PS["Game.Cubbit.Materials"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports._loadSound = function(name){
-      return function(url){
-          return function(scene){
-              return function(options){
-                  return function(){
-                      return function(resolve){
-                          return function(){
-                              var sound = new BABYLON.Sound(name, url, scene, function(){
-                                  resolve(sound)();
-                              }, options);
-                          };
-                      };
-                  };
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports._loadSound = function(name){
+      return function(url){
+          return function(scene){
+              return function(options){
+                  return function(){
+                      return function(resolve){
+                          return function(){
+                              var sound = new BABYLON.Sound(name, url, scene, function(){
+                                  resolve(sound)();
+                              }, options);
+                          };
+                      };
+                  };
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Aff.Sound"] = PS["Graphics.Babylon.Aff.Sound"] || {});
 (function(exports) {
@@ -10108,28 +10109,28 @@ var PS = {};
   exports["loadSound"] = loadSound;
 })(PS["Graphics.Babylon.Aff.Sound"] = PS["Graphics.Babylon.Aff.Sound"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.play = function(sound){
-      return function(){
-          sound.play();
-      };
-  };
-
-  exports.stop = function(sound){
-      return function(){
-          sound.stop();
-      };
-  };
-
-  exports.setVolume = function(volume){
-      return function(sound){
-          return function(){
-              sound.setVolume(volume);
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.play = function(sound){
+      return function(){
+          sound.play();
+      };
+  };
+
+  exports.stop = function(sound){
+      return function(){
+          sound.stop();
+      };
+  };
+
+  exports.setVolume = function(volume){
+      return function(sound){
+          return function(){
+              sound.setVolume(volume);
+          };
+      };
   };
 })(PS["Graphics.Babylon.Sound"] = PS["Graphics.Babylon.Sound"] || {});
 (function(exports) {
@@ -10151,21 +10152,14 @@ var PS = {};
   exports["stop"] = $foreign.stop;
 })(PS["Graphics.Babylon.Sound"] = PS["Graphics.Babylon.Sound"] || {});
 (function(exports) {
-    "use strict";
-  var Control_Alt = PS["Control.Alt"];
+  // Generated by psc version 0.10.3
+  "use strict";
   var Control_Alternative = PS["Control.Alternative"];
   var Control_Bind = PS["Control.Bind"];
   var Control_Monad_Aff = PS["Control.Monad.Aff"];
   var Control_Monad_Eff = PS["Control.Monad.Eff"];
-  var Control_Monad_Eff_Class = PS["Control.Monad.Eff.Class"];
-  var Control_Monad_Eff_Console = PS["Control.Monad.Eff.Console"];
-  var Control_Monad_Eff_Timer = PS["Control.Monad.Eff.Timer"];
-  var Data_Array = PS["Data.Array"];
-  var Data_Int = PS["Data.Int"];
   var Data_Traversable = PS["Data.Traversable"];
   var Data_Unit = PS["Data.Unit"];
-  var Game_Cubbit_Aff = PS["Game.Cubbit.Aff"];
-  var Game_Cubbit_Constants = PS["Game.Cubbit.Constants"];
   var Graphics_Babylon_Aff_Sound = PS["Graphics.Babylon.Aff.Sound"];
   var Graphics_Babylon_Sound = PS["Graphics.Babylon.Sound"];
   var Graphics_Babylon_Types = PS["Graphics.Babylon.Types"];
@@ -10173,30 +10167,7 @@ var PS = {};
   var Data_Foldable = PS["Data.Foldable"];
   var Control_Applicative = PS["Control.Applicative"];
   var Data_Function = PS["Data.Function"];
-  var Data_Semigroup = PS["Data.Semigroup"];        
-  var setSEVolume = function (volume) {
-      return function (sounds) {
-          return Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(sounds.ses)(Graphics_Babylon_Sound.setVolume(volume));
-      };
-  };
-  var setMute = function (mute) {
-      return function (sounds) {
-          return Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(sounds.all)(Graphics_Babylon_Sound.setVolume((function () {
-              if (mute) {
-                  return 0.0;
-              };
-              if (!mute) {
-                  return 1.0;
-              };
-              throw new Error("Failed pattern match at Game.Cubbit.Sounds line 93, column 51 - line 93, column 76: " + [ mute.constructor.name ]);
-          })()));
-      };
-  };
-  var setBGMVolume = function (volume) {
-      return function (sounds) {
-          return Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(sounds.bgms)(Graphics_Babylon_Sound.setVolume(volume));
-      };
-  };
+  var Data_Semigroup = PS["Data.Semigroup"];
   var loadSounds = function (scene) {
       return function (inc) {
           var load = function (url) {
@@ -10255,42 +10226,39 @@ var PS = {};
       };
   };
   exports["loadSounds"] = loadSounds;
-  exports["setBGMVolume"] = setBGMVolume;
-  exports["setMute"] = setMute;
-  exports["setSEVolume"] = setSEVolume;
 })(PS["Game.Cubbit.Sounds"] = PS["Game.Cubbit.Sounds"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports._loadMesh = function(meshesNames){
-      return function(rootUrl){
-          return function(sceneFilename){
-              return function(scene){
-                  return function(onsuccess){
-                      return function(progressCallBack){
-                          return function(onerror){
-                              return function(){
-                                  BABYLON.SceneLoader.ImportMesh(
-                                      meshesNames, rootUrl, sceneFilename, scene,
-                                      function(result){
-                                          onsuccess(result)();
-                                      },
-                                      function(e){
-                                          progressCallBack(e)();
-                                      },
-                                      function(e){
-                                          onerror(e)();
-                                      }
-                                  );
-                              };
-                          };
-                      };
-                  };
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports._loadMesh = function(meshesNames){
+      return function(rootUrl){
+          return function(sceneFilename){
+              return function(scene){
+                  return function(onsuccess){
+                      return function(progressCallBack){
+                          return function(onerror){
+                              return function(){
+                                  BABYLON.SceneLoader.ImportMesh(
+                                      meshesNames, rootUrl, sceneFilename, scene,
+                                      function(result){
+                                          onsuccess(result)();
+                                      },
+                                      function(e){
+                                          progressCallBack(e)();
+                                      },
+                                      function(e){
+                                          onerror(e)();
+                                      }
+                                  );
+                              };
+                          };
+                      };
+                  };
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Aff.SceneLoader"] = PS["Graphics.Babylon.Aff.SceneLoader"] || {});
 (function(exports) {
@@ -10320,31 +10288,31 @@ var PS = {};
   exports["loadMesh"] = loadMesh;
 })(PS["Graphics.Babylon.Aff.SceneLoader"] = PS["Graphics.Babylon.Aff.SceneLoader"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports._loadTexture = function(path){
-      return function(scene){
-          return function(options){
-              return function(reject){
-                  return function(resolve){
-                      return function(){
-                          var texture = new BABYLON.Texture(path, scene, options.noMipmap, options.invertY, options.samplingMode,
-                              function(){
-                                  options.onLoad({})();
-                                  resolve(texture)();
-                              },
-                              function(){
-                                  options.onError({})();
-                                  reject(new Error())();
-                              })
-                           ;
-                      };
-                  };
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports._loadTexture = function(path){
+      return function(scene){
+          return function(options){
+              return function(reject){
+                  return function(resolve){
+                      return function(){
+                          var texture = new BABYLON.Texture(path, scene, options.noMipmap, options.invertY, options.samplingMode,
+                              function(){
+                                  options.onLoad({})();
+                                  resolve(texture)();
+                              },
+                              function(){
+                                  options.onError({})();
+                                  reject(new Error())();
+                              })
+                           ;
+                      };
+                  };
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Aff.Texture"] = PS["Graphics.Babylon.Aff.Texture"] || {});
 (function(exports) {
@@ -10366,38 +10334,38 @@ var PS = {};
   exports["loadTexture"] = loadTexture;
 })(PS["Graphics.Babylon.Aff.Texture"] = PS["Graphics.Babylon.Aff.Texture"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.setPosition = function(position){
-      return function(camera){
-          return function(){
-              camera.position = position;
-          };
-      };
-  };
-
-  exports.setMaxZ = function(maxZ){
-      return function(camera){
-          return function(){
-              camera.maxZ = maxZ;
-          };
-      };
-  };
-
-  exports.setMinZ = function(minZ){
-      return function(camera){
-          return function(){
-              camera.minZ = minZ;
-          };
-      };
-  };
-
-  exports.setFOV = function(fov){
-      return function(camera){
-          return function(){
-              camera.fov = fov;
-          };
-      };
+    "use strict";
+
+  exports.setPosition = function(position){
+      return function(camera){
+          return function(){
+              camera.position = position;
+          };
+      };
+  };
+
+  exports.setMaxZ = function(maxZ){
+      return function(camera){
+          return function(){
+              camera.maxZ = maxZ;
+          };
+      };
+  };
+
+  exports.setMinZ = function(minZ){
+      return function(camera){
+          return function(){
+              camera.minZ = minZ;
+          };
+      };
+  };
+
+  exports.setFOV = function(fov){
+      return function(camera){
+          return function(){
+              camera.fov = fov;
+          };
+      };
   };
 })(PS["Graphics.Babylon.Camera"] = PS["Graphics.Babylon.Camera"] || {});
 (function(exports) {
@@ -10413,31 +10381,31 @@ var PS = {};
   exports["setPosition"] = $foreign.setPosition;
 })(PS["Graphics.Babylon.Camera"] = PS["Graphics.Babylon.Camera"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createCubeTexture = function(path){
-      return function(scene){
-          return function(){
-
-              // HACK
-              ///BABYLON.CubeTexture.prototype.getTextureMatrix = function(){
-              //    return this._textureMatrix;
-              //}
-
-
-              var tex = new BABYLON.CubeTexture(path, scene);
-
-
-
-              return tex;
-          };
-      };
-  };
-
-  exports.cubeTextureToTexture = function(tex){
-      return tex;
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createCubeTexture = function(path){
+      return function(scene){
+          return function(){
+
+              // HACK
+              ///BABYLON.CubeTexture.prototype.getTextureMatrix = function(){
+              //    return this._textureMatrix;
+              //}
+
+
+              var tex = new BABYLON.CubeTexture(path, scene);
+
+
+
+              return tex;
+          };
+      };
+  };
+
+  exports.cubeTextureToTexture = function(tex){
+      return tex;
   };
 })(PS["Graphics.Babylon.CubeTexture"] = PS["Graphics.Babylon.CubeTexture"] || {});
 (function(exports) {
@@ -10450,23 +10418,23 @@ var PS = {};
   exports["cubeTextureToTexture"] = $foreign.cubeTextureToTexture;
 })(PS["Graphics.Babylon.CubeTexture"] = PS["Graphics.Babylon.CubeTexture"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createDirectionalLight = function(id){
-      return function(direction){
-          return function(scene){
-              return function(){
-                  return new BABYLON.DirectionalLight(id, direction, scene);
-              };
-          };
-      };
-  };
-
-
-  exports.directionalLightToLight = function(light){
-      return light;
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createDirectionalLight = function(id){
+      return function(direction){
+          return function(scene){
+              return function(){
+                  return new BABYLON.DirectionalLight(id, direction, scene);
+              };
+          };
+      };
+  };
+
+
+  exports.directionalLightToLight = function(light){
+      return light;
   };
 })(PS["Graphics.Babylon.DirectionalLight"] = PS["Graphics.Babylon.DirectionalLight"] || {});
 (function(exports) {
@@ -10479,37 +10447,37 @@ var PS = {};
   exports["directionalLightToLight"] = $foreign.directionalLightToLight;
 })(PS["Graphics.Babylon.DirectionalLight"] = PS["Graphics.Babylon.DirectionalLight"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createEngine = function(canvas){
-      return function(antialias){
-          return function(){
-              return new BABYLON.Engine(canvas, antialias);
-          };
-      };
-  };
-
-
-  exports.runRenderLoop = function(callback){
-      return function(engine){
-          return function(){
-              engine.runRenderLoop(callback);
-          };
-      };
-  };
-
-  exports.getDeltaTime = function(engine){
-      return function(){
-          return engine.getDeltaTime();
-      };
-  };
-
-  exports.resize = function(engine){
-      return function(){
-          engine.resize();
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createEngine = function(canvas){
+      return function(antialias){
+          return function(){
+              return new BABYLON.Engine(canvas, antialias);
+          };
+      };
+  };
+
+
+  exports.runRenderLoop = function(callback){
+      return function(engine){
+          return function(){
+              engine.runRenderLoop(callback);
+          };
+      };
+  };
+
+  exports.getDeltaTime = function(engine){
+      return function(){
+          return engine.getDeltaTime();
+      };
+  };
+
+  exports.resize = function(engine){
+      return function(){
+          engine.resize();
+      };
   };
 })(PS["Graphics.Babylon.Engine"] = PS["Graphics.Babylon.Engine"] || {});
 (function(exports) {
@@ -10526,23 +10494,23 @@ var PS = {};
   exports["runRenderLoop"] = $foreign.runRenderLoop;
 })(PS["Graphics.Babylon.Engine"] = PS["Graphics.Babylon.Engine"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createHemisphericLight = function(id){
-      return function(position){
-          return function(scene){
-              return function(){
-                  return new BABYLON.HemisphericLight(id, position, scene);
-              };
-          };
-      };
-  };
-
-
-  exports.hemisphericLightToLight = function(light){
-      return light;
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createHemisphericLight = function(id){
+      return function(position){
+          return function(scene){
+              return function(){
+                  return new BABYLON.HemisphericLight(id, position, scene);
+              };
+          };
+      };
+  };
+
+
+  exports.hemisphericLightToLight = function(light){
+      return light;
   };
 })(PS["Graphics.Babylon.HemisphericLight"] = PS["Graphics.Babylon.HemisphericLight"] || {});
 (function(exports) {
@@ -10555,14 +10523,14 @@ var PS = {};
   exports["hemisphericLightToLight"] = $foreign.hemisphericLightToLight;
 })(PS["Graphics.Babylon.HemisphericLight"] = PS["Graphics.Babylon.HemisphericLight"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.setDiffuse = function(color){
-      return function(light){
-          return function(){
-              light.diffuse = color;
-          };
-      };
+    "use strict";
+
+  exports.setDiffuse = function(color){
+      return function(light){
+          return function(){
+              light.diffuse = color;
+          };
+      };
   };
 })(PS["Graphics.Babylon.Light"] = PS["Graphics.Babylon.Light"] || {});
 (function(exports) {
@@ -10575,10 +10543,10 @@ var PS = {};
   exports["setDiffuse"] = $foreign.setDiffuse;
 })(PS["Graphics.Babylon.Light"] = PS["Graphics.Babylon.Light"] || {});
 (function(exports) {
-    "use strict";
-
-  exports.getName = function(node){
-      return node.name;
+    "use strict";
+
+  exports.getName = function(node){
+      return node.name;
   };
 })(PS["Graphics.Babylon.Node"] = PS["Graphics.Babylon.Node"] || {});
 (function(exports) {
@@ -10589,106 +10557,113 @@ var PS = {};
   exports["getName"] = $foreign.getName;
 })(PS["Graphics.Babylon.Node"] = PS["Graphics.Babylon.Node"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createScene = function(engine){
-      return function(){
-          return new BABYLON.Scene(engine);
-      };
-  };
-
-  exports.render = function(scene){
-      return function(){
-          scene.render();
-      };
-  };
-
-  exports.fOGMODE_EXP = BABYLON.Scene.FOGMODE_EXP;
-
-  exports.setFogMode = function(fogMode){
-      return function(scene){
-          return function(){
-              scene.fogMode = fogMode;
-          };
-      };
-  };
-
-  exports.setFogDensity = function(fogDensity){
-      return function(scene){
-          return function(){
-              scene.fogDensity = fogDensity;
-          };
-      };
-  };
-
-  exports.setFogColor = function(fogColor){
-      return function(scene){
-          return function(){
-              scene.fogColor = fogColor;
-          };
-      };
-  };
-
-  exports.setCollisionsEnabled = function(collisionsEnabled){
-      return function(scene){
-          return function(){
-              scene.collisionsEnabled = collisionsEnabled;
-          };
-      };
-  };
-
-  exports.getDebugLayer = function(scene){
-      return function(){
-          return scene.debugLayer;
-      };
-  };
-
-  exports.pick = function(x){
-      return function(y){
-          return function(predicate){
-              return function(fastCheck){
-                  return function(scene){
-                      return function(){
-                          return scene.pick(x, y, function(mesh){
-                              return predicate(mesh)();
-                          }, fastCheck);
-                      };
-                  };
-              };
-          };
-      };
-  };
-
-  exports.pickWithRay = function(ray){
-      return function(predicate){
-          return function(fastCheck){
-              return function(scene){
-                  return function(){
-                      return scene.pickWithRay(ray, function(mesh){
-                          return predicate(mesh)();
-                      }, fastCheck);
-                  };
-              };
-          };
-      };
-  };
-
-  exports.setActiveCamera = function(camera){
-      return function(scene){
-          return function(){
-              scene.activeCamera = camera;
-          };
-      };
-  };
-
-  exports.setActiveCameras = function(cameras){
-      return function(scene){
-          return function(){
-              scene.activeCameras = cameras;
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createScene = function(engine){
+      return function(){
+          return new BABYLON.Scene(engine);
+      };
+  };
+
+  exports.render = function(scene){
+      return function(){
+          scene.render();
+      };
+  };
+
+  exports.fOGMODE_EXP = BABYLON.Scene.FOGMODE_EXP;
+
+  exports.setFogMode = function(fogMode){
+      return function(scene){
+          return function(){
+              scene.fogMode = fogMode;
+          };
+      };
+  };
+
+  exports.setFogDensity = function(fogDensity){
+      return function(scene){
+          return function(){
+              scene.fogDensity = fogDensity;
+          };
+      };
+  };
+
+  exports.setFogColor = function(fogColor){
+      return function(scene){
+          return function(){
+              scene.fogColor = fogColor;
+          };
+      };
+  };
+
+  exports.setCollisionsEnabled = function(collisionsEnabled){
+      return function(scene){
+          return function(){
+              scene.collisionsEnabled = collisionsEnabled;
+          };
+      };
+  };
+
+  exports.getDebugLayer = function(scene){
+      return function(){
+          return scene.debugLayer;
+      };
+  };
+
+  exports.pick = function(x){
+      return function(y){
+          return function(predicate){
+              return function(fastCheck){
+                  return function(scene){
+                      return function(){
+                          return scene.pick(x, y, function(mesh){
+                              return predicate(mesh)();
+                          }, fastCheck);
+                      };
+                  };
+              };
+          };
+      };
+  };
+
+  exports.pickWithRay = function(ray){
+      return function(predicate){
+          return function(fastCheck){
+              return function(scene){
+                  return function(){
+                      return scene.pickWithRay(ray, function(mesh){
+                          return predicate(mesh)();
+                      }, fastCheck);
+                  };
+              };
+          };
+      };
+  };
+
+  exports.setActiveCamera = function(camera){
+      return function(scene){
+          return function(){
+              scene.activeCamera = camera;
+          };
+      };
+  };
+
+  exports.setActiveCameras = function(cameras){
+      return function(scene){
+          return function(){
+              scene.activeCameras = cameras;
+          };
+      };
+  };
+
+
+  exports.getMeshes = function(scene){
+      return function(){
+          return scene.meshes;
+      };
   };
 })(PS["Graphics.Babylon.Scene"] = PS["Graphics.Babylon.Scene"] || {});
 (function(exports) {
@@ -10702,6 +10677,7 @@ var PS = {};
   exports["createScene"] = $foreign.createScene;
   exports["fOGMODE_EXP"] = $foreign.fOGMODE_EXP;
   exports["getDebugLayer"] = $foreign.getDebugLayer;
+  exports["getMeshes"] = $foreign.getMeshes;
   exports["pick"] = $foreign.pick;
   exports["pickWithRay"] = $foreign.pickWithRay;
   exports["render"] = $foreign.render;
@@ -10713,48 +10689,48 @@ var PS = {};
   exports["setFogMode"] = $foreign.setFogMode;
 })(PS["Graphics.Babylon.Scene"] = PS["Graphics.Babylon.Scene"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createShadowGenerator = function(size){
-      return function(light){
-          return function(){
-              return new BABYLON.ShadowGenerator(size, light);
-          };
-      };
-  };
-
-  exports.getShadowMap = function(shadowGenerator){
-      return function(){
-          return shadowGenerator.getShadowMap();
-      };
-  };
-
-  exports.setRenderList = function(renderList){
-      return function(shadowMap){
-          return function(){
-              shadowMap.renderList = renderList.filter(function(mesh){
-                  return (0 < mesh.getTotalVertices()) && ( ( ! mesh.skeleton) || mesh.skeleton.getTransformMatrices(mesh) );
-              });
-          };
-      };
-  };
-
-  exports.setBias = function(bias){
-      return function(generator){
-          return function(){
-              generator.bias = bias;
-          };
-      };
-  };
-
-  exports.setUsePoissonSampling = function(usePoissonSampling){
-      return function(generator){
-          return function(){
-              generator.usePoissonSampling = usePoissonSampling;
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createShadowGenerator = function(size){
+      return function(light){
+          return function(){
+              return new BABYLON.ShadowGenerator(size, light);
+          };
+      };
+  };
+
+  exports.getShadowMap = function(shadowGenerator){
+      return function(){
+          return shadowGenerator.getShadowMap();
+      };
+  };
+
+  exports.setRenderList = function(renderList){
+      return function(shadowMap){
+          return function(){
+              shadowMap.renderList = renderList.filter(function(mesh){
+                  return (0 < mesh.getTotalVertices()) && ( ( ! mesh.skeleton) || mesh.skeleton.getTransformMatrices(mesh) );
+              });
+          };
+      };
+  };
+
+  exports.setBias = function(bias){
+      return function(generator){
+          return function(){
+              generator.bias = bias;
+          };
+      };
+  };
+
+  exports.setUsePoissonSampling = function(usePoissonSampling){
+      return function(generator){
+          return function(){
+              generator.usePoissonSampling = usePoissonSampling;
+          };
+      };
   };
 })(PS["Graphics.Babylon.ShadowGenerator"] = PS["Graphics.Babylon.ShadowGenerator"] || {});
 (function(exports) {
@@ -10771,30 +10747,30 @@ var PS = {};
   exports["setUsePoissonSampling"] = $foreign.setUsePoissonSampling;
 })(PS["Graphics.Babylon.ShadowGenerator"] = PS["Graphics.Babylon.ShadowGenerator"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createTargetCamera = function(name){
-      return function(position){
-          return function(scene){
-              return function(){
-                  return new BABYLON.TargetCamera(name, position, scene);
-              };
-          };
-      };
-  };
-
-  exports.targetCameraToCamera = function(camera){
-      return camera;
-  };
-
-  exports.setTarget = function(position){
-      return function(camera){
-          return function(){
-              camera.setTarget(position);
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createTargetCamera = function(name){
+      return function(position){
+          return function(scene){
+              return function(){
+                  return new BABYLON.TargetCamera(name, position, scene);
+              };
+          };
+      };
+  };
+
+  exports.targetCameraToCamera = function(camera){
+      return camera;
+  };
+
+  exports.setTarget = function(position){
+      return function(camera){
+          return function(){
+              camera.setTarget(position);
+          };
+      };
   };
 })(PS["Graphics.Babylon.TargetCamera"] = PS["Graphics.Babylon.TargetCamera"] || {});
 (function(exports) {
@@ -11864,10 +11840,10 @@ var PS = {};
   exports["updatePhysics"] = updatePhysics;
 })(PS["Game.Cubbit.Collesion"] = PS["Game.Cubbit.Collesion"] || {});
 (function(exports) {
-    "use strict";
-
-  exports._getPickedPoint = function(info){
-      return info.pickedPoint;
+    "use strict";
+
+  exports._getPickedPoint = function(info){
+      return info.pickedPoint;
   };
 })(PS["Graphics.Babylon.PickingInfo"] = PS["Graphics.Babylon.PickingInfo"] || {});
 (function(exports) {
@@ -11885,22 +11861,22 @@ var PS = {};
   exports["getPickedPoint"] = getPickedPoint;
 })(PS["Graphics.Babylon.PickingInfo"] = PS["Graphics.Babylon.PickingInfo"] || {});
 (function(exports) {
-    "use strict";
-
-  exports._beginAnimation = function(name){
-      return function(loop){
-          return function(speedRatio){
-              return function(onAnimationEnd){
-                  return function(skeleton){
-                      return function(){
-                          return skeleton.beginAnimation(name, loop, speedRatio, function(){
-                              onAnimationEnd({})();
-                          });
-                      };
-                  };
-              };
-          };
-      };
+    "use strict";
+
+  exports._beginAnimation = function(name){
+      return function(loop){
+          return function(speedRatio){
+              return function(onAnimationEnd){
+                  return function(skeleton){
+                      return function(){
+                          return skeleton.beginAnimation(name, loop, speedRatio, function(){
+                              onAnimationEnd({})();
+                          });
+                      };
+                  };
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Skeleton"] = PS["Graphics.Babylon.Skeleton"] || {});
 (function(exports) {
@@ -13105,30 +13081,30 @@ var PS = {};
   };
 })(PS["Game.Cubbit.MeshBuilder"] = PS["Game.Cubbit.MeshBuilder"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createVertexData = function(props){
-      return function(){
-          var v = new BABYLON.VertexData();
-          v.indices = props.indices;
-          v.positions = props.positions;
-          v.normals = props.normals;
-          v.uvs = props.uvs;
-          v.colors = props.colors;
-          return v;
-      };
-  };
-
-  exports.applyToMesh = function(mesh){
-      return function(updatable){
-          return function(vertexData){
-              return function(){
-                  vertexData.applyToMesh(mesh, updatable);
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createVertexData = function(props){
+      return function(){
+          var v = new BABYLON.VertexData();
+          v.indices = props.indices;
+          v.positions = props.positions;
+          v.normals = props.normals;
+          v.uvs = props.uvs;
+          v.colors = props.colors;
+          return v;
+      };
+  };
+
+  exports.applyToMesh = function(mesh){
+      return function(updatable){
+          return function(vertexData){
+              return function(){
+                  vertexData.applyToMesh(mesh, updatable);
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.VertexData"] = PS["Graphics.Babylon.VertexData"] || {});
 (function(exports) {
@@ -13465,24 +13441,24 @@ var PS = {};
   exports["requestPointerLock"] = $foreign.requestPointerLock;
 })(PS["Game.Cubbit.PointerLock"] = PS["Game.Cubbit.PointerLock"] || {});
 (function(exports) {
-    "use strict";
-
-  exports._show = function(showUI){
-      return function(camera){
-          return function(rootElement){
-              return function(debugLayer){
-                  return function(){
-                      debugLayer.show(showUI, camera, rootElement);
-                  };
-              };
-          };
-      };
-  };
-
-  exports.hide = function(debugLayer){
-      return function(){
-          debugLayer.hide();
-      };
+    "use strict";
+
+  exports._show = function(showUI){
+      return function(camera){
+          return function(rootElement){
+              return function(debugLayer){
+                  return function(){
+                      debugLayer.show(showUI, camera, rootElement);
+                  };
+              };
+          };
+      };
+  };
+
+  exports.hide = function(debugLayer){
+      return function(){
+          debugLayer.hide();
+      };
   };
 })(PS["Graphics.Babylon.DebugLayer"] = PS["Graphics.Babylon.DebugLayer"] || {});
 (function(exports) {
@@ -13839,8 +13815,7 @@ var PS = {};
   exports["action"] = action;
 })(PS["Halogen.Query"] = PS["Halogen.Query"] || {});
 (function(exports) {
-  // Generated by psc version 0.10.3
-  "use strict";
+    "use strict";
   var $foreign = PS["Game.Cubbit.Hud.Eval"];
   var Control_Alt = PS["Control.Alt"];
   var Control_Alternative = PS["Control.Alternative"];
@@ -13889,11 +13864,10 @@ var PS = {};
   var Control_Monad_State_Class = PS["Control.Monad.State.Class"];
   var Data_Functor = PS["Data.Functor"];
   var Control_Applicative = PS["Control.Applicative"];
-  var Data_EuclideanRing = PS["Data.EuclideanRing"];
   var Data_HeytingAlgebra = PS["Data.HeytingAlgebra"];
+  var Data_Foldable = PS["Data.Foldable"];
   var Control_Monad_Aff_Class = PS["Control.Monad.Aff.Class"];
   var Data_Ring = PS["Data.Ring"];
-  var Data_Foldable = PS["Data.Foldable"];
   var Data_Eq = PS["Data.Eq"];
   var Data_Semiring = PS["Data.Semiring"];
   var DOM_Event_Types = PS["DOM.Event.Types"];        
@@ -13958,55 +13932,54 @@ var PS = {};
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.ShowConfig) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $60 = {};
-                                  for (var $61 in v2) {
-                                      if (v2.hasOwnProperty($61)) {
-                                          $60[$61] = v2[$61];
+                                  var $63 = {};
+                                  for (var $64 in v2) {
+                                      if (v2.hasOwnProperty($64)) {
+                                          $63[$64] = v2[$64];
                                       };
                                   };
-                                  $60.configVisible = true;
-                                  return $60;
+                                  $63.configVisible = true;
+                                  return $63;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound));
                               });
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.CloseConfig) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $64 = {};
-                                  for (var $65 in v2) {
-                                      if (v2.hasOwnProperty($65)) {
-                                          $64[$65] = v2[$65];
+                                  var $67 = {};
+                                  for (var $68 in v2) {
+                                      if (v2.hasOwnProperty($68)) {
+                                          $67[$68] = v2[$68];
                                       };
                                   };
-                                  $64.configVisible = false;
-                                  return $64;
+                                  $67.configVisible = false;
+                                  return $67;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound));
                               });
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.SetBGMVolume) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $71 = {};
-                                  for (var $72 in v2) {
-                                      if (v2.hasOwnProperty($72)) {
-                                          $71[$72] = v2[$72];
+                                  var $74 = {};
+                                  for (var $75 in v2) {
+                                      if (v2.hasOwnProperty($75)) {
+                                          $74[$75] = v2[$75];
                                       };
                                   };
-                                  $71.config = (function () {
-                                      var $68 = {};
-                                      for (var $69 in v2.config) {
-                                          if (v2.config.hasOwnProperty($69)) {
-                                              $68[$69] = v2.config[$69];
+                                  $74.config = (function () {
+                                      var $71 = {};
+                                      for (var $72 in v2.config) {
+                                          if (v2.config.hasOwnProperty($72)) {
+                                              $71[$72] = v2.config[$72];
                                           };
                                       };
-                                      $68.bgmVolume = query.value0.value0;
-                                      return $68;
+                                      $71.bgmVolume = query.value0.value0;
+                                      return $71;
                                   })();
-                                  return $71;
+                                  return $74;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
-                                      Game_Cubbit_Sounds.setBGMVolume(Data_Int.toNumber(query.value0.value0) / 8.0)(v.res.value0.sounds)();
                                       var v2 = Control_Monad_Eff_Ref.readRef(ref)();
                                       return Game_Cubbit_Config.writeConfig(v2.config)();
                                   });
@@ -14014,27 +13987,26 @@ var PS = {};
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.SetSEVolume) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $81 = {};
-                                  for (var $82 in v2) {
-                                      if (v2.hasOwnProperty($82)) {
-                                          $81[$82] = v2[$82];
+                                  var $84 = {};
+                                  for (var $85 in v2) {
+                                      if (v2.hasOwnProperty($85)) {
+                                          $84[$85] = v2[$85];
                                       };
                                   };
-                                  $81.config = (function () {
-                                      var $78 = {};
-                                      for (var $79 in v2.config) {
-                                          if (v2.config.hasOwnProperty($79)) {
-                                              $78[$79] = v2.config[$79];
+                                  $84.config = (function () {
+                                      var $81 = {};
+                                      for (var $82 in v2.config) {
+                                          if (v2.config.hasOwnProperty($82)) {
+                                              $81[$82] = v2.config[$82];
                                           };
                                       };
-                                      $78.seVolume = query.value0.value0;
-                                      return $78;
+                                      $81.seVolume = query.value0.value0;
+                                      return $81;
                                   })();
-                                  return $81;
+                                  return $84;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
-                                      Game_Cubbit_Sounds.setSEVolume(Data_Int.toNumber(query.value0.value0) / 8.0)(v.res.value0.sounds)();
                                       var v2 = Control_Monad_Eff_Ref.readRef(ref)();
                                       return Game_Cubbit_Config.writeConfig(v2.config)();
                                   });
@@ -14042,77 +14014,96 @@ var PS = {};
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.ToggleShadow) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $91 = {};
-                                  for (var $92 in v2) {
-                                      if (v2.hasOwnProperty($92)) {
-                                          $91[$92] = v2[$92];
+                                  var $94 = {};
+                                  for (var $95 in v2) {
+                                      if (v2.hasOwnProperty($95)) {
+                                          $94[$95] = v2[$95];
                                       };
                                   };
-                                  $91.config = (function () {
-                                      var $88 = {};
-                                      for (var $89 in v2.config) {
-                                          if (v2.config.hasOwnProperty($89)) {
-                                              $88[$89] = v2.config[$89];
+                                  $94.config = (function () {
+                                      var $91 = {};
+                                      for (var $92 in v2.config) {
+                                          if (v2.config.hasOwnProperty($92)) {
+                                              $91[$92] = v2.config[$92];
                                           };
                                       };
-                                      $88.shadow = !v2.config.shadow;
-                                      return $88;
+                                      $91.shadow = !v2.config.shadow;
+                                      return $91;
                                   })();
-                                  return $91;
+                                  return $94;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
                                       var v2 = Control_Monad_Eff_Ref.readRef(ref)();
-                                      return Game_Cubbit_Config.writeConfig(v2.config)();
+                                      Game_Cubbit_Config.writeConfig(v2.config)();
+                                      if (v2.res instanceof Game_Cubbit_Types.Loading) {
+                                          return Data_Unit.unit;
+                                      };
+                                      if (v2.res instanceof Game_Cubbit_Types.Complete) {
+                                          var v3 = Graphics_Babylon_Scene.getMeshes(v2.res.value0.scene)();
+                                          return Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(v3)(Graphics_Babylon_AbstractMesh.setReceiveShadows(v2.config.shadow))();
+                                      };
+                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 137, column 29 - line 141, column 82: " + [ v2.res.constructor.name ]);
                                   });
                               });
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.ToggleVertexColor) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $100 = {};
-                                  for (var $101 in v2) {
-                                      if (v2.hasOwnProperty($101)) {
-                                          $100[$101] = v2[$101];
+                                  var $108 = {};
+                                  for (var $109 in v2) {
+                                      if (v2.hasOwnProperty($109)) {
+                                          $108[$109] = v2[$109];
                                       };
                                   };
-                                  $100.config = (function () {
-                                      var $97 = {};
-                                      for (var $98 in v2.config) {
-                                          if (v2.config.hasOwnProperty($98)) {
-                                              $97[$98] = v2.config[$98];
+                                  $108.config = (function () {
+                                      var $105 = {};
+                                      for (var $106 in v2.config) {
+                                          if (v2.config.hasOwnProperty($106)) {
+                                              $105[$106] = v2.config[$106];
                                           };
                                       };
-                                      $97.vertexColor = !v2.config.vertexColor;
-                                      return $97;
+                                      $105.vertexColor = !v2.config.vertexColor;
+                                      return $105;
                                   })();
-                                  return $100;
+                                  return $108;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
                                       var v2 = Control_Monad_Eff_Ref.readRef(ref)();
-                                      return Game_Cubbit_Config.writeConfig(v2.config)();
+                                      Game_Cubbit_Config.writeConfig(v2.config)();
+                                      Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
+                                      var v3 = Control_Monad_Eff_Ref.readRef(ref)();
+                                      Game_Cubbit_Config.writeConfig(v3.config)();
+                                      if (v3.res instanceof Game_Cubbit_Types.Loading) {
+                                          return Data_Unit.unit;
+                                      };
+                                      if (v3.res instanceof Game_Cubbit_Types.Complete) {
+                                          var v4 = Graphics_Babylon_Scene.getMeshes(v3.res.value0.scene)();
+                                          return Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(v4)(Graphics_Babylon_AbstractMesh.setUseVertexColors(v3.config.vertexColor))();
+                                      };
+                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 158, column 29 - line 162, column 88: " + [ v3.res.constructor.name ]);
                                   });
                               });
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.SetShadowArea) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $109 = {};
-                                  for (var $110 in v2) {
-                                      if (v2.hasOwnProperty($110)) {
-                                          $109[$110] = v2[$110];
+                                  var $123 = {};
+                                  for (var $124 in v2) {
+                                      if (v2.hasOwnProperty($124)) {
+                                          $123[$124] = v2[$124];
                                       };
                                   };
-                                  $109.config = (function () {
-                                      var $106 = {};
-                                      for (var $107 in v2.config) {
-                                          if (v2.config.hasOwnProperty($107)) {
-                                              $106[$107] = v2.config[$107];
+                                  $123.config = (function () {
+                                      var $120 = {};
+                                      for (var $121 in v2.config) {
+                                          if (v2.config.hasOwnProperty($121)) {
+                                              $120[$121] = v2.config[$121];
                                           };
                                       };
-                                      $106.shadowArea = query.value0.value0;
-                                      return $106;
+                                      $120.shadowArea = query.value0.value0;
+                                      return $120;
                                   })();
-                                  return $109;
+                                  return $123;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
@@ -14123,23 +14114,23 @@ var PS = {};
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.SetChunkArea) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $119 = {};
-                                  for (var $120 in v2) {
-                                      if (v2.hasOwnProperty($120)) {
-                                          $119[$120] = v2[$120];
+                                  var $133 = {};
+                                  for (var $134 in v2) {
+                                      if (v2.hasOwnProperty($134)) {
+                                          $133[$134] = v2[$134];
                                       };
                                   };
-                                  $119.config = (function () {
-                                      var $116 = {};
-                                      for (var $117 in v2.config) {
-                                          if (v2.config.hasOwnProperty($117)) {
-                                              $116[$117] = v2.config[$117];
+                                  $133.config = (function () {
+                                      var $130 = {};
+                                      for (var $131 in v2.config) {
+                                          if (v2.config.hasOwnProperty($131)) {
+                                              $130[$131] = v2.config[$131];
                                           };
                                       };
-                                      $116.chunkArea = query.value0.value0;
-                                      return $116;
+                                      $130.chunkArea = query.value0.value0;
+                                      return $130;
                                   })();
-                                  return $119;
+                                  return $133;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound)();
@@ -14177,35 +14168,35 @@ var PS = {};
                               });
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.play(v.res.value0.sounds.warpSound)))(function () {
                                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                      var $126 = {};
-                                      for (var $127 in v2) {
-                                          if (v2.hasOwnProperty($127)) {
-                                              $126[$127] = v2[$127];
+                                      var $140 = {};
+                                      for (var $141 in v2) {
+                                          if (v2.hasOwnProperty($141)) {
+                                              $140[$141] = v2[$141];
                                           };
                                       };
-                                      $126.nextScene = new Data_Maybe.Just(nextScene);
-                                      return $126;
+                                      $140.nextScene = new Data_Maybe.Just(nextScene);
+                                      return $140;
                                   }))(function () {
                                       return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Game_Cubbit_Aff.wait(Halogen_Query_HalogenM.monadAffHalogenM(Control_Monad_Aff_Class.monadAffAff))(1000))(function () {
                                           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                              var $130 = {};
-                                              for (var $131 in v2) {
-                                                  if (v2.hasOwnProperty($131)) {
-                                                      $130[$131] = v2[$131];
+                                              var $144 = {};
+                                              for (var $145 in v2) {
+                                                  if (v2.hasOwnProperty($145)) {
+                                                      $144[$145] = v2[$145];
                                                   };
                                               };
-                                              $130.cameraPosition = {
+                                              $144.cameraPosition = {
                                                   x: 10.0, 
                                                   y: 20.0, 
                                                   z: -10.0
                                               };
-                                              $130.cameraTarget = {
+                                              $144.cameraTarget = {
                                                   x: 0.5, 
                                                   y: 11.0, 
                                                   z: 0.5
                                               };
-                                              $130.sceneState = nextScene;
-                                              return $130;
+                                              $144.sceneState = nextScene;
+                                              return $144;
                                           }))(function () {
                                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Data_Foldable.for_(Control_Monad_Eff.applicativeEff)(Data_Foldable.foldableArray)(v.res.value0.playerMeshes)(function (mesh) {
                                                   return Data_Functor["void"](Control_Monad_Eff.functorEff)(Graphics_Babylon_AbstractMesh.setIsVisible(true)(mesh));
@@ -14213,15 +14204,15 @@ var PS = {};
                                                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Game_Cubbit_Aff.wait(Halogen_Query_HalogenM.monadAffHalogenM(Control_Monad_Aff_Class.monadAffAff))(1000))(function () {
                                                       return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.play(v.res.value0.sounds.forestSound)))(function () {
                                                           return modifyAppState(ref)(function (v2) {
-                                                              var $134 = {};
-                                                              for (var $135 in v2) {
-                                                                  if (v2.hasOwnProperty($135)) {
-                                                                      $134[$135] = v2[$135];
+                                                              var $148 = {};
+                                                              for (var $149 in v2) {
+                                                                  if (v2.hasOwnProperty($149)) {
+                                                                      $148[$149] = v2[$149];
                                                                   };
                                                               };
-                                                              $134.nextScene = Data_Maybe.Nothing.value;
-                                                              $134.nextBGM = new Data_Maybe.Just(v.res.value0.sounds.rye);
-                                                              return $134;
+                                                              $148.nextScene = Data_Maybe.Nothing.value;
+                                                              $148.nextBGM = new Data_Maybe.Just(v.res.value0.sounds.rye);
+                                                              return $148;
                                                           });
                                                       });
                                                   });
@@ -14233,27 +14224,26 @@ var PS = {};
                           };
                           if (query.value0 instanceof Game_Cubbit_Hud_Type.ToggleMute) {
                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v2) {
-                                  var $141 = {};
-                                  for (var $142 in v2) {
-                                      if (v2.hasOwnProperty($142)) {
-                                          $141[$142] = v2[$142];
+                                  var $155 = {};
+                                  for (var $156 in v2) {
+                                      if (v2.hasOwnProperty($156)) {
+                                          $155[$156] = v2[$156];
                                       };
                                   };
-                                  $141.config = (function () {
-                                      var $138 = {};
-                                      for (var $139 in v2.config) {
-                                          if (v2.config.hasOwnProperty($139)) {
-                                              $138[$139] = v2.config[$139];
+                                  $155.config = (function () {
+                                      var $152 = {};
+                                      for (var $153 in v2.config) {
+                                          if (v2.config.hasOwnProperty($153)) {
+                                              $152[$153] = v2.config[$153];
                                           };
                                       };
-                                      $138.mute = !v2.config.mute;
-                                      return $138;
+                                      $152.mute = !v2.config.mute;
+                                      return $152;
                                   })();
-                                  return $141;
+                                  return $155;
                               }))(function () {
                                   return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                       var v2 = Control_Monad_Eff_Ref.readRef(ref)();
-                                      Game_Cubbit_Sounds.setMute(v2.config.mute)(v.res.value0.sounds)();
                                       return Game_Cubbit_Config.writeConfig(v2.config)();
                                   });
                               });
@@ -14266,45 +14256,45 @@ var PS = {};
                                   if (v2.sceneState instanceof Game_Cubbit_Types.PlayingSceneState) {
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.SetCursorPosition) {
                                           return Control_Applicative.when(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Eq.notEq(Game_Cubbit_BlockIndex.eq_BlockIndex)(query.value0.value0.value0)(v2.sceneState.value0.cursorPosition))(modifyAppState(ref)(function (v3) {
-                                              var $155 = {};
-                                              for (var $156 in v3) {
-                                                  if (v3.hasOwnProperty($156)) {
-                                                      $155[$156] = v3[$156];
+                                              var $169 = {};
+                                              for (var $170 in v3) {
+                                                  if (v3.hasOwnProperty($170)) {
+                                                      $169[$170] = v3[$170];
                                                   };
                                               };
-                                              $155.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                  var $152 = {};
-                                                  for (var $153 in v2.sceneState.value0) {
-                                                      if (v2.sceneState.value0.hasOwnProperty($153)) {
-                                                          $152[$153] = v2.sceneState.value0[$153];
+                                              $169.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                  var $166 = {};
+                                                  for (var $167 in v2.sceneState.value0) {
+                                                      if (v2.sceneState.value0.hasOwnProperty($167)) {
+                                                          $166[$167] = v2.sceneState.value0[$167];
                                                       };
                                                   };
-                                                  $152.cursorPosition = query.value0.value0.value0;
-                                                  return $152;
+                                                  $166.cursorPosition = query.value0.value0.value0;
+                                                  return $166;
                                               })());
-                                              return $155;
+                                              return $169;
                                           }));
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.SetMode) {
                                           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Control_Applicative.when(Control_Monad_Eff.applicativeEff)(Data_Eq.notEq(Game_Cubbit_Types.eqMode)(v2.sceneState.value0.mode)(query.value0.value0.value0))(Graphics_Babylon_Sound.play(v.res.value0.sounds.switchSound))))(function () {
                                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v3) {
-                                                  var $163 = {};
-                                                  for (var $164 in v3) {
-                                                      if (v3.hasOwnProperty($164)) {
-                                                          $163[$164] = v3[$164];
+                                                  var $177 = {};
+                                                  for (var $178 in v3) {
+                                                      if (v3.hasOwnProperty($178)) {
+                                                          $177[$178] = v3[$178];
                                                       };
                                                   };
-                                                  $163.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                      var $160 = {};
-                                                      for (var $161 in v2.sceneState.value0) {
-                                                          if (v2.sceneState.value0.hasOwnProperty($161)) {
-                                                              $160[$161] = v2.sceneState.value0[$161];
+                                                  $177.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                      var $174 = {};
+                                                      for (var $175 in v2.sceneState.value0) {
+                                                          if (v2.sceneState.value0.hasOwnProperty($175)) {
+                                                              $174[$175] = v2.sceneState.value0[$175];
                                                           };
                                                       };
-                                                      $160.mode = query.value0.value0.value0;
-                                                      return $160;
+                                                      $174.mode = query.value0.value0.value0;
+                                                      return $174;
                                                   })());
-                                                  return $163;
+                                                  return $177;
                                               }))(function () {
                                                   return Control_Applicative.pure(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Unit.unit);
                                               });
@@ -14312,23 +14302,23 @@ var PS = {};
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.SetPosition) {
                                           return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                              var $171 = {};
-                                              for (var $172 in v3) {
-                                                  if (v3.hasOwnProperty($172)) {
-                                                      $171[$172] = v3[$172];
+                                              var $185 = {};
+                                              for (var $186 in v3) {
+                                                  if (v3.hasOwnProperty($186)) {
+                                                      $185[$186] = v3[$186];
                                                   };
                                               };
-                                              $171.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                  var $168 = {};
-                                                  for (var $169 in v2.sceneState.value0) {
-                                                      if (v2.sceneState.value0.hasOwnProperty($169)) {
-                                                          $168[$169] = v2.sceneState.value0[$169];
+                                              $185.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                  var $182 = {};
+                                                  for (var $183 in v2.sceneState.value0) {
+                                                      if (v2.sceneState.value0.hasOwnProperty($183)) {
+                                                          $182[$183] = v2.sceneState.value0[$183];
                                                       };
                                                   };
-                                                  $168.position = query.value0.value0.value0;
-                                                  return $168;
+                                                  $182.position = query.value0.value0.value0;
+                                                  return $182;
                                               })());
-                                              return $171;
+                                              return $185;
                                           }));
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.TogglePointerLock) {
@@ -14336,89 +14326,89 @@ var PS = {};
                                               var firstPersonView = !v2.sceneState.value0.firstPersonView;
                                               return function __do() {
                                                   Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                      var $179 = {};
-                                                      for (var $180 in v3) {
-                                                          if (v3.hasOwnProperty($180)) {
-                                                              $179[$180] = v3[$180];
+                                                      var $193 = {};
+                                                      for (var $194 in v3) {
+                                                          if (v3.hasOwnProperty($194)) {
+                                                              $193[$194] = v3[$194];
                                                           };
                                                       };
-                                                      $179.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                          var $176 = {};
-                                                          for (var $177 in v2.sceneState.value0) {
-                                                              if (v2.sceneState.value0.hasOwnProperty($177)) {
-                                                                  $176[$177] = v2.sceneState.value0[$177];
+                                                      $193.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                          var $190 = {};
+                                                          for (var $191 in v2.sceneState.value0) {
+                                                              if (v2.sceneState.value0.hasOwnProperty($191)) {
+                                                                  $190[$191] = v2.sceneState.value0[$191];
                                                               };
                                                           };
-                                                          $176.firstPersonView = firstPersonView;
-                                                          return $176;
+                                                          $190.firstPersonView = firstPersonView;
+                                                          return $190;
                                                       })());
-                                                      return $179;
+                                                      return $193;
                                                   })();
                                                   if (firstPersonView) {
                                                       return Game_Cubbit_PointerLock.requestPointerLock(function (e) {
                                                           return function __do() {
                                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                                  var $190 = {};
-                                                                  for (var $191 in v3) {
-                                                                      if (v3.hasOwnProperty($191)) {
-                                                                          $190[$191] = v3[$191];
+                                                                  var $204 = {};
+                                                                  for (var $205 in v3) {
+                                                                      if (v3.hasOwnProperty($205)) {
+                                                                          $204[$205] = v3[$205];
                                                                       };
                                                                   };
-                                                                  $190.sceneState = (function () {
+                                                                  $204.sceneState = (function () {
                                                                       if (v3.sceneState instanceof Game_Cubbit_Types.TitleSceneState) {
                                                                           return new Game_Cubbit_Types.TitleSceneState(v3.sceneState.value0);
                                                                       };
                                                                       if (v3.sceneState instanceof Game_Cubbit_Types.PlayingSceneState) {
                                                                           return new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                                              var $186 = {};
-                                                                              for (var $187 in v3.sceneState.value0) {
-                                                                                  if (v3.sceneState.value0.hasOwnProperty($187)) {
-                                                                                      $186[$187] = v3.sceneState.value0[$187];
+                                                                              var $200 = {};
+                                                                              for (var $201 in v3.sceneState.value0) {
+                                                                                  if (v3.sceneState.value0.hasOwnProperty($201)) {
+                                                                                      $200[$201] = v3.sceneState.value0[$201];
                                                                                   };
                                                                               };
-                                                                              $186.playerRotation = v3.sceneState.value0.playerRotation + e.movementX * v1.pointerHorizontalSensitivity;
-                                                                              $186.playerPitch = Data_Ord.max(Data_Ord.ordNumber)(-$$Math.pi * 0.45)(Data_Ord.min(Data_Ord.ordNumber)($$Math.pi * 0.45)(v3.sceneState.value0.playerPitch) - e.movementY * v1.pointerVerticalSensitivity);
-                                                                              return $186;
+                                                                              $200.playerRotation = v3.sceneState.value0.playerRotation + e.movementX * v1.pointerHorizontalSensitivity;
+                                                                              $200.playerPitch = Data_Ord.max(Data_Ord.ordNumber)(-$$Math.pi * 0.45)(Data_Ord.min(Data_Ord.ordNumber)($$Math.pi * 0.45)(v3.sceneState.value0.playerPitch) - e.movementY * v1.pointerVerticalSensitivity);
+                                                                              return $200;
                                                                           })());
                                                                       };
-                                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 292, column 70 - line 297, column 62: " + [ v3.sceneState.constructor.name ]);
+                                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 304, column 70 - line 309, column 62: " + [ v3.sceneState.constructor.name ]);
                                                                   })();
-                                                                  return $190;
+                                                                  return $204;
                                                               })();
                                                               return Data_Unit.unit;
                                                           };
                                                       })(Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                          var $200 = {};
-                                                          for (var $201 in v3) {
-                                                              if (v3.hasOwnProperty($201)) {
-                                                                  $200[$201] = v3[$201];
+                                                          var $214 = {};
+                                                          for (var $215 in v3) {
+                                                              if (v3.hasOwnProperty($215)) {
+                                                                  $214[$215] = v3[$215];
                                                               };
                                                           };
-                                                          $200.sceneState = (function () {
+                                                          $214.sceneState = (function () {
                                                               if (v3.sceneState instanceof Game_Cubbit_Types.TitleSceneState) {
                                                                   return new Game_Cubbit_Types.TitleSceneState(v3.sceneState.value0);
                                                               };
                                                               if (v3.sceneState instanceof Game_Cubbit_Types.PlayingSceneState) {
                                                                   return new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                                      var $196 = {};
-                                                                      for (var $197 in v3.sceneState.value0) {
-                                                                          if (v3.sceneState.value0.hasOwnProperty($197)) {
-                                                                              $196[$197] = v3.sceneState.value0[$197];
+                                                                      var $210 = {};
+                                                                      for (var $211 in v3.sceneState.value0) {
+                                                                          if (v3.sceneState.value0.hasOwnProperty($211)) {
+                                                                              $210[$211] = v3.sceneState.value0[$211];
                                                                           };
                                                                       };
-                                                                      $196.firstPersonView = false;
-                                                                      return $196;
+                                                                      $210.firstPersonView = false;
+                                                                      return $210;
                                                                   })());
                                                               };
-                                                              throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 301, column 66 - line 305, column 58: " + [ v3.sceneState.constructor.name ]);
+                                                              throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 313, column 66 - line 317, column 58: " + [ v3.sceneState.constructor.name ]);
                                                           })();
-                                                          return $200;
+                                                          return $214;
                                                       }))();
                                                   };
                                                   if (!firstPersonView) {
                                                       return Game_Cubbit_PointerLock.exitPointerLock();
                                                   };
-                                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 289, column 45 - line 307, column 69: " + [ firstPersonView.constructor.name ]);
+                                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 301, column 45 - line 319, column 69: " + [ firstPersonView.constructor.name ]);
                                               };
                                           })());
                                       };
@@ -14427,61 +14417,61 @@ var PS = {};
                                               var isRightButton = DOM_Event_MouseEvent.buttons(query.value0.value0.value0) === 2;
                                               var dy = offsetY(query.value0.value0.value0) - v3.mousePosition.y;
                                               var dx = offsetX(query.value0.value0.value0) - v3.mousePosition.x;
-                                              var $209 = {};
-                                              for (var $210 in v3) {
-                                                  if (v3.hasOwnProperty($210)) {
-                                                      $209[$210] = v3[$210];
+                                              var $223 = {};
+                                              for (var $224 in v3) {
+                                                  if (v3.hasOwnProperty($224)) {
+                                                      $223[$224] = v3[$224];
                                                   };
                                               };
-                                              $209.mousePosition = {
+                                              $223.mousePosition = {
                                                   x: offsetX(query.value0.value0.value0), 
                                                   y: offsetY(query.value0.value0.value0)
                                               };
-                                              $209.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                  var $206 = {};
-                                                  for (var $207 in v2.sceneState.value0) {
-                                                      if (v2.sceneState.value0.hasOwnProperty($207)) {
-                                                          $206[$207] = v2.sceneState.value0[$207];
+                                              $223.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                  var $220 = {};
+                                                  for (var $221 in v2.sceneState.value0) {
+                                                      if (v2.sceneState.value0.hasOwnProperty($221)) {
+                                                          $220[$221] = v2.sceneState.value0[$221];
                                                       };
                                                   };
-                                                  $206.cameraYaw = (function () {
+                                                  $220.cameraYaw = (function () {
                                                       if (isRightButton) {
                                                           return v2.sceneState.value0.cameraYaw + Data_Int.toNumber(dx) * v1.cameraHorizontalSensitivity;
                                                       };
                                                       if (!isRightButton) {
                                                           return v2.sceneState.value0.cameraYaw;
                                                       };
-                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 321, column 81 - line 321, column 215: " + [ isRightButton.constructor.name ]);
+                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 333, column 81 - line 333, column 215: " + [ isRightButton.constructor.name ]);
                                                   })();
-                                                  $206.cameraPitch = (function () {
+                                                  $220.cameraPitch = (function () {
                                                       if (isRightButton) {
                                                           return Data_Ord.max(Data_Ord.ordNumber)(-$$Math.pi * 0.45)(Data_Ord.min(Data_Ord.ordNumber)($$Math.pi * 0.45)(v2.sceneState.value0.cameraPitch + Data_Int.toNumber(dy) * v1.cameraVertialSensitivity));
                                                       };
                                                       if (!isRightButton) {
                                                           return v2.sceneState.value0.cameraPitch;
                                                       };
-                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 322, column 83 - line 322, column 255: " + [ isRightButton.constructor.name ]);
+                                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 334, column 83 - line 334, column 255: " + [ isRightButton.constructor.name ]);
                                                   })();
-                                                  return $206;
+                                                  return $220;
                                               })());
-                                              return $209;
+                                              return $223;
                                           }));
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.OnMouseClick) {
                                           return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                               var v3 = Control_Monad_Eff_Ref.readRef(ref)();
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v4) {
-                                                  var $215 = {};
-                                                  for (var $216 in v4) {
-                                                      if (v4.hasOwnProperty($216)) {
-                                                          $215[$216] = v4[$216];
+                                                  var $229 = {};
+                                                  for (var $230 in v4) {
+                                                      if (v4.hasOwnProperty($230)) {
+                                                          $229[$230] = v4[$230];
                                                       };
                                                   };
-                                                  $215.mousePosition = {
+                                                  $229.mousePosition = {
                                                       x: offsetX(query.value0.value0.value0), 
                                                       y: offsetY(query.value0.value0.value0)
                                                   };
-                                                  return $215;
+                                                  return $229;
                                               })();
                                               return Control_Applicative.when(Control_Monad_Eff.applicativeEff)(DOM_Event_MouseEvent.buttons(query.value0.value0.value0) === 1)((function () {
                                                   var put = function (block) {
@@ -14494,17 +14484,17 @@ var PS = {};
                                                               Game_Cubbit_MeshBuilder.editBlock(ref)(v4.value0)(block)();
                                                               var v5 = Game_Cubbit_Collesion.updateChunkCollesion(v3.terrain)(v3.world)(Game_Cubbit_Terrain.globalIndexToChunkIndex(v4.value0))();
                                                               return Control_Monad_Eff_Ref.modifyRef(ref)(function (v6) {
-                                                                  var $222 = {};
-                                                                  for (var $223 in v6) {
-                                                                      if (v6.hasOwnProperty($223)) {
-                                                                          $222[$223] = v6[$223];
+                                                                  var $236 = {};
+                                                                  for (var $237 in v6) {
+                                                                      if (v6.hasOwnProperty($237)) {
+                                                                          $236[$237] = v6[$237];
                                                                       };
                                                                   };
-                                                                  $222.terrain = v5;
-                                                                  return $222;
+                                                                  $236.terrain = v5;
+                                                                  return $236;
                                                               })();
                                                           };
-                                                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 345, column 57 - line 352, column 66: " + [ v4.constructor.name ]);
+                                                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 357, column 57 - line 364, column 66: " + [ v4.constructor.name ]);
                                                       };
                                                   };
                                                   if (v2.sceneState.value0.mode instanceof Game_Cubbit_Types.Put) {
@@ -14522,30 +14512,30 @@ var PS = {};
                                                   if (v2.sceneState.value0.mode instanceof Game_Cubbit_Types.Move) {
                                                       return Control_Applicative.pure(Control_Monad_Eff.applicativeEff)(Data_Unit.unit);
                                                   };
-                                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 354, column 49 - line 361, column 70: " + [ v2.sceneState.value0.mode.constructor.name ]);
+                                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 366, column 49 - line 373, column 70: " + [ v2.sceneState.value0.mode.constructor.name ]);
                                               })())();
                                           });
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.Zoom) {
                                           return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                  var $233 = {};
-                                                  for (var $234 in v3) {
-                                                      if (v3.hasOwnProperty($234)) {
-                                                          $233[$234] = v3[$234];
+                                                  var $247 = {};
+                                                  for (var $248 in v3) {
+                                                      if (v3.hasOwnProperty($248)) {
+                                                          $247[$248] = v3[$248];
                                                       };
                                                   };
-                                                  $233.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                      var $230 = {};
-                                                      for (var $231 in v2.sceneState.value0) {
-                                                          if (v2.sceneState.value0.hasOwnProperty($231)) {
-                                                              $230[$231] = v2.sceneState.value0[$231];
+                                                  $247.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                      var $244 = {};
+                                                      for (var $245 in v2.sceneState.value0) {
+                                                          if (v2.sceneState.value0.hasOwnProperty($245)) {
+                                                              $244[$245] = v2.sceneState.value0[$245];
                                                           };
                                                       };
-                                                      $230.cameraRange = Data_Ord.max(Data_Ord.ordNumber)(v1.cameraMinimumRange)(Data_Ord.min(Data_Ord.ordNumber)(v1.cameraMaximumRange)(v2.sceneState.value0.cameraRange + Data_Int.toNumber(deltaY(query.value0.value0.value0)) * v1.cameraZoomSpeed));
-                                                      return $230;
+                                                      $244.cameraRange = Data_Ord.max(Data_Ord.ordNumber)(v1.cameraMinimumRange)(Data_Ord.min(Data_Ord.ordNumber)(v1.cameraMaximumRange)(v2.sceneState.value0.cameraRange + Data_Int.toNumber(deltaY(query.value0.value0.value0)) * v1.cameraZoomSpeed));
+                                                      return $244;
                                                   })());
-                                                  return $233;
+                                                  return $247;
                                               })();
                                               DOM_Event_Event.preventDefault(DOM_Event_Types.wheelEventToEvent(query.value0.value0.value0))();
                                               return DOM_Event_Event.stopPropagation(DOM_Event_Types.wheelEventToEvent(query.value0.value0.value0))();
@@ -14554,18 +14544,18 @@ var PS = {};
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.OnKeyDown) {
                                           return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                  var $238 = {};
-                                                  for (var $239 in v3) {
-                                                      if (v3.hasOwnProperty($239)) {
-                                                          $238[$239] = v3[$239];
+                                                  var $252 = {};
+                                                  for (var $253 in v3) {
+                                                      if (v3.hasOwnProperty($253)) {
+                                                          $252[$253] = v3[$253];
                                                       };
                                                   };
-                                                  $238.keys = Data_Set.insert(Data_Ord.ordString)(DOM_Event_KeyboardEvent.key(query.value0.value0.value0))(v3.keys);
-                                                  return $238;
+                                                  $252.keys = Data_Set.insert(Data_Ord.ordString)(DOM_Event_KeyboardEvent.key(query.value0.value0.value0))(v3.keys);
+                                                  return $252;
                                               })();
                                               (function () {
-                                                  var $241 = DOM_Event_KeyboardEvent.key(query.value0.value0.value0);
-                                                  if ($241 === "1") {
+                                                  var $255 = DOM_Event_KeyboardEvent.key(query.value0.value0.value0);
+                                                  if ($255 === "1") {
                                                       return function __do() {
                                                           var v3 = Control_Monad_Eff_Ref.readRef(ref)();
                                                           if (v3.debugLayer) {
@@ -14574,10 +14564,10 @@ var PS = {};
                                                           if (!v3.debugLayer) {
                                                               return Control_Bind.bind(Control_Monad_Eff.bindEff)(Graphics_Babylon_Scene.getDebugLayer(v.res.value0.scene))(Graphics_Babylon_DebugLayer.hide)();
                                                           };
-                                                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 380, column 49 - line 382, column 97: " + [ v3.debugLayer.constructor.name ]);
+                                                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 392, column 49 - line 394, column 97: " + [ v3.debugLayer.constructor.name ]);
                                                       };
                                                   };
-                                                  if ($241 === "2") {
+                                                  if ($255 === "2") {
                                                       return $foreign.openDevTools;
                                                   };
                                                   return Control_Applicative.pure(Control_Monad_Eff.applicativeEff)(Data_Unit.unit);
@@ -14589,14 +14579,14 @@ var PS = {};
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.OnKeyUp) {
                                           return Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(function __do() {
                                               Control_Monad_Eff_Ref.modifyRef(ref)(function (v3) {
-                                                  var $246 = {};
-                                                  for (var $247 in v3) {
-                                                      if (v3.hasOwnProperty($247)) {
-                                                          $246[$247] = v3[$247];
+                                                  var $260 = {};
+                                                  for (var $261 in v3) {
+                                                      if (v3.hasOwnProperty($261)) {
+                                                          $260[$261] = v3[$261];
                                                       };
                                                   };
-                                                  $246.keys = Data_Set["delete"](Data_Ord.ordString)(DOM_Event_KeyboardEvent.key(query.value0.value0.value0))(v3.keys);
-                                                  return $246;
+                                                  $260.keys = Data_Set["delete"](Data_Ord.ordString)(DOM_Event_KeyboardEvent.key(query.value0.value0.value0))(v3.keys);
+                                                  return $260;
                                               })();
                                               DOM_Event_Event.preventDefault(DOM_Event_Types.keyboardEventToEvent(query.value0.value0.value0))();
                                               return DOM_Event_Event.stopPropagation(DOM_Event_Types.keyboardEventToEvent(query.value0.value0.value0))();
@@ -14604,23 +14594,23 @@ var PS = {};
                                       };
                                       if (query.value0.value0 instanceof Game_Cubbit_Hud_Type.SetCenterPanelVisible) {
                                           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v3) {
-                                              var $254 = {};
-                                              for (var $255 in v3) {
-                                                  if (v3.hasOwnProperty($255)) {
-                                                      $254[$255] = v3[$255];
+                                              var $268 = {};
+                                              for (var $269 in v3) {
+                                                  if (v3.hasOwnProperty($269)) {
+                                                      $268[$269] = v3[$269];
                                                   };
                                               };
-                                              $254.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
-                                                  var $251 = {};
-                                                  for (var $252 in v2.sceneState.value0) {
-                                                      if (v2.sceneState.value0.hasOwnProperty($252)) {
-                                                          $251[$252] = v2.sceneState.value0[$252];
+                                              $268.sceneState = new Game_Cubbit_Types.PlayingSceneState((function () {
+                                                  var $265 = {};
+                                                  for (var $266 in v2.sceneState.value0) {
+                                                      if (v2.sceneState.value0.hasOwnProperty($266)) {
+                                                          $265[$266] = v2.sceneState.value0[$266];
                                                       };
                                                   };
-                                                  $251.centerPanelVisible = query.value0.value0.value0;
-                                                  return $251;
+                                                  $265.centerPanelVisible = query.value0.value0.value0;
+                                                  return $265;
                                               })());
-                                              return $254;
+                                              return $268;
                                           }))(function () {
                                               return Control_Applicative.pure(Halogen_Query_HalogenM.applicativeHalogenM)(Data_Unit.unit);
                                           });
@@ -14631,38 +14621,38 @@ var PS = {};
                                           });
                                           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.play(v.res.value0.sounds.warpSound)))(function () {
                                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v3) {
-                                                  var $259 = {};
-                                                  for (var $260 in v3) {
-                                                      if (v3.hasOwnProperty($260)) {
-                                                          $259[$260] = v3[$260];
+                                                  var $273 = {};
+                                                  for (var $274 in v3) {
+                                                      if (v3.hasOwnProperty($274)) {
+                                                          $273[$274] = v3[$274];
                                                       };
                                                   };
-                                                  $259.nextScene = new Data_Maybe.Just(nextScene);
-                                                  return $259;
+                                                  $273.nextScene = new Data_Maybe.Just(nextScene);
+                                                  return $273;
                                               }))(function () {
                                                   return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Game_Cubbit_Aff.wait(Halogen_Query_HalogenM.monadAffHalogenM(Control_Monad_Aff_Class.monadAffAff))(1000))(function () {
                                                       return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Control_Monad_Eff_Class.liftEff(Halogen_Query_HalogenM.monadEffHalogenM(Control_Monad_Aff.monadEffAff))(Graphics_Babylon_Sound.stop(v.res.value0.sounds.forestSound)))(function () {
                                                           return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(modifyAppState(ref)(function (v3) {
-                                                              var $263 = {};
-                                                              for (var $264 in v3) {
-                                                                  if (v3.hasOwnProperty($264)) {
-                                                                      $263[$264] = v3[$264];
+                                                              var $277 = {};
+                                                              for (var $278 in v3) {
+                                                                  if (v3.hasOwnProperty($278)) {
+                                                                      $277[$278] = v3[$278];
                                                                   };
                                                               };
-                                                              $263.sceneState = nextScene;
-                                                              return $263;
+                                                              $277.sceneState = nextScene;
+                                                              return $277;
                                                           }))(function () {
                                                               return Control_Bind.bind(Halogen_Query_HalogenM.bindHalogenM)(Game_Cubbit_Aff.wait(Halogen_Query_HalogenM.monadAffHalogenM(Control_Monad_Aff_Class.monadAffAff))(1000))(function () {
                                                                   return modifyAppState(ref)(function (v3) {
-                                                                      var $267 = {};
-                                                                      for (var $268 in v3) {
-                                                                          if (v3.hasOwnProperty($268)) {
-                                                                              $267[$268] = v3[$268];
+                                                                      var $281 = {};
+                                                                      for (var $282 in v3) {
+                                                                          if (v3.hasOwnProperty($282)) {
+                                                                              $281[$282] = v3[$282];
                                                                           };
                                                                       };
-                                                                      $267.nextScene = Data_Maybe.Nothing.value;
-                                                                      $267.nextBGM = new Data_Maybe.Just(v.res.value0.sounds.cleaning);
-                                                                      return $267;
+                                                                      $281.nextScene = Data_Maybe.Nothing.value;
+                                                                      $281.nextBGM = new Data_Maybe.Just(v.res.value0.sounds.cleaning);
+                                                                      return $281;
                                                                   });
                                                               });
                                                           });
@@ -14671,16 +14661,16 @@ var PS = {};
                                               });
                                           });
                                       };
-                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 248, column 33 - line 417, column 43: " + [ query.value0.value0.constructor.name ]);
+                                      throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 260, column 33 - line 429, column 43: " + [ query.value0.value0.constructor.name ]);
                                   };
-                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 240, column 25 - line 417, column 43: " + [ v2.sceneState.constructor.name ]);
+                                  throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 252, column 25 - line 429, column 43: " + [ v2.sceneState.constructor.name ]);
                               });
                           };
-                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 68, column 41 - line 417, column 43: " + [ query.value0.constructor.name ]);
+                          throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 68, column 41 - line 429, column 43: " + [ query.value0.constructor.name ]);
                       })());
                   });
               };
-              throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 48, column 5 - line 417, column 43: " + [ v.res.constructor.name ]);
+              throw new Error("Failed pattern match at Game.Cubbit.Hud.Eval line 48, column 5 - line 429, column 43: " + [ v.res.constructor.name ]);
           });
       };
   };
@@ -16524,18 +16514,18 @@ var PS = {};
   };
 })(PS["Game.Cubbit.Update"] = PS["Game.Cubbit.Update"] || {});
 (function(exports) {
-  /* global BABYLON */
-
-  "use strict";
-
-  exports.createRayWithLength = function(origin){
-      return function(direction){
-          return function(length){
-              return function(){
-                  return new BABYLON.Ray(origin, direction, length);
-              };
-          };
-      };
+  /* global BABYLON */
+
+  "use strict";
+
+  exports.createRayWithLength = function(origin){
+      return function(direction){
+          return function(length){
+              return function(){
+                  return new BABYLON.Ray(origin, direction, length);
+              };
+          };
+      };
   };
 })(PS["Graphics.Babylon.Ray"] = PS["Graphics.Babylon.Ray"] || {});
 (function(exports) {
@@ -16547,7 +16537,8 @@ var PS = {};
   exports["createRayWithLength"] = $foreign.createRayWithLength;
 })(PS["Graphics.Babylon.Ray"] = PS["Graphics.Babylon.Ray"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.3
+  "use strict";
   var $foreign = PS["Game.Cubbit.Update"];
   var Control_Alt = PS["Control.Alt"];
   var Control_Alternative = PS["Control.Alternative"];
@@ -17286,15 +17277,15 @@ var PS = {};
   exports["updateBabylon"] = updateBabylon;
 })(PS["Game.Cubbit.Update"] = PS["Game.Cubbit.Update"] || {});
 (function(exports) {
-  /* global window */
-  /* global document */
-
-  "use strict";
-
-  exports.querySelectorCanvas = function(selector){
-      return function(){
-          return document.querySelector(selector);
-      };
+  /* global window */
+  /* global document */
+
+  "use strict";
+
+  exports.querySelectorCanvas = function(selector){
+      return function(){
+          return document.querySelector(selector);
+      };
   };
 })(PS["Graphics.Babylon.Util"] = PS["Graphics.Babylon.Util"] || {});
 (function(exports) {
@@ -17373,7 +17364,8 @@ var PS = {};
   exports["selectElement"] = selectElement;
 })(PS["Halogen.Aff.Util"] = PS["Halogen.Aff.Util"] || {});
 (function(exports) {
-    "use strict";
+  // Generated by psc version 0.10.3
+  "use strict";
   var Control_Alternative = PS["Control.Alternative"];
   var Control_Bind = PS["Control.Bind"];
   var Control_Monad_Eff = PS["Control.Monad.Eff"];

@@ -30,10 +30,10 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Sounds (setMute)
 import Game.Cubbit.Terrain (globalIndexToChunkIndex)
-import Game.Cubbit.Types (Mode(..), SceneState(..), State(..), ResourceProgress(..))
-import Graphics.Babylon.AbstractMesh (setIsVisible)
+import Game.Cubbit.Types (Mode(..), ResourceProgress(..), SceneState(..), State(..))
+import Graphics.Babylon.AbstractMesh (setIsVisible, setReceiveShadows, setUseVertexColors)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
-import Graphics.Babylon.Scene (getDebugLayer)
+import Graphics.Babylon.Scene (getDebugLayer, getMeshes)
 import Graphics.Babylon.Sound (play, stop)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (action)
@@ -132,8 +132,13 @@ eval ref query = do
                         })
                         liftEff do
                             play sounds.switchSound
-                            State state' <- readRef ref
+                            State state'@{ config: Config config } <- readRef ref
                             writeConfig state'.config
+                            case state'.res of
+                                Loading _ -> pure unit
+                                Complete res -> do
+                                    meshes <- getMeshes res.scene
+                                    for_ meshes $ setReceiveShadows config.shadow
 
                     (ToggleVertexColor) -> do
 
@@ -146,6 +151,16 @@ eval ref query = do
                             play sounds.switchSound
                             State state' <- readRef ref
                             writeConfig state'.config
+
+                            play sounds.switchSound
+                            State state'@{ config: Config config } <- readRef ref
+                            writeConfig state'.config
+                            case state'.res of
+                                Loading _ -> pure unit
+                                Complete res -> do
+                                    meshes <- getMeshes res.scene
+                                    for_ meshes $ setUseVertexColors config.vertexColor
+
 
                     (SetShadowArea value) -> do
 
