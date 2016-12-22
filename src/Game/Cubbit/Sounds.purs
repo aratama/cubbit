@@ -1,23 +1,15 @@
 module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, setBGMVolume, setSEVolume) where
 
-import Control.Alt (void)
 import Control.Alternative (pure)
 import Control.Bind (bind)
-import Control.Monad.Aff (Aff, runAff)
+import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (CONSOLE, errorShow)
-import Control.Monad.Eff.Timer (TIMER)
-import Data.Array ((..))
-import Data.Int (toNumber)
 import Data.Traversable (for_)
 import Data.Unit (Unit)
-import Game.Cubbit.Aff (wait)
-import Game.Cubbit.Constants (sliderMaxValue)
 import Graphics.Babylon.Aff.Sound (loadSound)
-import Graphics.Babylon.Sound (defaultCreateSoundOptions, play, setVolume, stop)
+import Graphics.Babylon.Sound (defaultCreateSoundOptions, setVolume)
 import Graphics.Babylon.Types (BABYLON, Scene, Sound)
-import Prelude (($), (<>), (/), (*), (-))
+import Prelude (($), (<>))
 
 type Sounds = {
     yourNatural :: Sound,

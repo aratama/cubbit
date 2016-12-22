@@ -11,6 +11,7 @@
     "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
     "preelectron": "npm run build",
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./res/icon.ico --asar",
+    "postelectron": "cd ./cubbit-win32-x64/ && cubbit",
     "prezip": "npm run electron",
     "zip": "bestzip ./docs/cubbit-win32-x64.zip ./cubbit-win32-x64",
     "server": "start http-server public",

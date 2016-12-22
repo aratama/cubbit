@@ -6,49 +6,35 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
-import Control.Monad.Rec.Class (Step(..), tailRec, tailRecM, tailRecM2)
-import DOM (DOM)
+import Control.Monad.Rec.Class (Step(Loop, Done), tailRecM2)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
-import DOM.HTML.Types (HTMLElement, windowToEventTarget)
-import Data.Array (length)
-import Data.Foldable (sum)
-import Data.Int (toNumber)
-import Data.List (List(..), catMaybes, filter, filterM, head, (..), (:))
-import Data.Map (fromFoldable, lookup, toList)
+import DOM.HTML.Types (windowToEventTarget)
 import Data.Maybe (Maybe(..))
-import Data.Monoid (mempty)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Set (empty)
 import Data.Show (show)
-import Data.Traversable (for, for_)
-import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
-import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
+import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion, buildCollesionTerrain)
 import Game.Cubbit.Config (Config(Config), readConfig)
-import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Hud.Eval (repaint)
 import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
-import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
-import Game.Cubbit.Terrain (Terrain(..), createTerrain, globalPositionToChunkIndex, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain, globalPositionToChunkIndex)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
-import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Util (querySelectorCanvas)
-import Graphics.Cannon (World, addBody, createVec3, createWorld, setGravity)
-import Graphics.Cannon.Type (Body, CANNON)
-import Graphics.Cannon.World (removeBody)
+import Graphics.Cannon (addBody, createVec3, createWorld, setGravity)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, void, (#), ($), (+), (-), (/), (<$>), (<>), (>>=), (<), (<=))
+import Prelude (negate, void, (#), ($), (+), (-), (<$>), (<>), (>>=))
 
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -155,11 +141,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             -- focus
             focus "content"
-
-            -- start bgm
-            setMute config.mute sounds
-            setBGMVolume (toNumber config.bgmVolume / toNumber sliderMaxValue) sounds
-            setSEVolume (toNumber config.seVolume / toNumber sliderMaxValue) sounds
 
 
             -- resize

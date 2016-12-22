@@ -401,8 +401,11 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
 
         -- update volumes
         do
-            let v = (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
+            let v = if config.mute then 0.0 else (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
             for_ sounds.bgms $ setVolume v
+
+            let sev = if config.mute then 0.0 else Int.toNumber config.seVolume / Int.toNumber sliderMaxValue
+            for_ sounds.ses $ setVolume sev
 
 
 

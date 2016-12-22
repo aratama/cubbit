@@ -3,7 +3,9 @@ module Game.Cubbit.Hud.Eval (eval, repaint) where
 import Control.Alt (void)
 import Control.Alternative (when)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
+import DOM (DOM)
 import DOM.Event.Event (preventDefault, stopPropagation)
 import DOM.Event.KeyboardEvent (key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
@@ -26,7 +28,7 @@ import Game.Cubbit.Hud.Type (HudEffects, PlayingSceneQuery(..), Query(..), Query
 import Game.Cubbit.MeshBuilder (editBlock)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
-import Game.Cubbit.Sounds (setBGMVolume, setMute, setSEVolume)
+import Game.Cubbit.Sounds (setMute)
 import Game.Cubbit.Terrain (globalIndexToChunkIndex)
 import Game.Cubbit.Types (Mode(..), SceneState(..), State(..), ResourceProgress(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
@@ -36,7 +38,7 @@ import Graphics.Babylon.Sound (play, stop)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (action)
 import Math (pi)
-import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (==), (>>=), (/), (<$))
+import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (<$), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
 eval :: forall eff. Ref State -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
@@ -105,7 +107,6 @@ eval ref query = do
                         })
                         liftEff do
                             play sounds.switchSound
-                            setBGMVolume (toNumber value / 8.0) sounds
                             State state' <- readRef ref
                             writeConfig state'.config
 
@@ -119,7 +120,6 @@ eval ref query = do
                         })
                         liftEff do
                             play sounds.switchSound
-                            setSEVolume (toNumber value / 8.0) sounds
                             State state' <- readRef ref
                             writeConfig state'.config
 
@@ -227,7 +227,6 @@ eval ref query = do
 
                         liftEff do
                             State state@{ config: Config config } <- readRef ref
-                            setMute config.mute sounds
                             writeConfig state.config
 
 
@@ -378,6 +377,7 @@ eval ref query = do
                                                 if state.debugLayer
                                                     then getDebugLayer scene >>= DebugLayer.show true true Nothing
                                                     else getDebugLayer scene >>= DebugLayer.hide
+                                            "2" -> openDevTools
                                             _ -> pure unit
                                         preventDefault (keyboardEventToEvent e)
                                         stopPropagation (keyboardEventToEvent e)
@@ -436,3 +436,5 @@ offsetY e = (unsafeCoerce e).offsetY
 deltaY :: WheelEvent -> Int
 deltaY e = (unsafeCoerce e).deltaY
 
+
+foreign import openDevTools :: forall eff. Eff (dom :: DOM | eff) Unit
