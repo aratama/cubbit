@@ -12,7 +12,7 @@ import Data.Map (Map, empty)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Game.Cubbit.BlockType (BlockType, BlockTypes, airBlock, bushBlock)
+import Game.Cubbit.BlockType (BlockType, BlockTypes, airBlock, bushBlock, leavesBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
 import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
@@ -84,7 +84,7 @@ lookupSolidBlock globalIndex (Terrain terrain) = do
 
 
 isSolidBlock :: BlockType -> Boolean
-isSolidBlock block = block /= airBlock && block /= bushBlock
+isSolidBlock block = block /= airBlock && block /= bushBlock && block /= leavesBlock
 
 lookupBlockByVec :: forall eff. Vec -> Terrain -> Eff eff (Maybe BlockType)
 lookupBlockByVec p (Terrain terrain) = lookupBlock (globalPositionToGlobalIndex p.x p.y p.z) (Terrain terrain)

@@ -2,9 +2,11 @@ module Game.Cubbit.Collesion (BodyTag, buildCollesionBoxes, updatePhysics, creat
 
 import Control.Monad.Eff (Eff)
 import Data.Maybe (Maybe(..))
+import Game.Cubbit.BlockType (BlockType(..))
 import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
+import Game.Cubbit.Terrain (isSolidBlock)
 import Game.Cubbit.Types (State(..), SceneState(..))
 import Graphics.Cannon (addBody, addShape, createBody, createMaterial, createSphere, createVec3, createWorld, defaultBodyProps, setFixedRotation, setGravity, setPosition, setTag, updateMassProperties)
 import Graphics.Cannon.Body (getPosition, getVelocity, setVelocity)
@@ -17,11 +19,14 @@ type BodyTag = String
 
 type BuildCollesionBoxesImports = {
     chunkSize :: Int,
-    localIndex :: (Int -> Int -> Int -> LocalIndex)
+    localIndex :: (Int -> Int -> Int -> LocalIndex),
+    isSolidBlock :: BlockType -> Boolean
 }
 
+
+
 buildCollesionBoxes :: forall eff. ChunkWithMesh -> World BodyTag -> Eff (cannon :: CANNON | eff) (Array (Body BodyTag))
-buildCollesionBoxes = _buildCollesionBoxes { chunkSize, localIndex }
+buildCollesionBoxes = _buildCollesionBoxes { chunkSize, localIndex, isSolidBlock }
 
 foreign import _buildCollesionBoxes :: forall eff. BuildCollesionBoxesImports -> ChunkWithMesh -> World BodyTag -> Eff (cannon :: CANNON | eff) (Array (Body BodyTag))
 

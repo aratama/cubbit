@@ -6,6 +6,7 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
+import Control.Monad.Rec.Class (Step(..), tailRec, tailRecM, tailRecM2)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
@@ -13,7 +14,7 @@ import DOM.HTML.Types (windowToEventTarget)
 import Data.Array (length)
 import Data.Foldable (sum)
 import Data.Int (toNumber)
-import Data.List (List, catMaybes, filter, (..))
+import Data.List (List(..), catMaybes, filter, filterM, head, (..), (:))
 import Data.Map (fromFoldable, lookup, toList)
 import Data.Maybe (Maybe(..))
 import Data.Monoid (mempty)
@@ -131,7 +132,12 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             playerBox <- createPlayerCollesion
             addBody playerBox world
 
-            terrain <- buildCollesionTerrain initialState.terrain world (chunkIndex 0 0 0)
+            terrain <- tailRecM2 (\ter -> case _ of
+                0 -> pure $ Done ter
+                i -> do
+                    ter' <- buildCollesionTerrain ter world (chunkIndex 0 0 0)
+                    pure $ Loop { a: ter', b: i - 1 }
+            ) initialState.terrain 9
             modifyRef ref \(State state) -> State state { terrain = terrain }
 
             -- focus
@@ -202,16 +208,15 @@ buildCollesionTerrain (Terrain terrain) world index = do
                 Just bodies -> mempty
                 Nothing -> pure i
 
-    newBodies <- for indices \i -> do
-        centerChunkMaybe <- lookupChunk i (Terrain terrain)
-        case centerChunkMaybe of
-            Nothing -> pure Nothing
-            Just chunk -> do
-                cannonBodies <- buildCollesionBoxes chunk world
-                pure (Just (Tuple i cannonBodies))
 
-    pure $ Terrain terrain {
-        bodies = fromFoldable (internals <> catMaybes newBodies)
-    }
+    chunks <- catMaybes <$> for indices (\i -> lookupChunk i (Terrain terrain))
+
+    case chunks of
+        Nil -> pure $ Terrain terrain
+        Cons chunk _ -> do
+            cannonBodies <- buildCollesionBoxes chunk world
+            pure $ Terrain terrain {
+                bodies = fromFoldable (Tuple chunk.index cannonBodies : internals)
+            }
 
 
