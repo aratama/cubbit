@@ -12,7 +12,7 @@ import Data.Map (Map, empty)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
-import Game.Cubbit.BlockType (BlockType, BlockTypes, airBlock, bushBlock, leavesBlock)
+import Game.Cubbit.BlockType (BlockType, airBlock, bushBlock, leavesBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
 import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
@@ -27,7 +27,7 @@ import Prelude ((*), (+), (-), (/), (==), (/=), (&&))
 newtype Terrain = Terrain {
     map :: ChunkMap,
     noise :: Noise,
-    bodies :: Map ChunkIndex (Array (Body String))
+    bodies :: Map ChunkIndex (Array Body)
 }
 
 getChunkMap :: Terrain -> ChunkMap

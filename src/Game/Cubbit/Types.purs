@@ -88,7 +88,7 @@ newtype State = State {
     skyboxRotation :: Number,
     updateIndex :: Nullable ForeachIndex,
 
-    world :: World String,
+    world :: World,
 
     -- camera
     cameraPosition :: Vec,

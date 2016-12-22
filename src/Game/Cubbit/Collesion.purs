@@ -1,6 +1,7 @@
 module Game.Cubbit.Collesion (BodyTag, buildCollesionBoxes, updatePhysics, createPlayerCollesion, updateChunkCollesion, buildCollesionTerrain) where
 
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
 import Data.List (List(..), catMaybes, filter, (..), (:))
 import Data.Map (delete, fromFoldable, insert, lookup, toList)
 import Data.Maybe (Maybe(..))
@@ -14,7 +15,7 @@ import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
 import Game.Cubbit.Terrain (Terrain(..), isSolidBlock, lookupChunk)
 import Game.Cubbit.Types (State(..), SceneState(..))
-import Graphics.Cannon (addShape, createBody, createMaterial, createSphere, createVec3, defaultBodyProps, setFixedRotation, setPosition, setTag, updateMassProperties)
+import Graphics.Cannon (addShape, createBody, createMaterial, createSphere, createVec3, defaultBodyProps, setFixedRotation, setPosition, updateMassProperties)
 import Graphics.Cannon.Body (getPosition, getVelocity, setVelocity)
 import Graphics.Cannon.Type (CANNON, Body, World)
 import Graphics.Cannon.Vec3 (runVec3)
@@ -31,12 +32,12 @@ type BuildCollesionBoxesImports = {
 
 
 
-buildCollesionBoxes :: forall eff. ChunkWithMesh -> World BodyTag -> Eff (cannon :: CANNON | eff) (Array (Body BodyTag))
+buildCollesionBoxes :: forall eff. ChunkWithMesh -> World -> Eff (cannon :: CANNON | eff) (Array Body)
 buildCollesionBoxes = _buildCollesionBoxes { chunkSize, localIndex, isSolidBlock }
 
-foreign import _buildCollesionBoxes :: forall eff. BuildCollesionBoxesImports -> ChunkWithMesh -> World BodyTag -> Eff (cannon :: CANNON | eff) (Array (Body BodyTag))
+foreign import _buildCollesionBoxes :: forall eff. BuildCollesionBoxesImports -> ChunkWithMesh -> World -> Eff (cannon :: CANNON | eff) (Array Body)
 
-createPlayerCollesion :: forall eff. Eff (cannon :: CANNON | eff) (Body String)
+createPlayerCollesion :: forall eff. Eff (cannon :: CANNON | eff) Body
 createPlayerCollesion = do
     size <- createVec3 0.5 0.5 0.5
     pos <- createVec3 2.5 17.0 2.5
@@ -58,12 +59,11 @@ createPlayerCollesion = do
     addShape lower (Just lowerOffset) Nothing body
 
     setPosition pos body
-    setTag (Just "player") body
     setFixedRotation true body
     updateMassProperties body
     pure body
 
-updatePhysics :: forall eff. Number -> Body String -> World String -> State -> Eff (cannon :: CANNON | eff) State
+updatePhysics :: forall eff. Number -> Body -> World -> State -> Eff (cannon :: CANNON | eff) State
 updatePhysics deltaTime playerBox world (State state) = case state.sceneState of
     TitleSceneState t -> pure $ State state
     PlayingSceneState p -> do
@@ -89,7 +89,7 @@ updatePhysics deltaTime playerBox world (State state) = case state.sceneState of
 
 
 
-updateChunkCollesion :: forall eff. Terrain -> World String -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
+updateChunkCollesion :: forall eff. Terrain -> World -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
 updateChunkCollesion (Terrain terrain) world index = do
 
     case lookup index terrain.bodies of
@@ -111,7 +111,7 @@ updateChunkCollesion (Terrain terrain) world index = do
                         bodies = insert index cannonBodies $ delete index terrain.bodies
                     }
 
-buildCollesionTerrain :: forall eff. Terrain -> World String -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
+buildCollesionTerrain :: forall eff. Terrain -> World -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
 buildCollesionTerrain (Terrain terrain) world index = do
     let ri = runChunkIndex index
     let xi = ri.x
@@ -125,7 +125,7 @@ buildCollesionTerrain (Terrain terrain) world index = do
         for_ bodyLists \body -> do
             removeBody body world
 
-    let internals :: List (Tuple ChunkIndex (Array (Body String)))
+    let internals :: List (Tuple ChunkIndex (Array Body))
         internals = filter (\(Tuple k v) -> chunkIndexDistance k index <= 1) bodyMap
 
     let internalsMap = fromFoldable internals
