@@ -8,6 +8,7 @@ import Control.Monad.Eff (Eff, runPure)
 import Control.Monad.Eff.Timer (TIMER, setTimeout)
 import DOM (DOM)
 import Data.Array (catMaybes, drop, take, any)
+import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
@@ -78,7 +79,8 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             Just block | isSolidBlock block -> true
             _ -> false
 
-    let jumpVelocity = if isLanding && member " " state.keys && playingSceneState.landing == 0 then options.jumpVelocity else 0.0
+    let isStartingJump = playingSceneState.jumpable && isLanding && member " " state.keys && playingSceneState.landing == 0
+    let jumpVelocity = if isStartingJump then options.jumpVelocity else 0.0
 
     let speed = options.moveSpeed
 
@@ -200,7 +202,8 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
                 playerRotation = playerRotation',
                 animation = animation',
-                landing = max 0 (landingCount - 1)
+                landing = max 0 (landingCount - 1),
+                jumpable = if isLanding && not (member " " state.keys) then true else if member " " state.keys then false else playingSceneState.jumpable
             }
 
 

@@ -129,7 +129,9 @@ render (State state@{ config: Config config }) = case state.res of
             div [
                 Properties.key "config-root",
                 class_ (ClassName ("content-layer config-root" <> if state.configVisible then " visible" else "")),
-                onClick \e -> send' CloseConfig
+                onClick \e -> send' CloseConfig,
+                suppressMouseDown,
+                suppressMouseMove
             ] [
                 div [
                     class_ (ClassName "config-inner"),

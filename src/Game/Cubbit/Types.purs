@@ -60,6 +60,7 @@ type PlayingSceneState = {
     animation :: String,
     mode :: Mode,
     landing :: Int,
+    jumpable :: Boolean,
 
     cursorPosition :: BlockIndex,
     centerPanelVisible :: Boolean,

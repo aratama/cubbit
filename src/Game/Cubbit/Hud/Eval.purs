@@ -204,6 +204,7 @@ eval ref query = do
                                     animation: "",
                                     mode: Move,
                                     landing: 0,
+                                    jumpable: true,
 
                                     cursorPosition: blockIndex 0 0 0,
                                     centerPanelVisible: false,
@@ -388,6 +389,7 @@ eval ref query = do
                                         modifyRef ref \(State state) -> State state { keys = insert (key e) state.keys }
                                         case key e of
                                             "1" -> do
+                                                modifyRef ref \(State state) -> State state { debugLayer = not state.debugLayer }                                            
                                                 State state <- readRef ref
                                                 if state.debugLayer
                                                     then getDebugLayer scene >>= DebugLayer.show true true Nothing
