@@ -15,8 +15,9 @@
     "prezip": "npm run electron",
     "zip": "bestzip ./docs/cubbit-win32-x64.zip ./cubbit-win32-x64",
     "server": "start http-server public",
+    "prepublish": "node res/license.js",
     "publish": "rimraf docs && cpx public/**/*.* docs",
-    "_____postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/lib/babylon.custom.js -o docs/lib/babylon.custom.js",
+    "postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/lib/babylon.custom.js -o docs/lib/babylon.custom.js",
     "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs",
     "license": "node res/license.js",
     "nicogame": "node res/nico.js"

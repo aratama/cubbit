@@ -138,7 +138,8 @@ exports.createTerrainGeometryJS = function(references) {
                     return bounds(t);
                 } else {
                     var gi = blockIndex(gx)(gy)(gz);
-                    var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
+                    //var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
+                    var chunkWithMesh = chunkMap.get(globalIndexToChunkIndex(gi));
                     if (chunkWithMesh) {
                         var block = chunkWithMesh.blocks[globalIndexToLocalIndex(gi)];
                         if (typeof block == "undefined") {
