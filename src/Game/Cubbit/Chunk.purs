@@ -34,6 +34,7 @@ type ChunkWithMesh = {
     z :: Int,
     index :: ChunkIndex,
     blocks :: Boxel.BoxelMap BlockType,
+    edited :: Boolean,
 
     standardMaterialMesh :: MeshLoadingState,
     waterMaterialMesh :: MeshLoadingState,

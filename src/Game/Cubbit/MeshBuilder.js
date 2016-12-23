@@ -139,7 +139,8 @@ exports.createTerrainGeometryJS = function(references) {
                 } else {
                     var gi = blockIndex(gx)(gy)(gz);
                     //var chunkWithMesh = chunkMap[globalIndexToChunkIndex(gi)];
-                    var chunkWithMesh = chunkMap.get(globalIndexToChunkIndex(gi));
+                    var chunkIndex = globalIndexToChunkIndex(gi);
+                    var chunkWithMesh = chunkMap.get(chunkIndex);
                     if (chunkWithMesh) {
                         var block = chunkWithMesh.blocks[globalIndexToLocalIndex(gi)];
                         if (typeof block == "undefined") {
@@ -148,7 +149,8 @@ exports.createTerrainGeometryJS = function(references) {
                         }
                         return bounds(block);
                     } else {
-                        // nerver come here
+                        // nerver come here?
+                        var i = runChunkIndex(chunkIndex);
                         debugger;
                         return true;
                     }

@@ -22,9 +22,10 @@ import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Hud.Eval (repaint)
-import Game.Cubbit.MeshBuilder (generateChunk)
+import Game.Cubbit.MeshBuilder (generateChunk, putBlocks)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
+import Game.Cubbit.Storage (listenAllChunks, listenAllChunksFromForebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain, globalPositionToChunkIndex)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon)
@@ -169,4 +170,10 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         _ -> pure unit
 
                 render scene
+
+
+            -- read saved chunks
+            listenAllChunksFromForebase $ putBlocks ref
+            -- listenAllChunks \chunk -> do
+                -- putBlocks ref chunk
 

@@ -7,7 +7,7 @@
     "test": "psc-bundle --module Game.Cubbot.Test --main Game.Cubbot.Test --output public/index.js output/**/*.js",
     "posttest": "node public/index.js",
     "lint": "eslint src",
-    "prebuild": "psc bower_components/purescript-*/src/**/*.purs ../purescript-cannon/src/**/*.purs ../purescript-babylon/src/**/*.purs src/**/*.purs",
+    "prebuild": "psc bower_components/purescript-*/src/**/*.purs ../purescript-cannon/src/**/*.purs ../purescript-babylon/src/**/*.purs ../purescript-firebase3/src/**/*.purs src/**/*.purs",
     "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
     "preelectron": "npm run build",
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./res/icon.ico --asar",

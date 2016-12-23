@@ -1,10 +1,11 @@
-module Game.Cubbit.MeshBuilder (generateChunk, editBlock) where
+module Game.Cubbit.MeshBuilder (generateChunk, editBlock, putBlocks) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void, when)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Ref (REF, Ref, readRef)
+import DOM (DOM)
 import Data.Array (length)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
@@ -19,6 +20,7 @@ import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex, runLocalIndex)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options(Options))
+import Game.Cubbit.Storage (saveChunk, saveChunkToFirebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (ResourceProgress(..), State(State))
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
@@ -26,7 +28,7 @@ import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (VertexDataProps(VertexDataProps), Material, BABYLON, Mesh, Scene)
 import Graphics.Babylon.VertexData (applyToMesh, createVertexData)
 import PerlinNoise (Noise, simplex2)
-import Prelude ((+), (-), (<), (=<<), (==), negate)
+import Prelude ((+), (-), (<), (=<<), (==), negate, ($))
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -54,6 +56,31 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
+generateTerrain :: forall eff. State -> ChunkIndex -> Eff (babylon :: BABYLON | eff) Unit
+generateTerrain (State state@{ terrain: Terrain terrain }) index = do
+    let i = runChunkIndex index
+    forE (i.x - 1) (i.x + 2) \x -> do
+        forE (i.y - 1) (i.y + 2) \y -> do
+            forE (i.z - 1) (i.z + 2) \z -> void do
+                let loadingChunkIndex = chunkIndex x y z
+                boxMapMaybe <- lookupChunk loadingChunkIndex state.terrain
+                case boxMapMaybe of
+                    Just _ -> pure false
+                    Nothing -> do
+                        insertChunk {
+                            x: x,
+                            y: y,
+                            z: z,
+                            index: loadingChunkIndex,
+                            blocks: createBlockMap terrain.noise loadingChunkIndex,
+                            edited: false,
+
+                            standardMaterialMesh: MeshNotLoaded,
+                            waterMaterialMesh: MeshNotLoaded,
+                            transparentMaterialMesh: MeshNotLoaded
+                        } state.terrain
+                        pure true
+
 generateChunk :: forall eff. State -> Materials -> Scene -> ChunkIndex -> Options -> Config -> Eff (babylon :: BABYLON | eff) Boolean
 generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (Options options) (Config config) = do
     case state.res of
@@ -61,27 +88,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
         Complete res -> do
 
             -- generate terrain -------------------------------
-            let i = runChunkIndex index
-            forE (i.x - 1) (i.x + 2) \x -> do
-                forE (i.y - 1) (i.y + 2) \y -> do
-                    forE (i.z - 1) (i.z + 2) \z -> void do
-                        let loadingChunkIndex = chunkIndex x y z
-                        boxMapMaybe <- lookupChunk loadingChunkIndex state.terrain
-                        case boxMapMaybe of
-                            Just _ -> pure false
-                            Nothing -> do
-                                insertChunk {
-                                    x: x,
-                                    y: y,
-                                    z: z,
-                                    index: loadingChunkIndex,
-                                    blocks: createBlockMap terrain.noise loadingChunkIndex,
-
-                                    standardMaterialMesh: MeshNotLoaded,
-                                    waterMaterialMesh: MeshNotLoaded,
-                                    transparentMaterialMesh: MeshNotLoaded
-                                } state.terrain
-                                pure true
+            generateTerrain (State state) index
 
             -- generate mesh ------------------------
             boxMapMaybe <- lookupChunk index state.terrain
@@ -121,6 +128,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
                         z: ci.z,
                         index,
                         blocks,
+                        edited: false,
 
                         standardMaterialMesh,
                         waterMaterialMesh,
@@ -147,7 +155,7 @@ generateMesh index verts mat scene (Config config) = do
 
 
 
-editBlock :: forall eff. Ref State -> BlockIndex -> BlockType -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+editBlock :: forall eff. Ref State -> BlockIndex -> BlockType -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | eff) Unit
 editBlock ref globalBlockIndex block = do
     State state <- readRef ref
     let editChunkIndex = globalIndexToChunkIndex globalBlockIndex
@@ -157,9 +165,14 @@ editBlock ref globalBlockIndex block = do
         Just chunkData, Complete res -> void do
             let localIndex = globalIndexToLocalIndex globalBlockIndex
             let li = runLocalIndex localIndex
+            let blocks = insert localIndex block chunkData.blocks
             updateChunkMesh ref res.materials res.scene chunkData {
-                blocks = insert localIndex block chunkData.blocks
+                blocks = blocks,
+                edited = true
             } res.options state.config
+
+            -- saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
+            saveChunkToFirebase $ Chunk { index: chunkData.index, blocks: blocks }
 
             let eci = runChunkIndex editChunkIndex
 
@@ -177,6 +190,33 @@ editBlock ref globalBlockIndex block = do
             when (li.z == chunkSize - 1) (refreash 0 0 1)
 
         _, _ -> pure unit
+
+
+
+
+putBlocks :: forall eff. Ref State -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | eff) Unit
+putBlocks ref (Chunk chunk) = do
+    State state <- readRef ref
+    chunkMaybe <- lookupChunk chunk.index state.terrain
+    case chunkMaybe, state.res of
+
+        Just chunkData, Complete res -> void do
+
+            -- generate terrain -------------------------------
+            generateTerrain (State state) chunk.index
+
+            updateChunkMesh ref res.materials res.scene chunkData {
+                blocks = chunk.blocks,
+                edited = true
+            } res.options state.config
+
+        _, _ -> pure unit
+
+
+
+
+
+
 
 updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Options -> Config -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
 updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config config) = void do
@@ -203,6 +243,7 @@ updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config conf
         z: ci.z,
         index,
         blocks: chunkWithMesh.blocks,
+        edited: chunkWithMesh.edited,
 
         standardMaterialMesh: MeshLoaded standardMaterialMesh,
         waterMaterialMesh: MeshLoaded waterMaterialMesh,
