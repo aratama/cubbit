@@ -321,8 +321,18 @@ canvas {
 .mode-root {
     background-color: #edede6;
     color: grey;
-    background-image: url(image/);
-    background-size: cover;
+    background-image: url(image/dots.png);
+    background-repeat: repeat;
+    animation: dots 20s linear infinite;
+}
+
+@keyframes dots {
+    0% {
+        background-position: 0 0, 0 0, 0 0;
+    }
+    100% {
+        background-position: 720px 0px;
+    }
 }
 
 .mode-root h1 {
@@ -340,11 +350,11 @@ canvas {
     border: solid 1px darkgrey;
     border-radius: 10px;
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
-    background-color: #d0d0c0;
+    background-color: white;
 }
 
 .mode-root .button {
-    background-color: #d0d0c0;
+    background-color: white;
     position: absolute;
     border: solid 1px darkgrey;
     overflow: hidden;
