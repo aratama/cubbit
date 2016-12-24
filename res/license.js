@@ -276,6 +276,7 @@ http://www.alabsoft.com/unity3d.shtml
 
 http://ipafont.ipa.go.jp/ipa_font_license_v1.html
 
+--------------------------------------------------------------------------------
 
 ## Sounds
 
@@ -283,6 +284,13 @@ http://ipafont.ipa.go.jp/ipa_font_license_v1.html
 * ライ麦畑で朝食を http://dova-s.jp/bgm/play5576.html
 * クリーニング・ストリーム http://dova-s.jp/bgm/play5475.html
 * いちごホイップ http://dova-s.jp/bgm/play2142.html
+
+--------------------------------------------------------------------------------
+
+## Seamless vector circle patterns
+
+* http://vector4free.com/vector/seamless-vector-circle-patterns/
+
 
 `
 
