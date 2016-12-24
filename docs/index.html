@@ -9,10 +9,25 @@
     <body>
 
         <canvas id="renderCanvas" class="content-layer"></canvas>
-        <canvas id="debugCanvas" class="content-layer"></canvas>        
+        <canvas id="debugCanvas" class="content-layer"></canvas>
         <script src="nico.js"></script>
         <script src="lib/babylon.custom.js"></script>
         <script src="lib/cannon.js"></script>
+        <script src="lib/lz-string.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/3.6.4/firebase.js"></script>
+        <script>
+            // Initialize Firebase
+            var config = {
+                apiKey: "AIzaSyD9RzQFA2YrliZwXGPG7_DuOW3ErDi8VFU",
+                authDomain: "cubbit-test.firebaseapp.com",
+                databaseURL: "https://cubbit-test.firebaseio.com",
+                storageBucket: "cubbit-test.appspot.com",
+                messagingSenderId: "351872758187"
+            };
+            firebase.initializeApp(config);
+
+            
+        </script>
         <script src="index.js"></script>
     </body>
 </html>

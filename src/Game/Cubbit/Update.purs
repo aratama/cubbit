@@ -1,4 +1,4 @@
-module Game.Cubbit.Update (update, updateBabylon) where
+module Game.Cubbit.Update (update, updateBabylon, updateSound) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
@@ -381,37 +381,10 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
 
 
 
-            case state.bgm, state.nextBGM, state.volume of
-                Just bgm, Just next, 0.0 -> void do
-                    stop bgm
-                    setTimeout 1000 $ play next
-                Nothing, Just next, 0.0 -> play next
-                _, _, _ -> pure unit
 
             pure $ State state {
-                updateIndex = toNullable (Just nextIndex),
-
-                bgm = case state.nextBGM, state.volume of
-                    Just next, 0.0 -> Just next
-                    _, _ -> state.bgm,
-
-                nextBGM = case state.nextBGM, state.volume of
-                    Just next, 0.0 -> Nothing
-                    _, _ -> state.nextBGM,
-
-                volume = case state.nextBGM of
-                    Just _ -> max 0.0 $ state.volume - 0.02
-                    _ -> 1.0
+                updateIndex = toNullable (Just nextIndex)
             }
-
-        -- update volumes
-        do
-            let v = if config.mute then 0.0 else (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
-            for_ sounds.bgms $ setVolume v
-
-            let sev = if config.mute then 0.0 else Int.toNumber config.seVolume / Int.toNumber sliderMaxValue
-            for_ sounds.ses $ setVolume sev
-
 
 
         -- unload chunks
@@ -443,6 +416,62 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
                 setRenderList (meshes <> playerMeshes) shadowMap
             else do
                 setRenderList [] shadowMap
+
+
+        pure nextState
+
+
+
+updateSound :: forall eff. Number
+                   -> Scene
+                   -> Materials
+                   -> Sounds
+                   -> ShadowMap
+                   -> Mesh
+                   -> TargetCamera
+                   -> Options
+                   -> Mesh
+                   -> HalogenIO Query Void (Aff (babylon :: BABYLON, timer :: TIMER | eff))
+                   -> State
+                   -> Eff (babylon :: BABYLON, timer :: TIMER | eff)  State
+updateSound deltaTime scene materials sounds shadowMap cursor camera (Options options) skybox driver (State state@{ terrain: Terrain terrain }) = do
+
+        Config config <- pure state.config
+
+        -- load chunks
+        nextState <- do
+
+            case state.bgm, state.nextBGM, state.volume of
+                Just bgm, Just next, 0.0 -> void do
+                    stop bgm
+                    setTimeout 1000 $ play next
+                Nothing, Just next, 0.0 -> play next
+                _, _, _ -> pure unit
+
+            pure $ State state {
+
+                bgm = case state.nextBGM, state.volume of
+                    Just next, 0.0 -> Just next
+                    _, _ -> state.bgm,
+
+                nextBGM = case state.nextBGM, state.volume of
+                    Just next, 0.0 -> Nothing
+                    _, _ -> state.nextBGM,
+
+                volume = case state.nextBGM of
+                    Just _ -> max 0.0 $ state.volume - 0.02
+                    _ -> 1.0
+            }
+
+        -- update volumes
+        do
+            let v = if config.mute then 0.0 else (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
+            for_ sounds.bgms $ setVolume v
+
+            let sev = if config.mute then 0.0 else Int.toNumber config.seVolume / Int.toNumber sliderMaxValue
+            for_ sounds.ses $ setVolume sev
+
+
 
 
         pure nextState

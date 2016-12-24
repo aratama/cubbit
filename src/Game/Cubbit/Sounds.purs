@@ -15,6 +15,8 @@ type Sounds = {
     yourNatural :: Sound,
     rye :: Sound,
     cleaning :: Sound,
+    ichigo :: Sound,
+
     forestSound :: Sound,
     switchSound :: Sound,
     pickSound :: Sound,
@@ -34,6 +36,7 @@ loadSounds scene inc = do
     yourNatural <- load "sound/Your_natural.mp3" true
     rye <- load "sound/rye.mp3" true
     cleaning <- load "sound/cleaningstream.mp3" true
+    ichigo <- load "sound/ichigo.mp3" true
 
     -- environment
     forestSound <- load "sound/forest.mp3" true
@@ -49,7 +52,8 @@ loadSounds scene inc = do
     let bgms = [
             rye,
             yourNatural,
-            cleaning
+            cleaning,
+            ichigo
         ]
     let ses = [
             forestSound,
@@ -63,6 +67,8 @@ loadSounds scene inc = do
         rye,
         yourNatural,
         cleaning,
+        ichigo,
+        
         forestSound,
         switchSound,
         pickSound,

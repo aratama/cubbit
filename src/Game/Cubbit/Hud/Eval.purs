@@ -216,16 +216,18 @@ eval ref query = do
                     ModeSelect -> do
                         liftEff $ play sounds.warpSound
                         let nextScene = ModeSelectionSceneState {}
-                        modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
+                        modifyAppState ref (\(State state) -> State state {
+                            nextScene = Just nextScene
+                        })
                         wait 1000
                         liftEff $ initializeTerrain ref
                         modifyAppState ref (\(State state) -> State state {
-                            sceneState = nextScene
+                            sceneState = nextScene,
+                            nextBGM = Just sounds.ichigo
                         })
                         wait 1000
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Nothing,
-                            nextBGM = Just sounds.rye
+                            nextScene = Nothing
                         })
                         pure unit
 

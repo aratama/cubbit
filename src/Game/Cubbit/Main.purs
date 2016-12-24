@@ -28,7 +28,7 @@ import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Storage (listenAllChunks, listenAllChunksFromForebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain, globalPositionToChunkIndex)
 import Game.Cubbit.Types (Effects, ResourceProgress(..), SceneState(..), State(State))
-import Game.Cubbit.Update (update, updateBabylon)
+import Game.Cubbit.Update (update, updateBabylon, updateSound)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Util (querySelectorCanvas)
@@ -143,8 +143,9 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                         readRef ref >>=
                             update deltaTime scene sounds cursor (Options options) driver >>=
                                 updateBabylon deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
-                                    updatePhysics deltaTime playerBox world >>=
-                                        writeRef ref
+                                    updateSound deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
+                                        updatePhysics deltaTime playerBox world >>=
+                                            writeRef ref
 
                         do
                             State s <- readRef ref
@@ -161,7 +162,11 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 State st <- readRef ref
                 case st.sceneState of
                     TitleSceneState _ -> updateCanvas
-                    ModeSelectionSceneState _ -> pure unit
+                    ModeSelectionSceneState _ -> do
+                        deltaTime <- getDeltaTime engine
+                        readRef ref >>=
+                            updateSound deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
+                                writeRef ref
                     PlayingSceneState _ -> updateCanvas
 
 
