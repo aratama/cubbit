@@ -58,30 +58,28 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
-generateTerrain :: forall eff. State -> ChunkIndex -> Eff (babylon :: BABYLON | eff) Unit
-generateTerrain (State state@{ terrain: Terrain terrain }) index = do
+generateTerrain :: forall eff. Terrain -> ChunkIndex -> Eff (babylon :: BABYLON | eff) Unit
+generateTerrain terrain@(Terrain t) index = do
     let i = runChunkIndex index
     forE (i.x - 1) (i.x + 2) \x -> do
         forE (i.y - 1) (i.y + 2) \y -> do
             forE (i.z - 1) (i.z + 2) \z -> void do
                 let loadingChunkIndex = chunkIndex x y z
-                boxMapMaybe <- lookupChunk loadingChunkIndex state.terrain
+                boxMapMaybe <- lookupChunk loadingChunkIndex terrain
                 case boxMapMaybe of
-                    Just _ -> pure false
-                    Nothing -> do
-                        insertChunk {
-                            x: x,
-                            y: y,
-                            z: z,
-                            index: loadingChunkIndex,
-                            blocks: createBlockMap terrain.noise loadingChunkIndex,
-                            edited: false,
+                    Just _ -> pure unit
+                    Nothing -> insertChunk {
+                        x: x,
+                        y: y,
+                        z: z,
+                        index: loadingChunkIndex,
+                        blocks: createBlockMap t.noise loadingChunkIndex,
+                        edited: false,
 
-                            standardMaterialMesh: MeshNotLoaded,
-                            waterMaterialMesh: MeshNotLoaded,
-                            transparentMaterialMesh: MeshNotLoaded
-                        } state.terrain
-                        pure true
+                        standardMaterialMesh: MeshNotLoaded,
+                        waterMaterialMesh: MeshNotLoaded,
+                        transparentMaterialMesh: MeshNotLoaded
+                    } terrain
 
 generateChunk :: forall eff. State -> Materials -> Scene -> ChunkIndex -> Options -> Config -> Eff (babylon :: BABYLON | eff) Boolean
 generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (Options options) (Config config) = do
@@ -90,7 +88,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
         Complete res -> do
 
             -- generate terrain -------------------------------
-            generateTerrain (State state) index
+            generateTerrain state.terrain index
 
             -- generate mesh ------------------------
             boxMapMaybe <- lookupChunk index state.terrain
@@ -209,7 +207,7 @@ putBlocks ref (Chunk chunk) = do
         Just chunkData, Complete res -> void do
 
             -- generate terrain -------------------------------
-            generateTerrain (State state) chunk.index
+            generateTerrain state.terrain chunk.index
 
             updateChunkMesh ref res.materials res.scene chunkData {
                 blocks = chunk.blocks,

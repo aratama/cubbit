@@ -29,7 +29,8 @@ newtype Options = Options {
     pointerHorizontalSensitivity :: Number,
     pointerVerticalSensitivity :: Number,
     landingVelocityLimit :: Number,
-    landingDuration :: Int
+    landingDuration :: Int,
+    blockPickingMaxDistance :: Int
 }
 
 derive instance genericOptions :: Generic Options _

@@ -24,5 +24,6 @@
     "pointerHorizontalSensitivity": 0.002,
     "pointerVerticalSensitivity": 0.002,
     "landingVelocityLimit": -1.5,
-    "landingDuration": 40
+    "landingDuration": 40,
+    "blockPickingMaxDistance": 10
 }

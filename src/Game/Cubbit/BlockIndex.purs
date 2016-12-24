@@ -1,11 +1,11 @@
-module Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex, eqBlockIndex, showBlockIndex) where
+module Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex, eqBlockIndex, showBlockIndex, blockIndexDistance) where
 
 import Control.Alternative (pure)
 import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Class (class AsForeign, class IsForeign)
-import Data.Ord (class Ord, compare)
+import Data.Ord (class Ord, abs, compare, max)
 import Data.Ordering (Ordering)
-import Prelude (class Eq, class Show)
+import Prelude (class Eq, class Show, (-))
 
 newtype BlockIndex = BlockIndex Int
 
@@ -16,6 +16,15 @@ foreign import runBlockIndex :: BlockIndex -> { x :: Int, y :: Int, z :: Int }
 foreign import eqBlockIndex :: BlockIndex -> BlockIndex -> Boolean
 
 foreign import showBlockIndex :: BlockIndex -> String
+
+blockIndexDistance :: BlockIndex -> BlockIndex -> Int
+blockIndexDistance a b =  max dx (max dy dz)
+  where
+    dx = abs (i.x - k.x)
+    dy = abs (i.y - k.y)
+    dz = abs (i.z - k.z)
+    i = runBlockIndex a
+    k = runBlockIndex b
 
 instance is_Foreign_Index3D :: IsForeign BlockIndex where
     read value = pure (unsafeFromForeign value)

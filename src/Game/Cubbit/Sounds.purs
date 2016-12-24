@@ -68,7 +68,7 @@ loadSounds scene inc = do
         yourNatural,
         cleaning,
         ichigo,
-        
+
         forestSound,
         switchSound,
         pickSound,

@@ -18,7 +18,7 @@ import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (BABYLON, Sound)
+import Graphics.Babylon.Types (BABYLON, Canvas, Sound)
 import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
@@ -82,6 +82,7 @@ data GameMode = SinglePlayerMode | MultiplayerMode
 data ResourceProgress = Loading Int | Complete Resources
 
 newtype State = State {
+    canvas :: Canvas,
     config :: Config,
     res :: ResourceProgress,
 

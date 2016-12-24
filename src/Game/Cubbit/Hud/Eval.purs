@@ -206,11 +206,13 @@ eval ref query = do
                         wait 1000
                         liftEff do
                             stop sounds.forestSound
-                        modifyAppState ref (\(State state) -> State state { sceneState = nextScene })
+                        modifyAppState ref (\(State state) -> State state {
+                            sceneState = nextScene,
+                            nextBGM = Just sounds.cleaning
+                        })
                         wait 1000
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Nothing,
-                            nextBGM = Just sounds.cleaning
+                            nextScene = Nothing
                         })
 
                     ModeSelect -> do

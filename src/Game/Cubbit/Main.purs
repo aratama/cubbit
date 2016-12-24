@@ -55,6 +55,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let terrainSeed = 0
         initialTerrain <- liftEff $ createTerrain terrainSeed
         let initialState =  {
+                canvas: canvasGL,
                 config: Config config,
                 res: Loading 0,
                 configVisible: false,

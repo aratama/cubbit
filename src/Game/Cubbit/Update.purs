@@ -5,20 +5,28 @@ import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Timer (TIMER, setTimeout)
 import DOM (DOM)
+import DOM.HTML (window)
+import DOM.HTML.HTMLElement (getBoundingClientRect)
+import DOM.HTML.Types (htmlDocumentToNonElementParentNode)
+import DOM.HTML.Window (document)
+import DOM.Node.NonElementParentNode (getElementById)
+import DOM.Node.Types (ElementId(..), documentToNonElementParentNode)
 import Data.Array (catMaybes, drop, take, any)
 import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
+import Data.Int (floor)
 import Data.Int (toNumber) as Int
 import Data.Maybe (Maybe(Just, Nothing))
-import Data.Nullable (Nullable, toNullable)
+import Data.Nullable (Nullable, toMaybe, toNullable)
 import Data.Ord (min, max)
 import Data.Set (member)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
-import Game.Cubbit.BlockIndex (runBlockIndex)
+import Game.Cubbit.BlockIndex (runBlockIndex, blockIndexDistance)
 import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
@@ -48,7 +56,8 @@ import Graphics.Babylon.Types (BABYLON, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||))
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), (>>=))
+import Unsafe.Coerce (unsafeCoerce)
 
 epsiron :: Number
 epsiron = 0.1
@@ -231,7 +240,7 @@ update :: forall eff. Number
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> State
                    -> Eff (Effects eff) State
-update deltaTime scene sounds cursor options driver (State state@{ terrain: Terrain terrain }) = do
+update deltaTime scene sounds cursor (Options options) driver (State state@{ terrain: Terrain terrain }) = do
 
         let playerMeshes = case state.res of
                 Loading _ -> []
@@ -253,7 +262,7 @@ update deltaTime scene sounds cursor options driver (State state@{ terrain: Terr
 
             PlayingSceneState playingSceneState -> do
 
-                Tuple (State state') playingSceneState' <- pure $ calcurateNextState options deltaTime (State state) playingSceneState
+                Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
 
                 when (playingSceneState'.animation /= playingSceneState.animation) do
                     playAnimation playingSceneState'.animation playerMeshes
@@ -267,19 +276,41 @@ update deltaTime scene sounds cursor options driver (State state@{ terrain: Terr
 
 
 
+
                 -- picking
                 do
                     case playingSceneState'.mode of
                         Move -> pure unit
                         _ -> do
-                            pickedBlock <- pickBlock scene cursor playingSceneState'.mode state.terrain state.mousePosition.x state.mousePosition.y
+
+                            canvasMaybe <- toMaybe <$> ((htmlDocumentToNonElementParentNode <$> (window >>= document)) >>= getElementById (ElementId "renderCanvas"))
+                            screenCenter <- case canvasMaybe of
+                                Nothing -> do
+                                    error "Canvas not found"
+                                    pure { x: 0, y: 0 }
+                                Just canvas -> do
+                                    bounds <- getBoundingClientRect (unsafeCoerce canvas)
+                                    pure {
+                                        x: floor (bounds.width * 0.5),
+                                        y: floor (bounds.height * 0.5)
+                                    }
+
+                            let playerPositionIndex = globalPositionToGlobalIndex playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
+
+                            pickedBlock <- if playingSceneState'.firstPersonView
+                                then pickBlock scene cursor playingSceneState'.mode state.terrain screenCenter.x screenCenter.y
+                                else pickBlock scene cursor playingSceneState'.mode state.terrain state.mousePosition.x state.mousePosition.y
                             case pickedBlock of
                                 Nothing -> pure unit
                                 Just bi -> void do
-                                    let rbi = runBlockIndex bi
-                                    r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
-                                    setPosition r cursor
-                                    queryToHud driver (Query (PlayingSceneQuery (SetCursorPosition bi)))
+
+
+                                    when (blockIndexDistance playerPositionIndex bi < options.blockPickingMaxDistance) do
+
+                                        let rbi = runBlockIndex bi
+                                        r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
+                                        setPosition r cursor
+                                        queryToHud driver (Query (PlayingSceneQuery (SetCursorPosition bi)))
 
 
                 do

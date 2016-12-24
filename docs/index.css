@@ -375,7 +375,7 @@ canvas {
 
 .mode-root .multiplayer.button {
     left: 80px;
-    top: 410px;
+    bottom: 50px;
 }
 
 
@@ -419,9 +419,9 @@ canvas {
 
 .config-inner {
     box-shadow: 0px 0px 50px 0px rgba(0, 0, 0, 0.6), 0px 0px 10px 0px rgba(0, 0, 0, 0.6) inset;
-    background-color: #cdb27b;
-    border: solid 20px white;
-    color: white;
+    background-color: #edede6;
+    border: solid 20px #d0d0c0;
+    color: grey;
     width: 600px;
     height: 400px;
     position: absolute;
@@ -430,7 +430,7 @@ canvas {
     right: 0px;
     top: 0px;
     bottom: 0px;
-    padding: 10px;
+    padding: 25px;
     border-radius: 12px;
 }
 
@@ -439,8 +439,9 @@ canvas {
     margin-top: 4px;
     margin-bottom: 0px;
     padding: 4px;
-    color: #cdb27b;
-    background-color: white;
+    color: white;
+    background-color: #d0d0c0;
+    border-radius: 0px 100px 0px 0px;
 }
 
 .config-root .config-bgm-volume {
@@ -462,18 +463,18 @@ canvas {
 
 .config-option .config-toggle {
     background-color: transparent;
-    color: white;
+    color: grey;
+    border: solid 1px grey;
+    border-radius: 4px;
     width: 100px;
     height: 1em;
     padding: 4px;
-    border: solid 1px white;
-    border-radius: 4px;
     text-align: center;
 }
 
 .config-option .config-toggle.on {
-    background-color: white;
-    color: #cdb27b;
+    background-color: grey;
+    color: #edede6;
 }
 
 
@@ -486,13 +487,13 @@ canvas {
 .config-slider-box {
     width: 1em;
     height: 1em;
-    border: solid 1px white;
+    border: solid 1px grey;
     margin: 2px;
     border-radius: 4px;
 }
 
 .config-slider-box.fill {
-    background-color: white;
+    background-color: grey;
 }
 
 .config-root a {
