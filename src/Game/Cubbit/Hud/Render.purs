@@ -80,10 +80,10 @@ render (State state@{ config: Config config }) = case state.res of
                 ModeSelectionSceneState e -> [
                     div [class_ (ClassName "content-layer mode-root")] [
 
-                        h1 [] [text "Mode Selection"],
-                        div [onClick \e -> send' Home] [text "Home"],
-                        div [onClick \e -> send' $ Start SinglePlayerMode] [text "Single Player Offline Mode"],
-                        div [onClick \e -> send' $ Start MultiplayerMode] [text "Multi-Players Online Mode"]
+                        h1 [] [icon "tree", text " Mode Selection!"],
+                        div [class_ (ClassName "home button"), onClick \e -> send' Home] [icon "home"],
+                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text " Single Player Offline Mode"],
+                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text " Multi-Players Online Mode"]
                     ]
                 ]
 

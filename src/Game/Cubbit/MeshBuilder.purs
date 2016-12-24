@@ -4,7 +4,7 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void, when)
 import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Ref (REF, Ref, readRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (length)
 import Data.Maybe (Maybe(..))
@@ -14,6 +14,7 @@ import Game.Cubbit.BlockType (BlockType, BlockTypes, blockTypes)
 import Game.Cubbit.BoxelMap (insert)
 import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
+import Game.Cubbit.Collesion (disposeCollesion)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (chunkSize, terrainRenderingGroup)
 import Game.Cubbit.Generation (createBlockMap)
@@ -27,6 +28,7 @@ import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexCo
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (VertexDataProps(VertexDataProps), Material, BABYLON, Mesh, Scene)
 import Graphics.Babylon.VertexData (applyToMesh, createVertexData)
+import Graphics.Cannon (CANNON)
 import PerlinNoise (Noise, simplex2)
 import Prelude ((+), (-), (<), (=<<), (==), negate, ($))
 
@@ -176,7 +178,7 @@ editBlock ref globalBlockIndex block = do
                     case p.gameMode of
                         SinglePlayerMode -> saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
                         MultiplayerMode -> saveChunkToFirebase $ Chunk { index: chunkData.index, blocks: blocks }
-                _ -> pure unit -- never come here 
+                _ -> pure unit -- never come here
 
             let eci = runChunkIndex editChunkIndex
 
@@ -198,7 +200,7 @@ editBlock ref globalBlockIndex block = do
 
 
 
-putBlocks :: forall eff. Ref State -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | eff) Unit
+putBlocks :: forall eff. Ref State -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Unit
 putBlocks ref (Chunk chunk) = do
     State state <- readRef ref
     chunkMaybe <- lookupChunk chunk.index state.terrain
@@ -213,6 +215,13 @@ putBlocks ref (Chunk chunk) = do
                 blocks = chunk.blocks,
                 edited = true
             } res.options state.config
+
+            -- update collesion
+            State state@{ terrain: terrain } <- readRef ref
+            terrain' <- disposeCollesion terrain state.world chunk.index
+            writeRef ref $ State state {
+                terrain = terrain'
+            }
 
         _, _ -> pure unit
 

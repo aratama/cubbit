@@ -313,10 +313,72 @@ canvas {
 }
 
 
+
+
+
+
+
 .mode-root {
-    background-color: white;
+    background-color: #edede6;
     color: grey;
 }
+
+.mode-root h1 {
+    text-align: center;
+}
+
+.mode-root .home {
+    position: absolute;
+    text-align: center;
+    padding: 10px;
+    left: 50px;
+    top: 50px;
+    width: 1.3em;
+    font-size: 50px;
+    border: solid 1px darkgrey;
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+    background-color: #d0d0c0;
+}
+
+.mode-root .button {
+    background-color: #d0d0c0;
+    position: absolute;
+    border: solid 1px darkgrey;
+    overflow: hidden;
+    box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
+    transition-property: transform;
+    transition-duration: 0.3s;
+}
+
+.mode-root .mode.button {
+    width: 600px;
+    height: 220px;
+    border-radius: 0px 30px 0px 30px;
+    font-size: xx-large;
+    padding: 20px;
+}
+
+.mode-root .button:hover {
+    transform: translateY(-10px);
+    background-color: rgba(255, 255, 255);
+}
+
+.mode-root .button:active {
+    transform: translateY(0px);
+}
+
+.mode-root .singleplayer.button {
+    right: 80px;
+    top: 110px;
+}
+
+.mode-root .multiplayer.button {
+    left: 80px;
+    top: 410px;
+}
+
+
 
 
 

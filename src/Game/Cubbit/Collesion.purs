@@ -1,4 +1,4 @@
-module Game.Cubbit.Collesion (BodyTag, buildCollesionBoxes, updatePhysics, createPlayerCollesion, updateChunkCollesion, buildCollesionTerrain) where
+module Game.Cubbit.Collesion (BodyTag, buildCollesionBoxes, updatePhysics, createPlayerCollesion, updateChunkCollesion, buildCollesionTerrain, disposeCollesion) where
 
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Unsafe (unsafeCoerceEff)
@@ -8,6 +8,7 @@ import Data.Maybe (Maybe(..))
 import Data.Monoid (mempty)
 import Data.Traversable (for, for_)
 import Data.Tuple (Tuple(..))
+import Data.Unit (unit)
 import Game.Cubbit.BlockType (BlockType)
 import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
@@ -111,6 +112,18 @@ updateChunkCollesion (Terrain terrain) world index = do
                     pure $ Terrain terrain {
                         bodies = insert index cannonBodies $ delete index terrain.bodies
                     }
+
+disposeCollesion :: forall eff. Terrain -> World -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
+disposeCollesion (Terrain terrain) world index = do
+    case lookup index terrain.bodies of
+        Nothing -> pure unit
+        Just bodies -> do
+            for_ bodies \body -> removeBody body world
+    pure $ Terrain terrain {
+        bodies = delete index terrain.bodies
+    }
+
+
 
 buildCollesionTerrain :: forall eff. Terrain -> World -> ChunkIndex -> Eff (cannon :: CANNON | eff) Terrain
 buildCollesionTerrain (Terrain terrain) world index = do

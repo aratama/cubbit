@@ -87,7 +87,7 @@ exports.saveChunkToFirebase = function(chunk) {
         var compressed = LZString.compressToUTF16(xs);
         var database = firebase.database();
         var ref = firebase.database().ref().child("terrain").child(chunk.index);
-        ref.set(compressed);
+        ref.set({ blocks: compressed });
 
     };
 };
@@ -98,7 +98,8 @@ exports.listenAllChunksFromForebase = function(callback) {
         var ref = firebase.database().ref().child("terrain");
         ref.once("value").then(function(snap){
             snap.forEach(function(chunkSnap){
-                var decompressed = LZString.decompressFromUTF16(chunkSnap.val().replace());
+                var value = chunkSnap.val();
+                var decompressed = LZString.decompressFromUTF16(value.blocks.replace());
                 if(decompressed == null){
                     debugger;
                     console.error("invalid chunk data at " + chunkSnap.key);
