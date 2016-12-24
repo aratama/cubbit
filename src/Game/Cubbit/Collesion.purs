@@ -66,6 +66,7 @@ createPlayerCollesion = do
 updatePhysics :: forall eff. Number -> Body -> World -> State -> Eff (cannon :: CANNON | eff) State
 updatePhysics deltaTime playerBox world (State state) = case state.sceneState of
     TitleSceneState t -> pure $ State state
+    ModeSelectionSceneState t -> pure $ State state
     PlayingSceneState p -> do
         pos <- createVec3 p.position.x p.position.y p.position.z
         setPosition pos playerBox

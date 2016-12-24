@@ -249,6 +249,8 @@ update deltaTime scene sounds cursor options driver (State state@{ terrain: Terr
                     }
                 pure (State state')
 
+            ModeSelectionSceneState ms -> pure (State state)
+
             PlayingSceneState playingSceneState -> do
 
                 Tuple (State state') playingSceneState' <- pure $ calcurateNextState options deltaTime (State state) playingSceneState

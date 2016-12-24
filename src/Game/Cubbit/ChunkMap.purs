@@ -35,3 +35,5 @@ foreign import slice :: forall eff. Int -> Int -> ChunkMap -> Eff eff (Array Chu
 foreign import filterNeighbors :: forall eff. Int -> Int -> Int -> Int -> ChunkMap -> Eff eff (Array ChunkWithMesh)
 
 foreign import getSortedChunks :: forall eff. Int -> Int -> Int -> ChunkMap -> Eff eff (Array ChunkWithMesh)
+
+foreign import toList :: forall eff. ChunkMap -> Eff eff (Array ChunkWithMesh)

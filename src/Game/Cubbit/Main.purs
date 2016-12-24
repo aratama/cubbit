@@ -21,7 +21,7 @@ import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCo
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Event (focus)
 import Game.Cubbit.Hud.Driver (initializeHud)
-import Game.Cubbit.Hud.Eval (repaint)
+import Game.Cubbit.Hud.Eval (repaint, initializeTerrain)
 import Game.Cubbit.MeshBuilder (generateChunk, putBlocks)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
@@ -114,16 +114,6 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 nextBGM = Just sounds.cleaning
             }
 
-            -- load initial chunks --
-            do
-                let initialWorldSize = options.initialWorldSize
-                forE (-initialWorldSize) initialWorldSize \x -> do
-                    forE (-initialWorldSize) initialWorldSize \z -> void do
-                        let index = chunkIndex x 0 z
-                        State state <- readRef ref
-                        generateChunk (State state) materials scene index (Options options) (Config config)
-
-
             -- cannon --
 
             gravity <- createVec3 0.0 options.gravity 0.0
@@ -132,17 +122,10 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
             playerBox <- createPlayerCollesion
             addBody playerBox world
 
-            terrain <- tailRecM2 (\ter -> case _ of
-                0 -> pure $ Done ter
-                i -> do
-                    ter' <- buildCollesionTerrain ter world (chunkIndex 0 0 0)
-                    pure $ Loop { a: ter', b: i - 1 }
-            ) initialState.terrain 9
-            modifyRef ref \(State state) -> State state { terrain = terrain }
+            initializeTerrain ref
 
             -- focus
             focus "content"
-
 
             -- resize
             win <- window
@@ -152,28 +135,37 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
 
             -- start game loop
             engine # runRenderLoop do
-                deltaTime <- getDeltaTime engine
-                readRef ref >>=
-                    update deltaTime scene sounds cursor (Options options) driver >>=
-                        updateBabylon deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
-                            updatePhysics deltaTime playerBox world >>=
-                                writeRef ref
 
-                do
-                    State s <- readRef ref
-                    case s.sceneState of
-                        PlayingSceneState p -> do
-                            let index = globalPositionToChunkIndex p.position.x p.position.y p.position.z
-                            Terrain t <- buildCollesionTerrain s.terrain world index
-                            -- log $ "boxes: " <> (show $ sum $ (\(Tuple k v) -> length v) <$> toList t.bodies)
-                            modifyRef ref \(State state) -> State state { terrain = Terrain t }
-                        _ -> pure unit
+                let updateCanvas = do
 
-                render scene
+                        deltaTime <- getDeltaTime engine
+
+                        readRef ref >>=
+                            update deltaTime scene sounds cursor (Options options) driver >>=
+                                updateBabylon deltaTime scene materials sounds shadowMap cursor targetCamera (Options options) skybox driver >>=
+                                    updatePhysics deltaTime playerBox world >>=
+                                        writeRef ref
+
+                        do
+                            State s <- readRef ref
+                            case s.sceneState of
+                                PlayingSceneState p -> do
+                                    let index = globalPositionToChunkIndex p.position.x p.position.y p.position.z
+                                    Terrain t <- buildCollesionTerrain s.terrain world index
+                                    -- log $ "boxes: " <> (show $ sum $ (\(Tuple k v) -> length v) <$> toList t.bodies)
+                                    modifyRef ref \(State state) -> State state { terrain = Terrain t }
+                                _ -> pure unit
+
+                        render scene
+
+                State st <- readRef ref
+                case st.sceneState of
+                    TitleSceneState _ -> updateCanvas
+                    ModeSelectionSceneState _ -> pure unit
+                    PlayingSceneState _ -> updateCanvas
 
 
-            -- read saved chunks
-            listenAllChunksFromForebase $ putBlocks ref
-            -- listenAllChunks \chunk -> do
-                -- putBlocks ref chunk
+
+
+
 

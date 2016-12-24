@@ -313,7 +313,10 @@ canvas {
 }
 
 
-
+.mode-root {
+    background-color: white;
+    color: grey;
+}
 
 
 

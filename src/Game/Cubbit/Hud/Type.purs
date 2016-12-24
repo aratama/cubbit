@@ -10,7 +10,7 @@ import DOM.Event.WheelEvent (WheelEvent)
 import DOM.WebStorage (STORAGE)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
-import Game.Cubbit.Types (Mode, State)
+import Game.Cubbit.Types (GameMode, Mode, State)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
@@ -23,7 +23,9 @@ data QueryA = PlayingSceneQuery PlayingSceneQuery
              | PreventDefault Event
              | Nop Event
              | ToggleMute
-             | Start
+             | ModeSelect
+             | Home
+             | Start GameMode
              | ShowConfig
              | CloseConfig
              | SetBGMVolume Int
@@ -45,7 +47,7 @@ data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | OnKeyDown KeyboardEvent
                          | OnKeyUp KeyboardEvent
                          | SetCenterPanelVisible Boolean
-                         | Home
+
 
 type HudEffects eff = HalogenEffects (
     console :: CONSOLE,

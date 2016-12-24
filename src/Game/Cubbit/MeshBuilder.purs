@@ -22,7 +22,7 @@ import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Storage (saveChunk, saveChunkToFirebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
-import Game.Cubbit.Types (ResourceProgress(..), State(State))
+import Game.Cubbit.Types (ResourceProgress(..), State(State), SceneState(..), GameMode(..))
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
 import Graphics.Babylon.Mesh (meshToAbstractMesh, createMesh)
 import Graphics.Babylon.Types (VertexDataProps(VertexDataProps), Material, BABYLON, Mesh, Scene)
@@ -171,8 +171,12 @@ editBlock ref globalBlockIndex block = do
                 edited = true
             } res.options state.config
 
-            -- saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
-            saveChunkToFirebase $ Chunk { index: chunkData.index, blocks: blocks }
+            case state.sceneState of
+                PlayingSceneState p -> do
+                    case p.gameMode of
+                        SinglePlayerMode -> saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
+                        MultiplayerMode -> saveChunkToFirebase $ Chunk { index: chunkData.index, blocks: blocks }
+                _ -> pure unit -- never come here 
 
             let eci = runChunkIndex editChunkIndex
 

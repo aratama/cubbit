@@ -48,6 +48,8 @@ type TitleSceneState = {
 
 type PlayingSceneState = {
 
+    gameMode :: GameMode,
+
     cameraYaw :: Number,
     cameraPitch :: Number,
     cameraRange :: Number,
@@ -68,8 +70,13 @@ type PlayingSceneState = {
     maxLife :: Int
 }
 
+type ModeSelectionSceneState = {}
+
 data SceneState = TitleSceneState TitleSceneState
+                | ModeSelectionSceneState ModeSelectionSceneState
                 | PlayingSceneState PlayingSceneState
+
+data GameMode = SinglePlayerMode | MultiplayerMode
 
 
 data ResourceProgress = Loading Int | Complete Resources

@@ -186,3 +186,9 @@ exports.getSortedChunks = function(cx){
         };
     };
 };
+
+exports.toList = function(obj){
+    return function(){
+        return obj.list.slice();
+    }
+}

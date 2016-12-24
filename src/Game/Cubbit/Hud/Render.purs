@@ -14,9 +14,9 @@ import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
 import Game.Cubbit.Resources (resourceCount)
-import Game.Cubbit.Types (Mode(Remove, Put, Move), State(..), SceneState(TitleSceneState, PlayingSceneState), ResourceProgress(..))
+import Game.Cubbit.Types (GameMode(..), Mode(..), ResourceProgress(..), SceneState(..), State(..))
 import Halogen (ComponentHTML)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h2, img, p, prop, text)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, p, prop, text)
 import Halogen.HTML.Elements (i, p_, a)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, autofocus, class_, href, id_, src, tabIndex, target)
@@ -68,13 +68,23 @@ render (State state@{ config: Config config }) = case state.res of
                         class_ (ClassName "content-layer"),
                         src "image/title.png",
                         Properties.key "image/title.png",
-                        onClick \e -> send' Start
+                        onClick \e -> send' ModeSelect
                     ],
 
                     div [
                         class_ (ClassName "show-config"),
                         onClick \e -> send' ShowConfig
                     ] [icon "gear"]
+                ]
+
+                ModeSelectionSceneState e -> [
+                    div [class_ (ClassName "content-layer mode-root")] [
+
+                        h1 [] [text "Mode Selection"],
+                        div [onClick \e -> send' Home] [text "Home"],
+                        div [onClick \e -> send' $ Start SinglePlayerMode] [text "Single Player Offline Mode"],
+                        div [onClick \e -> send' $ Start MultiplayerMode] [text "Multi-Players Online Mode"]
+                    ]
                 ]
 
                 PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
@@ -100,7 +110,7 @@ render (State state@{ config: Config config }) = case state.res of
                         div [class_ (ClassName "button"), onClick \e -> send TogglePointerLock] [icon "eye"],
                         div [class_ (ClassName "button"), onClick \e -> send (SetPosition { x: 0.0, y: 30.0, z: 0.0 })] [icon "plane"],
                         div [class_ (ClassName "button"), onClick \e -> send' ShowConfig] [icon "gear"],
-                        div [class_ (ClassName "button"), onClick \e -> send Home] [icon "home"]
+                        div [class_ (ClassName "button"), onClick \e -> send' Home] [icon "home"]
                     ],
 
 
