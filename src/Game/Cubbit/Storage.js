@@ -78,41 +78,23 @@ function getCubbitDatabase(callback){
     };
 }
 
-exports.saveChunkToFirebase = function(chunk) {
-    return function() {
-        var xs = "";
-        for(var i = 0; i < chunk.blocks.length; i++){
-            xs += String.fromCharCode(chunk.blocks[i]);
-        }
-        var compressed = LZString.compressToUTF16(xs);
-        var database = firebase.database();
-        var ref = firebase.database().ref().child("terrain").child(chunk.index);
-        ref.set({ blocks: compressed });
-
+exports.from = function(length){
+    return function(f){
+        return function(){
+            return Uint8Array.from({ length: length }, function(v, i){
+                return f(i);
+            });
+        };
     };
 };
+exports.boxelMapToString = function(boxelMap){
+    var xs = "";
+    for(var i = 0; i < boxelMap.length; i++){
+        xs += String.fromCharCode(boxelMap[i]);
+    }
+    return xs;
+}
 
-exports.listenAllChunksFromForebase = function(callback) {
-    return function() {
-        var database = firebase.database();
-        var ref = firebase.database().ref().child("terrain");
-        ref.once("value").then(function(snap){
-            snap.forEach(function(chunkSnap){
-                var value = chunkSnap.val();
-                var decompressed = LZString.decompressFromUTF16(value.blocks.replace());
-                if(decompressed == null){
-                    debugger;
-                    console.error("invalid chunk data at " + chunkSnap.key);
-                }else{
-                    var ys = Uint8Array.from({ length: 4096 }, function(v, i){
-                        return decompressed.charCodeAt(i);
-                    });
-                    callback({
-                        index: parseInt(chunkSnap.key),
-                        blocks: ys
-                    })();
-                }
-            })
-        });
-    };
-};
+exports.parseIndex = function(str){
+    return parseFloat(str);
+}

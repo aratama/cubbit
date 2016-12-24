@@ -22,6 +22,7 @@ import Graphics.Babylon.Types (BABYLON, Canvas, Sound)
 import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
+import Web.Firebase (FIREBASE, Firebase)
 
 type CoreEffects eff = (
     canvas :: CANVAS,
@@ -32,7 +33,8 @@ type CoreEffects eff = (
     ajax :: AJAX,
     storage :: STORAGE,
     timer :: TIMER,
-    cannon :: CANNON | eff)
+    cannon :: CANNON,
+    firebase :: FIREBASE | eff)
 
 type Effects eff =  CoreEffects (
     dom :: DOM,
@@ -99,6 +101,8 @@ newtype State = State {
 
     world :: World,
 
+    firebase :: Firebase,
+
     -- camera
     cameraPosition :: Vec,
     cameraTarget :: Vec,
@@ -111,7 +115,9 @@ newtype State = State {
     keys :: Set String,
     bgm :: Maybe Sound,
     nextBGM :: Maybe Sound,
-    volume :: Number
+    volume :: Number,
+
+    niconico :: Boolean
 }
 
 foreign import data ForeachIndex :: *

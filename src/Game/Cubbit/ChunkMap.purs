@@ -1,6 +1,7 @@
 module Game.Cubbit.ChunkMap where
 
 import Control.Monad.Eff (Eff)
+import Data.ArrayBuffer.Types (Uint8Array)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
 import Data.Unit (Unit)
@@ -37,3 +38,4 @@ foreign import filterNeighbors :: forall eff. Int -> Int -> Int -> Int -> ChunkM
 foreign import getSortedChunks :: forall eff. Int -> Int -> Int -> ChunkMap -> Eff eff (Array ChunkWithMesh)
 
 foreign import toList :: forall eff. ChunkMap -> Eff eff (Array ChunkWithMesh)
+

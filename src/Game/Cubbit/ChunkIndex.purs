@@ -1,4 +1,4 @@
-module Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex, chunkIndexDistance) where
+module Game.Cubbit.ChunkIndex (ChunkIndex(..), chunkIndex, runChunkIndex, chunkIndexDistance) where
 
 import Data.Foreign.Class (class AsForeign, class IsForeign, read, write)
 import Data.Generic (class Generic, gCompare, gEq)

@@ -31,6 +31,7 @@ import Graphics.Babylon.VertexData (applyToMesh, createVertexData)
 import Graphics.Cannon (CANNON)
 import PerlinNoise (Noise, simplex2)
 import Prelude ((+), (-), (<), (=<<), (==), negate, ($))
+import Web.Firebase (FIREBASE)
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -155,7 +156,7 @@ generateMesh index verts mat scene (Config config) = do
 
 
 
-editBlock :: forall eff. Ref State -> BlockIndex -> BlockType -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON | eff) Unit
+editBlock :: forall eff. Ref State -> BlockIndex -> BlockType -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, firebase :: FIREBASE | eff) Unit
 editBlock ref globalBlockIndex block = do
     State state <- readRef ref
     let editChunkIndex = globalIndexToChunkIndex globalBlockIndex
@@ -175,7 +176,7 @@ editBlock ref globalBlockIndex block = do
                 PlayingSceneState p -> do
                     case p.gameMode of
                         SinglePlayerMode -> saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
-                        MultiplayerMode -> saveChunkToFirebase $ Chunk { index: chunkData.index, blocks: blocks }
+                        MultiplayerMode -> saveChunkToFirebase (Chunk { index: chunkData.index, blocks: blocks }) state.firebase
                 _ -> pure unit -- never come here
 
             let eci = runChunkIndex editChunkIndex

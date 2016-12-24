@@ -16,6 +16,7 @@ import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
 import Halogen (HalogenEffects, HalogenIO)
 import Network.HTTP.Affjax (AJAX)
+import Web.Firebase (FIREBASE)
 
 data Query a = Query QueryA a
 
@@ -55,6 +56,7 @@ type HudEffects eff = HalogenEffects (
     babylon :: BABYLON,
     storage :: STORAGE,
     timer :: TIMER,
-    cannon :: CANNON | eff)
+    cannon :: CANNON,
+    firebase :: FIREBASE | eff)
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))

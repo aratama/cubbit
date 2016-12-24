@@ -270,7 +270,7 @@ eval ref query = do
                                 setIsVisible true mesh
                             case gameMode of
                                 SinglePlayerMode -> listenAllChunks $ putBlocks ref
-                                MultiplayerMode -> listenAllChunksFromForebase $ putBlocks ref
+                                MultiplayerMode -> listenAllChunksFromForebase currentState.firebase $ putBlocks ref
 
                         wait 1000
                         liftEff do

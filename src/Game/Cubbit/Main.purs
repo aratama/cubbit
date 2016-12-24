@@ -1,6 +1,6 @@
 module Game.Cubbit.Main (main) where
 
-import Control.Alternative (pure)
+import Control.Alternative (pure, when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Class (liftEff)
@@ -10,11 +10,16 @@ import Control.Monad.Rec.Class (Step(Loop, Done), tailRecM2)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.Event.Types (EventType(..))
 import DOM.HTML (window)
-import DOM.HTML.Types (windowToEventTarget)
+import DOM.HTML.Document (body)
+import DOM.HTML.Location (hostname)
+import DOM.HTML.Types (htmlElementToElement, windowToEventTarget)
+import DOM.HTML.Window (document, location)
+import DOM.Node.Element (setClassName)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Set (empty)
 import Data.Show (show)
+import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.ChunkIndex (chunkIndex)
 import Game.Cubbit.Collesion (buildCollesionBoxes, updatePhysics, createPlayerCollesion, buildCollesionTerrain)
@@ -35,7 +40,8 @@ import Graphics.Babylon.Util (querySelectorCanvas)
 import Graphics.Cannon (addBody, createVec3, createWorld, setGravity)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, void, (#), ($), (+), (-), (<$>), (<>), (>>=))
+import Prelude (negate, void, (#), ($), (+), (-), (<$>), (<>), (>>=), (==), (<<<))
+import Web.Firebase (Profile(..), initializeApp)
 
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -49,7 +55,26 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         -- config
         Config config <- liftEff $ readConfig
 
+        -- cannon
         world <- liftEff $ createWorld
+
+        -- firebase
+        let firebaseConfig = Profile {
+                    apiKey: "AIzaSyD9RzQFA2YrliZwXGPG7_DuOW3ErDi8VFU",
+                    authDomain: "cubbit-test.firebaseapp.com",
+                    databaseURL: "https://cubbit-test.firebaseio.com",
+                    storageBucket: "cubbit-test.appspot.com",
+                    messagingSenderId: "351872758187"
+                }
+        firebase <- liftEff $ initializeApp firebaseConfig
+
+        -- niconico fix
+        host <- liftEff $ window >>= location >>= hostname
+        let niconico = host == "html5.nicogame.jp"
+        when niconico do
+            liftEff do
+                b <- window >>= document >>= body
+                for_ (toMaybe b) $ setClassName "niconico" <<< htmlElementToElement
 
         -- initialize game state
         let terrainSeed = 0
@@ -67,6 +92,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 terrain: initialTerrain,
                 updateIndex: toNullable Nothing,
                 world,
+                firebase,
                 cameraPosition: { x: 10.0, y: 20.0, z: negate 10.0 },
                 cameraTarget: { x: 0.5, y: 11.0, z: 0.5 },
                 mousePosition: { x: 0, y: 0 },
@@ -76,7 +102,8 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
                 keys: empty,
                 bgm: Nothing,
                 nextBGM: Nothing,
-                volume: 1.0
+                volume: 1.0,
+                niconico
             }
 
         ref <- liftEff $ newRef $ State initialState

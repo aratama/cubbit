@@ -1,18 +1,18 @@
-#renderCanvas {
+.niconico #renderCanvas {
     width   : 816px;
     height  : 624px;
 }
 
-.content-layer {
+.niconico .content-layer {
     width   : 816px;
     height  : 624px;
 }
 
-.config-root {
+.niconico .config-root {
     left: 816px;
 }
 
-.mode-root .mode.button {
+.niconico .mode-root .mode.button {
     width: 400px;
     height: 160px;
     border-radius: 0px 30px 0px 30px;
