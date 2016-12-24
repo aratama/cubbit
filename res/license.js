@@ -287,9 +287,6 @@ http://ipafont.ipa.go.jp/ipa_font_license_v1.html
 
 --------------------------------------------------------------------------------
 
-## Seamless vector circle patterns
-
-* http://vector4free.com/vector/seamless-vector-circle-patterns/
 
 
 `

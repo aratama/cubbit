@@ -321,6 +321,18 @@ canvas {
 .mode-root {
     background-color: #edede6;
     color: grey;
+    background-image: url(image/dots.png);
+    background-repeat: repeat;
+    animation: dots 20s linear infinite;
+}
+
+@keyframes dots {
+    0% {
+        background-position: 0 0, 0 0, 0 0;
+    }
+    100% {
+        background-position: 720px 0px;
+    }
 }
 
 .mode-root h1 {
@@ -338,11 +350,11 @@ canvas {
     border: solid 1px darkgrey;
     border-radius: 10px;
     box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
-    background-color: #d0d0c0;
+    background-color: white;
 }
 
 .mode-root .button {
-    background-color: #d0d0c0;
+    background-color: white;
     position: absolute;
     border: solid 1px darkgrey;
     overflow: hidden;
@@ -357,6 +369,8 @@ canvas {
     border-radius: 0px 30px 0px 30px;
     font-size: xx-large;
     padding: 20px;
+    text-shadow: 0px 0px 10px white, 0px 0px 10px white, 0px 0px 10px white;
+    -webkit-text-stroke: 1px white;
 }
 
 .mode-root .button:hover {
@@ -371,11 +385,16 @@ canvas {
 .mode-root .singleplayer.button {
     right: 80px;
     top: 110px;
+    background-image: url(image/singleplayer.png);
+    background-size: cover;
 }
 
 .mode-root .multiplayer.button {
     left: 80px;
     bottom: 50px;
+    background-image: url(image/multiplayer.png);
+    background-size: cover;
+    text-shadow: 0px 0px 10px white;
 }
 
 
