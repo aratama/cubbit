@@ -61,10 +61,9 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         -- niconico fix
         host <- liftEff $ window >>= location >>= hostname
         let niconico = host == "html5.nicogame.jp"
-        when niconico do
-            liftEff do
-                b <- window >>= document >>= body
-                for_ (toMaybe b) $ setClassName "niconico" <<< htmlElementToElement
+        when niconico $ liftEff do
+            b <- window >>= document >>= body
+            for_ (toMaybe b) $ setClassName "niconico" <<< htmlElementToElement
 
         -- initialize game state
         let terrainSeed = 0

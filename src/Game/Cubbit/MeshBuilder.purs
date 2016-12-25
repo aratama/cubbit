@@ -7,6 +7,7 @@ import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Ref (REF, Ref, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (length)
+import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
@@ -17,12 +18,13 @@ import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.Collesion (disposeCollesion)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (chunkSize, terrainRenderingGroup)
+import Game.Cubbit.Firebase (saveChunkToFirebase)
 import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex, runLocalIndex)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options(Options))
+import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Storage (saveChunk)
-import Game.Cubbit.Firebase (saveChunkToFirebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (ResourceProgress(..), State(State), SceneState(..), GameMode(..))
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
@@ -31,7 +33,7 @@ import Graphics.Babylon.Types (VertexDataProps(VertexDataProps), Material, BABYL
 import Graphics.Babylon.VertexData (applyToMesh, createVertexData)
 import Graphics.Cannon (CANNON)
 import PerlinNoise (Noise, simplex2)
-import Prelude ((+), (-), (<), (=<<), (==), negate, ($))
+import Prelude ((+), (-), (<), (=<<), (==), negate, ($), (>>=))
 import Web.Firebase (FIREBASE)
 
 type CreateTerrainGeometryReferences = {
@@ -60,8 +62,8 @@ foreign import createTerrainGeometryJS :: CreateTerrainGeometryReferences -> Ter
 createTerrainGeometry :: Terrain -> Chunk -> VertexDataPropsData
 createTerrainGeometry = createTerrainGeometryJS createTerrainGeometryReferences
 
-generateTerrain :: forall eff. Terrain -> ChunkIndex -> Eff (babylon :: BABYLON | eff) Unit
-generateTerrain terrain@(Terrain t) index = do
+generateNeighborChunks :: forall eff. Terrain -> ChunkIndex -> Eff (babylon :: BABYLON | eff) Unit
+generateNeighborChunks terrain@(Terrain t) index = do
     let i = runChunkIndex index
     forE (i.x - 1) (i.x + 2) \x -> do
         forE (i.y - 1) (i.y + 2) \y -> do
@@ -90,7 +92,7 @@ generateChunk (State state@{ terrain: Terrain terrain }) materials scene index (
         Complete res -> do
 
             -- generate terrain -------------------------------
-            generateTerrain state.terrain index
+            generateNeighborChunks state.terrain index
 
             -- generate mesh ------------------------
             boxMapMaybe <- lookupChunk index state.terrain
@@ -200,30 +202,26 @@ editBlock ref globalBlockIndex block = do
 
 
 
-putBlocks :: forall eff. Ref State -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Unit
-putBlocks ref (Chunk chunk) = do
+putBlocks :: forall eff. Ref State -> Resources -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Unit
+putBlocks ref res (Chunk chunk) = do
     State state <- readRef ref
-    chunkMaybe <- lookupChunk chunk.index state.terrain
-    case chunkMaybe, state.res of
+    lookupChunk chunk.index state.terrain >>= traverse_ \chunkData -> do
+        -- generate neighbor terrain -------------------------------
+        generateNeighborChunks state.terrain chunk.index
 
-        Just chunkData, Complete res -> void do
+        -- overwrite the chunk
+        updateChunkMesh ref res.materials res.scene chunkData {
+            blocks = chunk.blocks,
+            edited = true
+        } res.options state.config
 
-            -- generate terrain -------------------------------
-            generateTerrain state.terrain chunk.index
+        -- update collesion
+        State st <- readRef ref
+        terrain' <- disposeCollesion st.terrain st.world chunk.index
+        writeRef ref $ State st {
+            terrain = terrain'
+        }
 
-            updateChunkMesh ref res.materials res.scene chunkData {
-                blocks = chunk.blocks,
-                edited = true
-            } res.options state.config
-
-            -- update collesion
-            State state@{ terrain: terrain } <- readRef ref
-            terrain' <- disposeCollesion terrain state.world chunk.index
-            writeRef ref $ State state {
-                terrain = terrain'
-            }
-
-        _, _ -> pure unit
 
 
 

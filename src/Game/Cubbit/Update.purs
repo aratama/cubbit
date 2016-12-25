@@ -138,10 +138,13 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
     let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
     blockMaybe <- lookupBlockByVec playerPosition (Terrain terrain)
 
-    let position' = playingSceneState.position
 
 
-    footHoldBlockMaybe' <- lookupBlockByVec { x: position'.x, y: position'.y - 0.01, z: position'.z } state.terrain
+    footHoldBlockMaybe' <- lookupBlockByVec {
+        x: playingSceneState.position.x,
+        y: playingSceneState.position.y - 0.01,
+        z: playingSceneState.position.z
+    } state.terrain
     let isLanding' = case footHoldBlockMaybe' of
             Just block | isSolidBlock block -> true
             _ -> false
@@ -157,14 +160,14 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let thirdPersonCameraTargetoffset = 2.0
 
-    let thirdPersonCameraTargetX = position'.x             + velocity.x * thirdPersonCameraTargetoffset
-    let thirdPersonCameraTargetY = position'.y + eyeHeight
-    let thirdPersonCameraTargetZ = position'.z             + velocity.z * thirdPersonCameraTargetoffset
+    let thirdPersonCameraTargetX = playingSceneState.position.x             + velocity.x * thirdPersonCameraTargetoffset
+    let thirdPersonCameraTargetY = playingSceneState.position.y + eyeHeight
+    let thirdPersonCameraTargetZ = playingSceneState.position.z             + velocity.z * thirdPersonCameraTargetoffset
 
     let playerRotationTheta = negate playingSceneState.playerRotation - pi * 0.5
-    let firstPersonCameraTargetX = position'.x + cos playerRotationTheta * cos playingSceneState.playerPitch
-    let firstPersonCameraTargetY = position'.y + eyeHeight + sin playingSceneState.playerPitch
-    let firstPersonCameraTargetZ = position'.z + sin playerRotationTheta * cos playingSceneState.playerPitch
+    let firstPersonCameraTargetX = playingSceneState.position.x + cos playerRotationTheta * cos playingSceneState.playerPitch
+    let firstPersonCameraTargetY = playingSceneState.position.y + eyeHeight + sin playingSceneState.playerPitch
+    let firstPersonCameraTargetZ = playingSceneState.position.z + sin playerRotationTheta * cos playingSceneState.playerPitch
 
     let cameraTargetX' = if playingSceneState.firstPersonView then firstPersonCameraTargetX else thirdPersonCameraTargetX
     let cameraTargetY' = if playingSceneState.firstPersonView then firstPersonCameraTargetY else thirdPersonCameraTargetY
@@ -182,13 +185,13 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let theta = negate playingSceneState.cameraYaw - pi * 0.5
 
-    let thirdPersonCameraPositionX = position'.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.x * thirdPersonCameraTargetoffset
-    let thirdPersonCameraPositionY = position'.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
-    let thirdPersonCameraPositionZ = position'.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.z * thirdPersonCameraTargetoffset
+    let thirdPersonCameraPositionX = playingSceneState.position.x + cos theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.x * thirdPersonCameraTargetoffset
+    let thirdPersonCameraPositionY = playingSceneState.position.y + eyeHeight + sin playingSceneState.cameraPitch * playingSceneState.cameraRange
+    let thirdPersonCameraPositionZ = playingSceneState.position.z + sin theta * cos playingSceneState.cameraPitch * playingSceneState.cameraRange + velocity.z * thirdPersonCameraTargetoffset
 
-    let firstPersonCameraPositionX = position'.x
-    let firstPersonCameraPositionY = position'.y + eyeHeight
-    let firstPersonCameraPositionZ = position'.z
+    let firstPersonCameraPositionX = playingSceneState.position.x
+    let firstPersonCameraPositionY = playingSceneState.position.y + eyeHeight
+    let firstPersonCameraPositionZ = playingSceneState.position.z
 
     let cameraPositionX = if playingSceneState.firstPersonView then firstPersonCameraPositionX else thirdPersonCameraPositionX
     let cameraPositionY = if playingSceneState.firstPersonView then firstPersonCameraPositionY else thirdPersonCameraPositionY
@@ -205,10 +208,7 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
                 cameraYaw = playingSceneState.cameraYaw + ((if member "q" state.keys then 1.0 else 0.0) - (if member "e" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed,
                 cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if member "r" state.keys then 1.0 else 0.0) - (if member "f" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed)),
                 cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if member "g" state.keys then 1.0 else 0.0) - (if member "t" state.keys then 1.0 else 0.0)) * options.cameraZoomSpeed)),
-
-                -- position = position',
                 velocity = velocity,
-
                 playerRotation = playerRotation',
                 animation = animation',
                 landing = max 0 (landingCount - 1),

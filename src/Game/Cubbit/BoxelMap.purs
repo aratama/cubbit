@@ -1,27 +1,25 @@
 module Game.Cubbit.BoxelMap (BoxelMap, lookup, insert, delete) where
 
-import Data.ArrayBuffer.Types (Uint8Array)
-import Data.Functor (class Functor)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
+import Game.Cubbit.BlockType (BlockType)
+import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex)
+import Prelude ((*))
 
-foreign import data BoxelMap :: * -> *
+foreign import data BoxelMap :: *
 
-instance functor_ShowMap :: Functor BoxelMap where
-    map = mapBoxelMap
+foreign import lookupNullable :: LocalIndex -> BoxelMap -> Nullable BlockType
 
-foreign import mapBoxelMap :: forall a b. (a -> b) -> BoxelMap a -> BoxelMap b
-
-foreign import lookupNullable :: forall a. LocalIndex -> BoxelMap a -> Nullable a
-
-lookup :: forall a. LocalIndex -> BoxelMap a -> Maybe a
+lookup :: LocalIndex -> BoxelMap -> Maybe BlockType
 lookup key map = toMaybe (lookupNullable key map)
 
-foreign import insert :: forall a. LocalIndex -> a -> BoxelMap a -> BoxelMap a
+foreign import insert :: LocalIndex -> BlockType -> BoxelMap -> BoxelMap
 
-foreign import delete :: forall a. LocalIndex -> BoxelMap a -> BoxelMap a
+foreign import delete :: LocalIndex -> BoxelMap -> BoxelMap
 
-foreign import empty :: forall a. BoxelMap a
+foreign import _empty :: Int -> BoxelMap
 
+empty :: BoxelMap
+empty = _empty (chunkSize * chunkSize * chunkSize)
 

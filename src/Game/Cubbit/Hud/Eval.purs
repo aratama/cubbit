@@ -270,8 +270,8 @@ eval ref query = do
                             for_ playerMeshes \mesh -> void do
                                 setIsVisible true mesh
                             case gameMode of
-                                SinglePlayerMode -> listenAllChunks $ putBlocks ref
-                                MultiplayerMode -> listenAllChunksFromForebase res.firebase $ putBlocks ref
+                                SinglePlayerMode -> listenAllChunks $ putBlocks ref res
+                                MultiplayerMode -> listenAllChunksFromForebase res.firebase $ putBlocks ref res
 
                         wait 1000
                         liftEff do

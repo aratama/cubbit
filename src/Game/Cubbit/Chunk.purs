@@ -3,20 +3,17 @@ module Game.Cubbit.Chunk where
 import Control.Monad.Eff (Eff)
 import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Class (class AsForeign, class IsForeign)
-import Data.Maybe (Maybe)
 import Data.Unit (Unit, unit)
-import Game.Cubbit.BlockType (BlockType)
 import Game.Cubbit.BoxelMap (BoxelMap) as Boxel
 import Game.Cubbit.ChunkIndex (ChunkIndex)
 import Graphics.Babylon.AbstractMesh (dispose)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Types (BABYLON, Mesh, VertexDataProps)
-import Graphics.Cannon (Body)
 import Prelude (pure, bind)
 
 newtype Chunk = Chunk {
     index :: ChunkIndex,
-    blocks :: Boxel.BoxelMap BlockType
+    blocks :: Boxel.BoxelMap
 }
 
 instance isForeign_TerrainMap :: IsForeign Chunk where
@@ -33,7 +30,7 @@ type ChunkWithMesh = {
     y :: Int,
     z :: Int,
     index :: ChunkIndex,
-    blocks :: Boxel.BoxelMap BlockType,
+    blocks :: Boxel.BoxelMap,
     edited :: Boolean,
 
     standardMaterialMesh :: MeshLoadingState,

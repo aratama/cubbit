@@ -1,8 +1,7 @@
 module Game.Cubbit.Generation (createBlockMap) where
 
-import Game.Cubbit.BlockType (BlockType(..), BlockTypes, blockTypes)
+import Game.Cubbit.BlockType (BlockTypes, blockTypes)
 import Game.Cubbit.BoxelMap (BoxelMap)
-import Game.Cubbit.Chunk (Chunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import PerlinNoise (Noise, simplex2)
@@ -28,7 +27,7 @@ generateReferences = {
     runChunkIndex: runChunkIndex
 }
 
-foreign import _createBlockMapJS :: GenerateReferences -> Noise -> ChunkIndex -> BoxelMap BlockType
+foreign import _createBlockMapJS :: GenerateReferences -> Noise -> ChunkIndex -> BoxelMap
 
-createBlockMap :: Noise -> ChunkIndex -> BoxelMap BlockType
+createBlockMap :: Noise -> ChunkIndex -> BoxelMap
 createBlockMap = _createBlockMapJS generateReferences
