@@ -21,7 +21,8 @@ import Game.Cubbit.Generation (createBlockMap)
 import Game.Cubbit.LocalIndex (LocalIndex, runLocalIndex)
 import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.Option (Options(Options))
-import Game.Cubbit.Storage (saveChunk, saveChunkToFirebase)
+import Game.Cubbit.Storage (saveChunk)
+import Game.Cubbit.Firebase (saveChunkToFirebase)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalIndexToChunkIndex, globalIndexToLocalIndex, insertChunk, lookupChunk)
 import Game.Cubbit.Types (ResourceProgress(..), State(State), SceneState(..), GameMode(..))
 import Graphics.Babylon.AbstractMesh (setMaterial, setIsPickable, setUseVertexColors, setRenderingGroupId, setReceiveShadows)
@@ -176,7 +177,7 @@ editBlock ref globalBlockIndex block = do
                 PlayingSceneState p -> do
                     case p.gameMode of
                         SinglePlayerMode -> saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
-                        MultiplayerMode -> saveChunkToFirebase (Chunk { index: chunkData.index, blocks: blocks }) state.firebase
+                        MultiplayerMode -> saveChunkToFirebase (Chunk { index: chunkData.index, blocks: blocks }) res.firebase
                 _ -> pure unit -- never come here
 
             let eci = runChunkIndex editChunkIndex

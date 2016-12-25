@@ -13,7 +13,7 @@ import DOM.HTML.HTMLElement (getBoundingClientRect)
 import DOM.HTML.Types (htmlDocumentToNonElementParentNode)
 import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
-import DOM.Node.Types (ElementId(..), documentToNonElementParentNode)
+import DOM.Node.Types (ElementId(ElementId))
 import Data.Array (catMaybes, drop, take, any)
 import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
@@ -35,12 +35,12 @@ import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
 import Game.Cubbit.Hud.Type (Query(..), QueryA(..), PlayingSceneQuery(..))
-import Game.Cubbit.Materials (Materials)
 import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
+import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), State(State), SceneState(..), PlayingSceneState, ResourceProgress(..))
+import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -52,7 +52,7 @@ import Graphics.Babylon.Scene (pickWithRay)
 import Graphics.Babylon.ShadowGenerator (setRenderList)
 import Graphics.Babylon.Sound (play, setVolume, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
-import Graphics.Babylon.Types (BABYLON, Mesh, Scene, ShadowMap, TargetCamera)
+import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
@@ -233,19 +233,11 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
 update :: forall eff. Number
-                   -> Scene
-                   -> Sounds
-                   -> Mesh
-                   -> Options
+                    -> Resources
                    -> HalogenIO Query Void (Aff (Effects eff))
                    -> State
                    -> Eff (Effects eff) State
-update deltaTime scene sounds cursor (Options options) driver (State state@{ terrain: Terrain terrain }) = do
-
-        let playerMeshes = case state.res of
-                Loading _ -> []
-                Complete res -> res.playerMeshes
-
+update deltaTime res@{ options: Options options } driver (State state@{ terrain: Terrain terrain }) = do
         case state.sceneState of
 
             TitleSceneState titleSceneState -> do
@@ -265,16 +257,14 @@ update deltaTime scene sounds cursor (Options options) driver (State state@{ ter
                 Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
 
                 when (playingSceneState'.animation /= playingSceneState.animation) do
-                    playAnimation playingSceneState'.animation playerMeshes
+                    playAnimation playingSceneState'.animation res.playerMeshes
 
                 playerRotationVector <- createVector3 0.0 playingSceneState'.playerRotation 0.0
                 positionVector <- createVector3 playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
-                for_ playerMeshes \mesh -> void do
+                for_ res.playerMeshes \mesh -> void do
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh
                     setVisibility (if playingSceneState.firstPersonView then 0.0 else 1.0) mesh
-
-
 
 
                 -- picking
@@ -298,8 +288,8 @@ update deltaTime scene sounds cursor (Options options) driver (State state@{ ter
                             let playerPositionIndex = globalPositionToGlobalIndex playingSceneState'.position.x playingSceneState'.position.y playingSceneState'.position.z
 
                             pickedBlock <- if playingSceneState'.firstPersonView
-                                then pickBlock scene cursor playingSceneState'.mode state.terrain screenCenter.x screenCenter.y
-                                else pickBlock scene cursor playingSceneState'.mode state.terrain state.mousePosition.x state.mousePosition.y
+                                then pickBlock res.scene res.cursor playingSceneState'.mode state.terrain screenCenter.x screenCenter.y
+                                else pickBlock res.scene res.cursor playingSceneState'.mode state.terrain state.mousePosition.x state.mousePosition.y
                             case pickedBlock of
                                 Nothing -> pure unit
                                 Just bi -> void do
@@ -309,7 +299,7 @@ update deltaTime scene sounds cursor (Options options) driver (State state@{ ter
 
                                         let rbi = runBlockIndex bi
                                         r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
-                                        setPosition r cursor
+                                        setPosition r res.cursor
                                         queryToHud driver (Query (PlayingSceneQuery (SetCursorPosition bi)))
 
 
@@ -317,14 +307,14 @@ update deltaTime scene sounds cursor (Options options) driver (State state@{ ter
                     setIsVisible (case playingSceneState'.mode of
                         Put _ -> true
                         Remove -> true
-                        Move -> false) (meshToAbstractMesh cursor)
+                        Move -> false) (meshToAbstractMesh res.cursor)
 
                 -- sounds
                 do
                     if playingSceneState.animation /= "run" && playingSceneState'.animation == "run"
-                        then play sounds.stepSound
+                        then play res.sounds.stepSound
                         else if playingSceneState.animation == "run" && playingSceneState'.animation /= "run"
-                            then stop sounds.stepSound
+                            then stop res.sounds.stepSound
                             else pure unit
 
                 pure (State state')
@@ -333,24 +323,12 @@ update deltaTime scene sounds cursor (Options options) driver (State state@{ ter
 
 
 updateBabylon :: forall eff. Number
-                   -> Scene
-                   -> Materials
-                   -> Sounds
-                   -> ShadowMap
-                   -> Mesh
-                   -> TargetCamera
-                   -> Options
-                   -> Mesh
-                   -> HalogenIO Query Void (Aff (babylon :: BABYLON, timer :: TIMER | eff))
+                   -> Resources
                    -> State
                    -> Eff (babylon :: BABYLON, timer :: TIMER | eff)  State
-updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options options) skybox driver (State state@{ terrain: Terrain terrain }) = do
+updateBabylon deltaTime res@{ options: Options options } (State state@{ terrain: Terrain terrain }) = do
 
         Config config <- pure state.config
-
-        let playerMeshes = case state.res of
-                Loading _ -> []
-                Complete res -> res.playerMeshes
 
         -- update camera
         let cameraPosition = state.cameraPosition
@@ -370,7 +348,7 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
                 let predicate mesh = do
                         let name = getName (abstractMeshToNode mesh)
                         pure (name == "terrain")
-                picked <- pickWithRay cameraRay predicate true scene
+                picked <- pickWithRay cameraRay predicate true res.scene
 
                 let pickedPoint = getPickedPoint picked
 
@@ -380,11 +358,11 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
 
             _ -> pure cameraPositionVector
 
-        Camera.setPosition cameraPosition'' (targetCameraToCamera camera)
-        setTarget cameraTargetVector camera
+        Camera.setPosition cameraPosition'' (targetCameraToCamera res.targetCamera)
+        setTarget cameraTargetVector res.targetCamera
 
         skyboxRotationVector <- createVector3 0.0 state.skyboxRotation 0.0
-        setRotation skyboxRotationVector (meshToAbstractMesh skybox)
+        setRotation skyboxRotationVector (meshToAbstractMesh res.skybox)
 
 
         -- load chunks
@@ -392,7 +370,7 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
 
             let ci = runChunkIndex cameraPositionChunkIndex
 
-            let loadAndGenerateChunk index = generateChunk (State state) materials scene index (Options options) state.config
+            let loadAndGenerateChunk index = generateChunk (State state) res.materials res.scene index (Options options) state.config
 
             let loadDistance = 3 + config.chunkArea
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do
@@ -444,68 +422,45 @@ updateBabylon deltaTime scene materials sounds shadowMap cursor camera (Options 
                             MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                             _ -> Nothing
                         ) <$> neighbors)
-                setRenderList (meshes <> playerMeshes) shadowMap
+                setRenderList (meshes <> res.playerMeshes) res.shadowMap
             else do
-                setRenderList [] shadowMap
+                setRenderList [] res.shadowMap
 
 
         pure nextState
 
 
 
-updateSound :: forall eff. Number
-                   -> Scene
-                   -> Materials
-                   -> Sounds
-                   -> ShadowMap
-                   -> Mesh
-                   -> TargetCamera
-                   -> Options
-                   -> Mesh
-                   -> HalogenIO Query Void (Aff (babylon :: BABYLON, timer :: TIMER | eff))
-                   -> State
-                   -> Eff (babylon :: BABYLON, timer :: TIMER | eff)  State
-updateSound deltaTime scene materials sounds shadowMap cursor camera (Options options) skybox driver (State state@{ terrain: Terrain terrain }) = do
+updateSound :: forall eff. Sounds -> State -> Eff (babylon :: BABYLON, timer :: TIMER | eff)  State
+updateSound sounds (State state@{ config: Config config }) = do
 
-        Config config <- pure state.config
+    -- update volumes
+    let sliderValueToNumber n = if config.mute then 0.0 else Int.toNumber n / Int.toNumber sliderMaxValue
+    for_ sounds.bgms $ setVolume $ sliderValueToNumber config.bgmVolume * state.volume
+    for_ sounds.ses $ setVolume $ sliderValueToNumber config.seVolume
 
-        -- load chunks
-        nextState <- do
+    case state.bgm, state.nextBGM, state.volume of
+        Just bgm, Just next, 0.0 -> void do
+            stop bgm
+            setTimeout 1000 $ play next
+        Nothing, Just next, 0.0 -> play next
+        _, _, _ -> pure unit
 
-            case state.bgm, state.nextBGM, state.volume of
-                Just bgm, Just next, 0.0 -> void do
-                    stop bgm
-                    setTimeout 1000 $ play next
-                Nothing, Just next, 0.0 -> play next
-                _, _, _ -> pure unit
+    -- calc next state
+    pure $ State state {
 
-            pure $ State state {
+        bgm = case state.nextBGM, state.volume of
+            Just next, 0.0 -> Just next
+            _, _ -> state.bgm,
 
-                bgm = case state.nextBGM, state.volume of
-                    Just next, 0.0 -> Just next
-                    _, _ -> state.bgm,
+        nextBGM = case state.nextBGM, state.volume of
+            Just next, 0.0 -> Nothing
+            _, _ -> state.nextBGM,
 
-                nextBGM = case state.nextBGM, state.volume of
-                    Just next, 0.0 -> Nothing
-                    _, _ -> state.nextBGM,
-
-                volume = case state.nextBGM of
-                    Just _ -> max 0.0 $ state.volume - 0.02
-                    _ -> 1.0
-            }
-
-        -- update volumes
-        do
-            let v = if config.mute then 0.0 else (Int.toNumber config.bgmVolume / Int.toNumber sliderMaxValue) * state.volume
-            for_ sounds.bgms $ setVolume v
-
-            let sev = if config.mute then 0.0 else Int.toNumber config.seVolume / Int.toNumber sliderMaxValue
-            for_ sounds.ses $ setVolume sev
-
-
-
-
-        pure nextState
+        volume = case state.nextBGM of
+            Just _ -> max 0.0 $ state.volume - 0.02
+            _ -> 1.0
+    }
 
 
 

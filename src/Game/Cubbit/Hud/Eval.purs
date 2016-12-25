@@ -34,7 +34,8 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (setMute)
-import Game.Cubbit.Storage (listenAllChunks, listenAllChunksFromForebase)
+import Game.Cubbit.Storage (listenAllChunks)
+import Game.Cubbit.Firebase (listenAllChunksFromForebase)
 import Game.Cubbit.Terrain (Terrain(..), createTerrain, globalIndexToChunkIndex)
 import Game.Cubbit.Types (GameMode(..), Mode(..), ResourceProgress(..), SceneState(..), State(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible, setReceiveShadows, setUseVertexColors)
@@ -270,7 +271,7 @@ eval ref query = do
                                 setIsVisible true mesh
                             case gameMode of
                                 SinglePlayerMode -> listenAllChunks $ putBlocks ref
-                                MultiplayerMode -> listenAllChunksFromForebase currentState.firebase $ putBlocks ref
+                                MultiplayerMode -> listenAllChunksFromForebase res.firebase $ putBlocks ref
 
                         wait 1000
                         liftEff do

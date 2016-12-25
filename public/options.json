@@ -1,4 +1,3 @@
-
 {
     "eyeHeight": 1.4,
     "gravity": -1.0,
@@ -25,5 +24,12 @@
     "pointerVerticalSensitivity": 0.002,
     "landingVelocityLimit": -1.5,
     "landingDuration": 40,
-    "blockPickingMaxDistance": 10
+    "blockPickingMaxDistance": 10,
+    "profile": {
+        "apiKey": "AIzaSyD9RzQFA2YrliZwXGPG7_DuOW3ErDi8VFU",
+        "authDomain": "cubbit-test.firebaseapp.com",
+        "databaseURL": "https://cubbit-test.firebaseio.com",
+        "storageBucket": "cubbit-test.appspot.com",
+        "messagingSenderId": "351872758187"
+    }
 }

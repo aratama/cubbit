@@ -3,6 +3,7 @@ module Game.Cubbit.Option (Options(Options), readOptions) where
 import Data.Foreign (F, Foreign)
 import Data.Foreign.Generic (readGeneric, defaultOptions)
 import Data.Generic.Rep (class Generic)
+import Web.Firebase (Profile)
 
 newtype Options = Options {
     eyeHeight :: Number,
@@ -30,7 +31,8 @@ newtype Options = Options {
     pointerVerticalSensitivity :: Number,
     landingVelocityLimit :: Number,
     landingDuration :: Int,
-    blockPickingMaxDistance :: Int
+    blockPickingMaxDistance :: Int,
+    profile :: Profile
 }
 
 derive instance genericOptions :: Generic Options _

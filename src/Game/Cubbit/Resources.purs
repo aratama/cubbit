@@ -5,17 +5,16 @@ import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (CONSOLE, log)
+import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (error)
-import Control.Monad.Eff.Ref (REF, modifyRef, newRef, readRef)
+import Control.Monad.Eff.Ref (REF)
 import Control.Monad.Except (runExcept, throwError)
 import DOM (DOM)
-import DOM.HTML.Types (HTMLElement)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Show (show)
 import Data.String (Pattern(..), contains)
-import Data.Unit (Unit, unit)
+import Data.Unit (Unit)
 import Game.Cubbit.Aff (loadImage)
 import Game.Cubbit.Constants (skyBoxRenderingGruop)
 import Game.Cubbit.Materials (Materials, initializeMaterials)
@@ -41,9 +40,10 @@ import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCamer
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Canvas, Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3)
-import Network.HTTP.Affjax (AJAX, AffjaxResponse, get)
+import Network.HTTP.Affjax (AJAX, get)
 import Prelude (negate, void, ($), (/))
 import Unsafe.Coerce (unsafeCoerce)
+import Web.Firebase (FIREBASE, Firebase, initializeApp)
 
 type Resources = {
     options :: Options,
@@ -55,18 +55,17 @@ type Resources = {
     shadowMap :: ShadowMap,
     targetCamera :: TargetCamera,
     playerMeshes :: Array AbstractMesh,
-    sounds :: Sounds
+    sounds :: Sounds,
+    firebase :: Firebase
 }
 
 -- Note: Keep the number up-to-date
 resourceCount :: Int
 resourceCount = 21
 
-
-
 loadResources :: forall eff. Canvas
-        -> Aff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON | eff) Unit
-        -> Aff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON | eff) Resources
+        -> Aff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE | eff) Unit
+        -> Aff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE | eff) Resources
 loadResources canvasGL inc = do
 
     let loadImage' url = do
@@ -101,6 +100,7 @@ loadResources canvasGL inc = do
         Left err -> throwError (error (show err))
         Right opt -> pure opt
 
+    firebase <- liftEff $ initializeApp options.profile
 
     engine <- liftEff $ createEngine canvasGL true
 
@@ -211,7 +211,7 @@ loadResources canvasGL inc = do
             setIsVisible false mesh
 
         pure {
-            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds
+            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase
         }
 
 

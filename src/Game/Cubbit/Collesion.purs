@@ -14,7 +14,7 @@ import Game.Cubbit.Chunk (ChunkWithMesh)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
-import Game.Cubbit.Terrain (Terrain(..), isSolidBlock, lookupChunk)
+import Game.Cubbit.Terrain (Terrain(..), globalPositionToChunkIndex, isSolidBlock, lookupChunk)
 import Game.Cubbit.Types (State(..), SceneState(..))
 import Graphics.Cannon (addShape, createBody, createMaterial, createSphere, createVec3, defaultBodyProps, setFixedRotation, setPosition, updateMassProperties)
 import Graphics.Cannon.Body (getPosition, getVelocity, setVelocity)
@@ -77,6 +77,11 @@ updatePhysics deltaTime playerBox world (State state) = case state.sceneState of
         -- step the world
         step (1.0 / 60.0) (1000.0 / deltaTime) 10 world
 
+
+        -- load terrain collesions
+        let index = globalPositionToChunkIndex p.position.x p.position.y p.position.z
+        Terrain t <- buildCollesionTerrain state.terrain world index
+
         -- read stepped world state
         posVec <- getPosition playerBox >>= runVec3
         velVec <- getVelocity playerBox >>= runVec3
@@ -84,7 +89,8 @@ updatePhysics deltaTime playerBox world (State state) = case state.sceneState of
             sceneState = PlayingSceneState p {
                 position = posVec,
                 velocity = velVec
-            }
+            },
+            terrain = Terrain t
         }
 
 
