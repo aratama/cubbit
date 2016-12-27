@@ -1,4 +1,4 @@
-module Game.Cubbit.BoxelMap (BoxelMap, lookup, insert, delete) where
+module Game.Cubbit.BoxelMap (BoxelMap, lookup, insert, delete, empty) where
 
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)

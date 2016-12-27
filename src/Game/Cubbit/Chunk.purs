@@ -5,7 +5,7 @@ import Data.Foreign (toForeign, unsafeFromForeign)
 import Data.Foreign.Class (class AsForeign, class IsForeign)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BoxelMap (BoxelMap) as Boxel
-import Game.Cubbit.ChunkIndex (ChunkIndex)
+import Game.Cubbit.ChunkIndex (ChunkIndex, runChunkIndex)
 import Graphics.Babylon.AbstractMesh (dispose)
 import Graphics.Babylon.Mesh (meshToAbstractMesh)
 import Graphics.Babylon.Types (BABYLON, Mesh, VertexDataProps)
@@ -37,6 +37,21 @@ type ChunkWithMesh = {
     waterMaterialMesh :: MeshLoadingState,
     transparentMaterialMesh :: MeshLoadingState
 }
+
+createChunkWithMesh :: Chunk -> ChunkWithMesh
+createChunkWithMesh (Chunk chunk) = {
+    x: i.x,
+    y: i.y,
+    z: i.z,
+    index: chunk.index,
+    blocks: chunk.blocks,
+    edited: false,
+    standardMaterialMesh: MeshNotLoaded,
+    waterMaterialMesh: MeshNotLoaded,
+    transparentMaterialMesh: MeshNotLoaded
+}
+  where
+    i = runChunkIndex chunk.index
 
 newtype VertexDataPropsData = VertexDataPropsData {
     standardMaterialBlocks :: VertexDataProps,

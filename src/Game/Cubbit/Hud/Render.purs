@@ -170,7 +170,7 @@ render (State state@{ config: Config config }) = case state.res of
 
             div [
                 id_ "shadow",
-                class_ (ClassName ("content-layer" <> if isNothing state.nextScene then " hide" else "")),
+                class_ (ClassName ("content-layer" <> if state.nextScene then "" else " hide")),
                 Properties.key "shadow"
             ] []
         ]

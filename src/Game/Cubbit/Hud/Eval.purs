@@ -3,7 +3,9 @@ module Game.Cubbit.Hud.Eval (eval, repaint, initializeTerrain) where
 import Control.Alt (void)
 import Control.Alternative (when)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff, forE)
+import Control.Monad.Eff.Console (error)
 import Control.Monad.Eff.Ref (REF, Ref, modifyRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM2)
 import DOM (DOM)
@@ -12,6 +14,7 @@ import DOM.Event.KeyboardEvent (key, keyboardEventToEvent)
 import DOM.Event.MouseEvent (MouseEvent, buttons)
 import DOM.Event.WheelEvent (WheelEvent, wheelEventToEvent)
 import Data.BooleanAlgebra (not)
+import Data.Either (either)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Ord (max, min)
@@ -22,12 +25,14 @@ import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
-import Game.Cubbit.Chunk (disposeChunk)
-import Game.Cubbit.ChunkIndex (chunkIndex)
+import Game.Cubbit.Chunk (MeshLoadingState(..), disposeChunk, Chunk(..), createChunkWithMesh)
+import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (toList)
+import Game.Cubbit.ChunkMap (insert) as CHUNKMAP
 import Game.Cubbit.Collesion (buildCollesionTerrain, updateChunkCollesion)
 import Game.Cubbit.Config (Config(Config), writeConfig)
 import Game.Cubbit.Control (pickBlock)
+import Game.Cubbit.Firebase (decode, listenAllChunksFromForebase, listenOnceToTerrainAff, listenToTerrain)
 import Game.Cubbit.Hud.Type (HudEffects, PlayingSceneQuery(..), Query(..), QueryA(..), HudDriver)
 import Game.Cubbit.MeshBuilder (editBlock, generateChunk, putBlocks)
 import Game.Cubbit.Option (Options(Options))
@@ -35,7 +40,6 @@ import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (setMute)
 import Game.Cubbit.Storage (listenAllChunks)
-import Game.Cubbit.Firebase (listenAllChunksFromForebase)
 import Game.Cubbit.Terrain (Terrain(..), createTerrain, globalIndexToChunkIndex)
 import Game.Cubbit.Types (GameMode(..), Mode(..), ResourceProgress(..), SceneState(..), State(..))
 import Graphics.Babylon.AbstractMesh (setIsVisible, setReceiveShadows, setUseVertexColors)
@@ -44,11 +48,14 @@ import Graphics.Babylon.Scene (getDebugLayer, getMeshes)
 import Graphics.Babylon.Sound (play, stop)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON, removeBody)
+import Graphics.Cannon.Type (World)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (action)
 import Math (pi)
-import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (<$), (==), (>>=))
+import Prelude (type (~>), bind, negate, pure, ($), (*), (+), (-), (/=), (<$), (==), (>>=), (<$>))
 import Unsafe.Coerce (unsafeCoerce)
+import Web.Firebase (EventType(..), database, on, val)
+import Web.Firebase (ref, key) as FIREBASE
 
 eval :: forall eff. Ref State -> (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval ref query = do
@@ -203,7 +210,7 @@ eval ref query = do
                                 }
 
                         liftEff $ play sounds.warpSound
-                        modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
+                        modifyAppState ref (\(State state) -> State state { nextScene = true })
                         wait 1000
                         liftEff do
                             stop sounds.forestSound
@@ -213,71 +220,124 @@ eval ref query = do
                         })
                         wait 1000
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Nothing
+                            nextScene = false
                         })
 
                     ModeSelect -> do
                         liftEff $ play sounds.warpSound
                         let nextScene = ModeSelectionSceneState {}
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Just nextScene
+                            nextScene = true
                         })
                         wait 1000
-                        liftEff $ initializeTerrain ref
+                        -- liftEff $ initializeTerrain ref
                         modifyAppState ref (\(State state) -> State state {
                             sceneState = nextScene,
                             nextBGM = Just sounds.ichigo
                         })
                         wait 1000
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Nothing
+                            nextScene = false
                         })
                         pure unit
 
                     (Start gameMode) -> do
 
-                        let nextScene = PlayingSceneState {
-                                    gameMode: gameMode,
-                                    cameraYaw: 0.0,
-                                    cameraPitch: 0.7,
-                                    cameraRange: 5.0,
-                                    firstPersonView: false,
-                                    firstPersonViewPitch: 0.0,
-                                    position: { x: 0.5, y: 10.0, z: 0.5 },
-                                    velocity: { x: 0.0, y: 0.0, z: 0.0 },
-                                    playerRotation: 0.5,
-                                    playerPitch: 0.0,
-                                    animation: "",
-                                    mode: Move,
-                                    landing: 0,
-                                    jumpable: true,
-
-                                    cursorPosition: blockIndex 0 0 0,
-                                    centerPanelVisible: false,
-                                    life: 10,
-                                    maxLife: 12
-                                }
-
+                        -- fade out --
                         liftEff $ play sounds.warpSound
-                        modifyAppState ref (\(State state) -> State state { nextScene = Just nextScene })
+                        modifyAppState ref (\(State state) -> State state { nextScene = true })
                         wait 1000
+
+                        -- initialize play screen --
+                        Terrain emptyTerrain <- liftEff do
+                            clearTerrain currentState.terrain currentState.world
+                            createTerrain 0
+
+                        reference <- case gameMode of
+                            SinglePlayerMode -> pure Nothing
+                            MultiplayerMode -> liftAff do
+
+                                -- fetch initial terrain state from firebase
+                                initialChunks <- listenOnceToTerrainAff res.firebase
+
+                                liftEff do
+
+                                    -- insert chunkMesh object to the terrain
+                                    for_ initialChunks \(Chunk chunk) -> do
+                                        let i = runChunkIndex chunk.index
+                                        CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk)) emptyTerrain.map
+
+                                    -- start listening events
+                                    r <- Just <$> listenToTerrain res.firebase \(Chunk chunk) -> do
+                                        -- CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk)) emptyTerrain.map
+                                        -- TODO refresah nighbor chunks
+                                        putBlocks ref res (Chunk chunk)
+
+                                        pure unit
+
+                                    pure r
+
                         modifyAppState ref (\(State state) -> State state {
+                            terrain = Terrain emptyTerrain,
                             cameraPosition = { x: 10.0, y: 20.0, z: negate 10.0 },
                             cameraTarget = { x: 0.5, y: 11.0, z: 0.5 },
-                            sceneState = nextScene
+                            sceneState = PlayingSceneState {
+                                gameMode: gameMode,
+                                cameraYaw: 0.0,
+                                cameraPitch: 0.7,
+                                cameraRange: 5.0,
+                                firstPersonView: false,
+                                firstPersonViewPitch: 0.0,
+                                position: { x: 0.5, y: 10.0, z: 0.5 },
+                                velocity: { x: 0.0, y: 0.0, z: 0.0 },
+                                playerRotation: 0.5,
+                                playerPitch: 0.0,
+                                animation: "",
+                                mode: Move,
+                                landing: 0,
+                                jumpable: true,
+
+                                cursorPosition: blockIndex 0 0 0,
+                                centerPanelVisible: false,
+                                life: 10,
+                                maxLife: 12,
+
+                                ref: reference
+                            }
                         })
+
                         liftEff do
+
+                            -- load neighbor meshes
+                            let initialWorldSize = options.initialWorldSize
+                            forE (-initialWorldSize) initialWorldSize \x -> do
+                                forE (-initialWorldSize) initialWorldSize \z -> void do
+                                    let index = chunkIndex x 0 z
+                                    State state <- readRef ref
+                                    generateChunk (State state) res.materials res.scene index res.options state.config
+
+                            -- initialize cannon world
+                            State { world } <- readRef ref
+                            terrain <- tailRecM2 (\ter -> case _ of
+                                0 -> pure $ Done ter
+                                i -> do
+                                    ter' <- buildCollesionTerrain ter world (chunkIndex 0 0 0)
+                                    pure $ Loop { a: ter', b: i - 1 }
+                            ) (Terrain emptyTerrain) 9
+                            modifyRef ref \(State state) -> State state { terrain = terrain }
+
                             for_ playerMeshes \mesh -> void do
                                 setIsVisible true mesh
+
                             case gameMode of
                                 SinglePlayerMode -> listenAllChunks $ putBlocks ref res
-                                MultiplayerMode -> listenAllChunksFromForebase res.firebase $ putBlocks ref res
+                                MultiplayerMode -> pure unit
 
                         wait 1000
                         liftEff do
                             play sounds.forestSound
                         modifyAppState ref (\(State state) -> State state {
-                            nextScene = Nothing,
+                            nextScene = false,
                             nextBGM = Just sounds.rye
                         })
 
@@ -490,6 +550,16 @@ offsetY e = (unsafeCoerce e).offsetY
 deltaY :: WheelEvent -> Int
 deltaY e = (unsafeCoerce e).deltaY
 
+
+
+clearTerrain :: forall eff. Terrain -> World -> Eff (babylon :: BABYLON, cannon :: CANNON | eff) Unit
+clearTerrain (Terrain terrain) world = do
+    -- dispose cannon bodies
+    for_ terrain.bodies \chunkBodies -> for_ chunkBodies \body -> removeBody body world
+
+    -- dispose meshes
+    chunkList <- toList terrain.map
+    for_ chunkList \chunk -> disposeChunk chunk
 
 initializeTerrain :: forall eff. Ref State -> Eff (babylon :: BABYLON, cannon :: CANNON, ref :: REF | eff) Unit
 initializeTerrain ref = do

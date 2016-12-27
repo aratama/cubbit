@@ -1,20 +1,28 @@
-module Game.Cubbit.Firebase (saveChunkToFirebase, listenAllChunksFromForebase) where
+module Game.Cubbit.Firebase (saveChunkToFirebase, listenAllChunksFromForebase, listenOnceToTerrainAff, decode, listenToTerrain) where
 
+import Control.Alternative (pure)
+import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, error)
-import Data.ArrayBuffer.Types (Uint8Array)
-import Data.Foreign (toForeign)
+import Control.Monad.Eff.Exception (Error)
+import Control.Monad.Eff.Ref (REF)
+import Data.Either (Either(..), either)
+import Data.Foreign (Foreign, toForeign)
+import Data.List (List)
 import Data.Maybe (Maybe(..))
+import Data.StrMap (StrMap, toList)
 import Data.String.Unsafe (charCodeAt)
+import Data.Traversable (for)
+import Data.Tuple (Tuple(..))
 import Data.Unit (Unit)
 import Game.Cubbit.BoxelMap (BoxelMap)
 import Game.Cubbit.Chunk (Chunk(..))
 import Game.Cubbit.ChunkIndex (ChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import LZString (decompressFromUTF16, compressToUTF16)
-import Prelude (bind, ($), (*), (<>), (>>=))
+import Prelude (($), (*), (<>), (>>=), (#), bind)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.Firebase (FIREBASE, Firebase, child, database, forEach, once, ref, val, key, set)
+import Web.Firebase (EventType(..), FIREBASE, Firebase, Reference, child, database, forEach, key, on, once, ref, set, val)
 
 saveChunkToFirebase :: forall eff. Chunk -> Firebase -> Eff (firebase :: FIREBASE | eff) Unit
 saveChunkToFirebase (Chunk chunk) firebase = do
@@ -23,21 +31,47 @@ saveChunkToFirebase (Chunk chunk) firebase = do
 listenAllChunksFromForebase :: forall eff. Firebase -> (Chunk -> Eff (firebase :: FIREBASE, console :: CONSOLE | eff) Unit) -> Eff (firebase :: FIREBASE, console :: CONSOLE | eff) Unit
 listenAllChunksFromForebase firebase callback = do
     database firebase >>= ref "terrain" >>= once \snap -> do
-        forEach snap \chunkSnap -> do
-            let value = val chunkSnap
-            let decompressed = decompressFromUTF16 (unsafeCoerce value).blocks
-            case decompressed of
-                Nothing -> error ("invalid chunk data at "  <> key chunkSnap)
-                Just decompressed' -> do
-                    array <- from (chunkSize * chunkSize * chunkSize) (\i -> charCodeAt i decompressed')
-                    callback $ Chunk {
-                        index: parseIndex $ key chunkSnap,
-                        blocks: unsafeCoerce array
-                    }
+        forEach snap \chunkSnap -> case decode (key chunkSnap) (val chunkSnap) of
+            Left err -> error err
+            Right chunk -> callback chunk
+
+listenOnceToTerrain :: forall eff. Firebase
+                -> (Error -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit)
+                -> (List Chunk -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit)
+                -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit
+listenOnceToTerrain firebase reject resolve = database firebase >>= ref "terrain" >>= once \snap -> do
+    let terrain = unsafeCoerce (val snap) :: StrMap Foreign
+    either error resolve $ for (toList terrain) \(Tuple key value) -> decode key value
+
+listenOnceToTerrainAff :: forall eff. Firebase -> Aff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) (List Chunk)
+listenOnceToTerrainAff firebase = makeAff $ listenOnceToTerrain firebase
+
+
+
+listenToTerrain :: forall eff. Firebase
+                -> (Chunk -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit)
+                -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Reference
+listenToTerrain firebase resolve = do
+    ref <- database firebase >>= ref "terrain"
+    ref # on ChildAdded \snap -> either error resolve $ decode (key snap) (val snap)
+    ref # on ChildChanged \snap -> either error resolve $ decode (key snap) (val snap)
+    pure ref
+
+
+decode :: String -> Foreign -> Either String Chunk
+decode key value = do
+    let chunk = unsafeCoerce value :: { blocks :: String }
+    let decompressed = decompressFromUTF16 chunk.blocks
+    case decompressed of
+        Nothing -> Left ("invalid chunk data at " <> key)
+        Just decompressed' -> pure $ Chunk {
+            index: parseIndex key,
+            blocks: from (chunkSize * chunkSize * chunkSize) (\i -> charCodeAt i decompressed')
+        }
 
 foreign import boxelMapToString :: BoxelMap -> String
 
-foreign import from :: forall eff. Int -> (Int -> Int) -> Eff (firebase :: FIREBASE | eff) Uint8Array
+foreign import from :: Int -> (Int -> Int) -> BoxelMap
 
 foreign import parseIndex :: String -> ChunkIndex
 

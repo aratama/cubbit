@@ -51,9 +51,7 @@ exports.listenAllChunks = function(callback) {
 
 exports.from = function(length){
     return function(f){
-        return function(){
-            return Uint8Array.from({ length: length }, function(v, i){ return f(i); });
-        };
+        return Uint8Array.from({ length: length }, function(v, i){ return f(i); });
     };
 };
 exports.boxelMapToString = function(boxelMap){

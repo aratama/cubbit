@@ -22,7 +22,7 @@ import Graphics.Babylon.Types (BABYLON, Canvas, Sound)
 import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
 import Network.HTTP.Affjax (AJAX)
-import Web.Firebase (FIREBASE)
+import Web.Firebase (FIREBASE, Reference)
 
 type CoreEffects eff = (
     canvas :: CANVAS,
@@ -69,7 +69,9 @@ type PlayingSceneState = {
     cursorPosition :: BlockIndex,
     centerPanelVisible :: Boolean,
     life :: Int,
-    maxLife :: Int
+    maxLife :: Int,
+
+    ref :: Maybe Reference
 }
 
 type ModeSelectionSceneState = {}
@@ -92,7 +94,7 @@ newtype State = State {
 
 
     sceneState :: SceneState,
-    nextScene ::Maybe SceneState,
+    nextScene :: Boolean,
 
     -- world
     terrain :: Terrain,
