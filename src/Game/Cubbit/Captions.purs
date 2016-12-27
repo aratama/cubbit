@@ -45,3 +45,61 @@ captions = {
         en: "Multi-player Online Mode"
     }
 }
+
+type L = Language -> String
+
+clickToStart :: L
+clickToStart En = "Click to Start"
+clickToStart Ja = "マウスクリックでスタートします"
+
+on :: L
+on En = "On"
+on Ja = "オン"
+
+off :: L
+off En = "Off"
+off Ja = "オフ"
+
+graphics :: L
+graphics Ja = "グラフィックス"
+graphics En = "Graphics"
+
+sounds :: L
+sounds Ja = "サウンド"
+sounds En = "Sound"
+
+terrain :: L
+terrain Ja = "地形表示"
+terrain En = "Terrain"
+
+language :: L
+language Ja = "言語"
+language En = "Language"
+
+mute :: L
+mute Ja = "消音"
+mute En = "Mute"
+
+bgmVolume :: L
+bgmVolume Ja = "ＢＧＭ音量"
+bgmVolume En = "BGM Volume"
+
+seVolume :: L
+seVolume Ja = "ＳＥ音量"
+seVolume En = "SE Volume"
+
+chunkArea :: L
+chunkArea Ja = "チャンク表示距離"
+chunkArea En = "Chunk Display Area"
+
+shadow :: L
+shadow Ja = "影"
+shadow En = "Shadow"
+
+shadowArea :: L
+shadowArea Ja = "影の範囲"
+shadowArea En = "Shadow Area"
+
+vertexColor :: L
+vertexColor Ja = "頂点色"
+vertexColor En = "Vertex Color"

@@ -6,6 +6,7 @@ import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (error, log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
+import DOM (DOM)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
@@ -41,7 +42,7 @@ import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Prelude (negate, (#), ($), (+), (<#>), (<$>), (<<<), (<>), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
-import Web.Firebase (Profile(..), initializeApp)
+
 
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -69,7 +70,7 @@ main = (toMaybe <$> querySelectorCanvas "#renderCanvas") >>= case _ of
         let terrainSeed = 0
         initialTerrain <- liftEff $ createTerrain terrainSeed
         let initialState =  {
-            
+
                 canvas: canvasGL,
                 config: Config config,
                 res: Loading 0,

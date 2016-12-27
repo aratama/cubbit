@@ -5,21 +5,19 @@
 
 html, body {
     overflow: hidden;
-    margin  : 0;
-    padding : 0;
+    margin: 0;
+    padding: 0;
     background-color: black;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
     font-family: "ranobe", serif;
-
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-
     cursor: default;
 }
 
@@ -45,10 +43,9 @@ html, body {
     background-color: white;
 }
 
-
 .content-layer {
-    width   : 1280px;
-    height  : 720px;
+    width: 1280px;
+    height: 720px;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -121,15 +118,14 @@ canvas {
     text-shadow: 0px 0px 20px rgba(0, 0, 0, 0.8);
 }
 
-#life > i {
+#life>i {
     margin: 2px;
     color: grey;
 }
 
-#life > div.active {
+#life>div.active {
     color: red;
 }
-
 
 #hotbar {
     position: absolute;
@@ -137,11 +133,9 @@ canvas {
     height: 50px;
     left: 0px;
     bottom: 00px;
-
-
 }
 
-#hotbar  div.slot {
+#hotbar div.slot {
     width: 32px;
     height: 32px;
     border: solid 1px rgba(255, 255, 255, 1);
@@ -155,27 +149,26 @@ canvas {
     overflow: hidden;
 }
 
-#hotbar  div.slot.active {
+#hotbar div.slot.active {
     opacity: 1.0;
     background-color: black;
 }
 
-#hotbar  div.slot:hover {
+#hotbar div.slot:hover {
     opacity: 1.0;
     transform: matrix(1.0, 0.0, 0.0, 1.0, 0.0, -16.0);
     transition-duration: 0.1s;
-
     width: 48px;
     height: 48px;
 }
 
-#hotbar  div.slot:active {
+#hotbar div.slot:active {
     opacity: 1.0;
     transform: matrix(1.0, 0.0, 0.0, 1.0, 0.0, -2.0);
     transition-duration: 0.1s;
 }
 
-#hotbar  div.slot img {
+#hotbar div.slot img {
     width: 100%;
     height: 100%;
 }
@@ -200,13 +193,6 @@ canvas {
     height: 50px;
 }
 
-
-
-
-
-
-
-
 #right-panel {
     position: absolute;
     right: 0px;
@@ -217,7 +203,7 @@ canvas {
     justify-content: flex-start;
 }
 
-#right-panel > .button {
+#right-panel>.button {
     border: solid 1px white;
     background-color: rgba(0, 0, 0, 0.2);
     margin: 8px;
@@ -228,11 +214,9 @@ canvas {
     transition-duration: 0.3s;
 }
 
-#right-panel > .button:hover {
+#right-panel>.button:hover {
     opacity: 1.0;
 }
-
-
 
 #center-panel {
     border: solid 1px white;
@@ -247,9 +231,8 @@ canvas {
     margin: auto;
 }
 
-
 #message-box-top {
-    position:absolute;
+    position: absolute;
     left: 0;
     top: 0;
     pointer-events: none;
@@ -259,12 +242,10 @@ canvas {
 }
 
 #message-box {
-
     display: none;
-
     font-size: 24px;
-    color:white;
-    position:absolute;
+    color: white;
+    position: absolute;
     text-shadow: 0px 0px 20px black, 0px 0px 20px black, 0px 0px 20px black, 0px 0px 20px black;
     left: 0;
     bottom: 0;
@@ -280,13 +261,8 @@ canvas {
     background-color: rgba(0, 0, 0, 0.6);
 }
 
-
-
-
-
-
 #screen-shade {
-    pointer-events:none;
+    pointer-events: none;
 }
 
 #cursor-position {
@@ -296,7 +272,6 @@ canvas {
     right: 0px;
     font-size: 12px;
 }
-
 
 #loading {
     display: block;
@@ -308,15 +283,8 @@ canvas {
     transition-duration: 1.0s;
     opacity: 1;
     background-color: black;
-
     z-index: 10000;
 }
-
-
-
-
-
-
 
 .mode-root {
     background-color: #edede6;
@@ -397,9 +365,33 @@ canvas {
     text-shadow: 0px 0px 10px white;
 }
 
+.click-to-start {
+    color: rgb(90, 90, 90);
+    position: absolute;
+    left: 0px;
+    width: 100%;
+    bottom: 100px;
+    text-align: center;
+    font-size: 30px;
+    /* text-shadow: 0px 0px 10px white, 0px 0px 10px white, 0px 0px 10px white; */
+    -webkit-text-stroke-color: white;
+    -webkit-text-stroke-width: 2px;
+    animation-duration: 2s;
+    animation-name: click-to-start-animation;
+    animation-iteration-count: infinite;
+}
 
-
-
+@keyframes click-to-start-animation {
+    from {
+        opacity: 1.0;
+    }
+    50% {
+        opacity: 0.3;
+    }
+    to {
+        opacity: 1.0;
+    }
+}
 
 .show-config {
     text-align: center;
@@ -442,7 +434,7 @@ canvas {
     border: solid 20px #d0d0c0;
     color: grey;
     width: 600px;
-    height: 400px;
+    height: 450px;
     position: absolute;
     margin: auto;
     left: 0px;
@@ -463,11 +455,7 @@ canvas {
     border-radius: 0px 100px 0px 0px;
 }
 
-.config-root .config-bgm-volume {
-
-}
-
-
+.config-root .config-bgm-volume {}
 
 .config-option {
     display: flex;
@@ -476,7 +464,7 @@ canvas {
 }
 
 .config-option .config-caption {
-    width: 120px;
+    width: 180px;
     height: 1em;
 }
 
@@ -495,8 +483,6 @@ canvas {
     background-color: grey;
     color: #edede6;
 }
-
-
 
 .config-slider {
     display: flex;
@@ -519,7 +505,6 @@ canvas {
     color: #7b7bdd;
 }
 
-
 .config-root .config-language {
     font-family: ranobe;
     padding: 10px;
@@ -537,22 +522,18 @@ canvas {
 }
 
 
-
-
-
-
 /*** full **/
 
 #renderCanvas.full {
-    width   : 100%;
-    height  : 100%;
+    width: 100%;
+    height: 100%;
     min-width: 1280px;
     min-height: 720px;
 }
 
 .content-layer.full {
-    width   : 100%;
-    height  : 100%;
+    width: 100%;
+    height: 100%;
     min-width: 1280px;
     min-height: 720px;
 }
@@ -560,4 +541,3 @@ canvas {
 .config-root.full {
     left: 100%;
 }
-

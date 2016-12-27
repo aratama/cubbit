@@ -19,9 +19,9 @@ newtype Config = Config {
     chunkArea :: Int
 }
 
-defaultConfig :: Config
-defaultConfig = Config {
-    language: En,
+defaultConfig :: Language -> Config
+defaultConfig lang = Config {
+    language: lang,
     mute: false,
     bgmVolume: 3,
     seVolume: 3,
@@ -42,11 +42,18 @@ configKey = ConfigKey
 
 readConfig :: forall eff. Eff (storage :: STORAGE, dom :: DOM | eff) Config
 readConfig = do
-  localStorage <- getLocalStorage
-  result <- getItem localStorage configKey
-  pure (fromMaybe defaultConfig result)
+    langText <- language
+    let lang = case langText of
+            "ja" -> Ja
+            _ -> En
+    localStorage <- getLocalStorage
+    result <- getItem localStorage configKey
+    pure (fromMaybe (defaultConfig lang) result)
 
 writeConfig :: forall eff. Config -> Eff (storage :: STORAGE, dom :: DOM | eff) Unit
 writeConfig config = do
-  localStorage <- getLocalStorage
-  setItem localStorage configKey config
+    localStorage <- getLocalStorage
+    setItem localStorage configKey config
+
+
+foreign import language :: forall eff. Eff (dom :: DOM | eff) String

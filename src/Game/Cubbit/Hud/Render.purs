@@ -6,11 +6,11 @@ import DOM.Event.Types (EventType(..), mouseEventToEvent)
 import DOM.Event.WheelEvent (WheelEvent)
 import Data.Array (replicate, (..))
 import Data.Functor (map, mapFlipped)
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(Nothing, Just))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
-import Game.Cubbit.Captions (Language(..), getCaption)
+import Game.Cubbit.Captions (Caption, Captions, Language(Ja, En), bgmVolume, captions, chunkArea, clickToStart, graphics, language, mute, off, on, seVolume, shadow, shadowArea, sounds, terrain, vertexColor)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
@@ -75,16 +75,18 @@ render (State state@{ config: Config config }) = case state.res of
                     div [
                         class_ (ClassName "show-config"),
                         onClick \e -> send' ShowConfig
-                    ] [icon "gear"]
+                    ] [icon "gear"],
+
+                    div [class_ (ClassName "click-to-start")] [mtext clickToStart]
                 ]
 
-                ModeSelectionSceneState e -> [
+                ModeSelectionSceneState _ -> [
                     div [class_ (ClassName "content-layer mode-root")] [
 
-                        h1 [] [icon "tree", text $ getCaption config.language _.modeSelection],
+                        h1 [] [icon "tree", text $ capt _.modeSelection],
                         div [class_ (ClassName "home button"), onClick \e -> send' Home] [icon "home"],
-                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text $ getCaption config.language _.singleplayerOfflineMode],
-                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text $ getCaption config.language _.multiplayerOnlineMode]
+                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text $ capt _.singleplayerOfflineMode],
+                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text $ capt _.multiplayerOnlineMode]
                     ]
                 ]
 
@@ -148,22 +150,22 @@ render (State state@{ config: Config config }) = case state.res of
                     class_ (ClassName "config-inner"),
                     onClick \e -> send' (Nop (mouseEventToEvent e))
                 ] [
-                    h2 [class_ (ClassName "config-heading")] [icon "language", text " Language"],
+                    h2 [class_ (ClassName "config-heading")] [icon "language", mtext language],
                     languageButton En "English",
                     languageButton Ja "日本語",
 
-                    h2 [class_ (ClassName "config-heading")] [icon "volume-up", text " Sounds"],
-                    option "Mute" (toggle config.mute ToggleMute),
-                    option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
-                    option "SE Volume" (slider config.seVolume SetSEVolume),
+                    h2 [class_ (ClassName "config-heading")] [icon "volume-up", mtext sounds],
+                    option mute (toggle config.mute ToggleMute),
+                    option bgmVolume (slider config.bgmVolume SetBGMVolume),
+                    option seVolume (slider config.seVolume SetSEVolume),
 
-                    h2 [class_ (ClassName "config-heading")] [icon "photo", text " Graphics"],
-                    option "Shadow" (toggle config.shadow ToggleShadow),
-                    option "Shadow Area" (slider config.shadowArea SetShadowArea),
-                    option "Vertex Color" (toggle config.vertexColor ToggleVertexColor),
+                    h2 [class_ (ClassName "config-heading")] [icon "photo", mtext graphics],
+                    option shadow (toggle config.shadow ToggleShadow),
+                    option shadowArea (slider config.shadowArea SetShadowArea),
+                    option vertexColor (toggle config.vertexColor ToggleVertexColor),
 
-                    h2 [class_ (ClassName "config-heading")] [icon "cubes", text " Terrain"],
-                    option "Chunk Area" (slider config.chunkArea SetChunkArea),
+                    h2 [class_ (ClassName "config-heading")] [icon "cubes", mtext terrain],
+                    option chunkArea (slider config.chunkArea SetChunkArea),
 
                     p_ [a [
                         target "_blank",
@@ -181,6 +183,14 @@ render (State state@{ config: Config config }) = case state.res of
         ]
 
           where
+
+            mtext t = text (t config.language)
+
+            capt :: (Captions -> Caption) -> String
+            capt f = " " <> (case config.language of
+                En -> _.en
+                Ja -> _.ja) (f captions)
+
             suppressMouseMove = onMouseMove \e -> send' (Nop (mouseEventToEvent e))
             suppressMouseDown = onMouseDown \e -> send' (Nop (mouseEventToEvent e))
 
@@ -194,7 +204,7 @@ render (State state@{ config: Config config }) = case state.res of
                 div [
                     class_ (ClassName "config-caption")
                 ] [
-                    text caption
+                    text (caption config.language)
                 ],
                 ui
             ]
@@ -211,7 +221,7 @@ render (State state@{ config: Config config }) = case state.res of
             toggle value act = div [
                 class_ (ClassName ("config-toggle " <> if value then "on" else "off")),
                 onClick \e -> Just (Query act unit)
-            ] [text if value then "On" else "Off"]
+            ] [mtext if value then on else off]
 
             hotbuttons playingSceneState = map slot [
                 Just Move,
