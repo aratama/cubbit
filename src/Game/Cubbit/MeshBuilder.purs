@@ -13,7 +13,8 @@ import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockType, BlockTypes, blockTypes)
 import Game.Cubbit.BoxelMap (insert)
-import Game.Cubbit.Chunk (Chunk(..), ChunkWithMesh, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkInstance(ChunkInstance, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.Collesion (disposeCollesion)
 import Game.Cubbit.Config (Config(..))
@@ -35,6 +36,7 @@ import Graphics.Cannon (CANNON)
 import PerlinNoise (Noise, simplex2)
 import Prelude ((+), (-), (<), (=<<), (==), negate, ($), (>>=))
 import Web.Firebase (FIREBASE)
+
 
 type CreateTerrainGeometryReferences = {
     chunkSize :: Int,
@@ -229,7 +231,7 @@ putBlocks ref res (Chunk chunk) = do
 
 
 
-updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkWithMesh -> Options -> Config -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
+updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkInstance -> Options -> Config -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
 updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config config) = void do
 
     State state <- readRef ref

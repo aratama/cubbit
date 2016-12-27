@@ -14,7 +14,7 @@ import Data.Unit (Unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex, runBlockIndex)
 import Game.Cubbit.BlockType (BlockType, airBlock, bushBlock, leavesBlock)
 import Game.Cubbit.BoxelMap (lookup) as Boxel
-import Game.Cubbit.Chunk (ChunkWithMesh)
+import Game.Cubbit.ChunkInstance (ChunkInstance)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (ChunkMap, createChunkMap, insert, lookup, size)
 import Game.Cubbit.Constants (chunkSize)
@@ -65,7 +65,7 @@ globalIndexToChunkIndex b = chunkIndex (f bi.x) (f bi.y) (f bi.z)
 
 
 
-lookupChunk :: forall eff. ChunkIndex -> Terrain -> Eff eff (Maybe ChunkWithMesh)
+lookupChunk :: forall eff. ChunkIndex -> Terrain -> Eff eff (Maybe ChunkInstance)
 lookupChunk index (Terrain terrain) = lookup index terrain.map
 
 lookupSolidBlockByVec :: forall eff. Vec -> Terrain -> Eff eff (Maybe BlockType)
@@ -107,7 +107,7 @@ globalIndexToLocalIndex index = localIndex cx cy cz
     cy = globalIndex.y - chunkSize * chunkIndex.y
     cz = globalIndex.z - chunkSize * chunkIndex.z
 
-insertChunk :: forall eff. ChunkWithMesh -> Terrain -> Eff eff Unit
+insertChunk :: forall eff. ChunkInstance -> Terrain -> Eff eff Unit
 insertChunk cmesh (Terrain terrain) = insert cmesh.index cmesh terrain.map
 
 

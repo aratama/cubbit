@@ -27,7 +27,7 @@ import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (runBlockIndex, blockIndexDistance)
-import Game.Cubbit.Chunk (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
+import Game.Cubbit.ChunkInstance (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Config (Config(..))
@@ -58,6 +58,7 @@ import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
+
 
 epsiron :: Number
 epsiron = 0.1

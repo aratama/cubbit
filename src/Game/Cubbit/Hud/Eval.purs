@@ -25,7 +25,8 @@ import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.BlockIndex (blockIndex)
 import Game.Cubbit.BlockType (airBlock)
-import Game.Cubbit.Chunk (MeshLoadingState(..), disposeChunk, Chunk(..), createChunkWithMesh)
+import Game.Cubbit.Chunk (Chunk(..))
+import Game.Cubbit.ChunkInstance (MeshLoadingState(..), disposeChunk, createChunkWithMesh)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
 import Game.Cubbit.ChunkMap (toList)
 import Game.Cubbit.ChunkMap (insert) as CHUNKMAP
@@ -265,7 +266,7 @@ eval ref query = do
                                     -- insert chunkMesh object to the terrain
                                     for_ initialChunks \(Chunk chunk) -> do
                                         let i = runChunkIndex chunk.index
-                                        CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk)) emptyTerrain.map
+                                        CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk) true) emptyTerrain.map
 
                                     -- start listening events
                                     r <- Just <$> listenToTerrain res.firebase \(Chunk chunk) -> do
@@ -569,12 +570,7 @@ initializeTerrain ref = do
         Loading _ -> pure unit
         Complete res@{ options: Options options } -> do
 
-            -- dispose cannon bodies
-            for_ terrain.bodies \chunkBodies -> for_ chunkBodies \body -> removeBody body state.world
-
-            -- dispose meshes
-            chunkList <- toList terrain.map
-            for_ chunkList \chunk -> disposeChunk chunk
+            clearTerrain (Terrain terrain) state.world
 
             -- update state
             emptyTerrain <- createTerrain 0

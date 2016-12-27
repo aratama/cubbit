@@ -10,7 +10,7 @@ import Data.Traversable (for, for_)
 import Data.Tuple (Tuple(..))
 import Data.Unit (unit)
 import Game.Cubbit.BlockType (BlockType)
-import Game.Cubbit.Chunk (ChunkWithMesh)
+import Game.Cubbit.ChunkInstance (ChunkInstance)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, chunkIndexDistance, runChunkIndex)
 import Game.Cubbit.Constants (chunkSize)
 import Game.Cubbit.LocalIndex (LocalIndex, localIndex)
@@ -33,10 +33,10 @@ type BuildCollesionBoxesImports = {
 
 
 
-buildCollesionBoxes :: forall eff. ChunkWithMesh -> World -> Eff (cannon :: CANNON | eff) (Array Body)
+buildCollesionBoxes :: forall eff. ChunkInstance -> World -> Eff (cannon :: CANNON | eff) (Array Body)
 buildCollesionBoxes = _buildCollesionBoxes { chunkSize, localIndex, isSolidBlock }
 
-foreign import _buildCollesionBoxes :: forall eff. BuildCollesionBoxesImports -> ChunkWithMesh -> World -> Eff (cannon :: CANNON | eff) (Array Body)
+foreign import _buildCollesionBoxes :: forall eff. BuildCollesionBoxesImports -> ChunkInstance -> World -> Eff (cannon :: CANNON | eff) (Array Body)
 
 createPlayerCollesion :: forall eff. Eff (cannon :: CANNON | eff) Body
 createPlayerCollesion = do
