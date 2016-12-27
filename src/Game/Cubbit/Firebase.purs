@@ -22,7 +22,7 @@ import Game.Cubbit.Constants (chunkSize)
 import LZString (decompressFromUTF16, compressToUTF16)
 import Prelude (($), (*), (<>), (>>=), (#), bind)
 import Unsafe.Coerce (unsafeCoerce)
-import Web.Firebase (EventType(..), FIREBASE, Firebase, Reference, child, database, forEach, key, on, once, ref, set, val)
+import Web.Firebase (EventType(..), FIREBASE, Firebase, Reference, limitToLast, child, database, forEach, key, on, once, ref, set, val)
 
 saveChunkToFirebase :: forall eff. Chunk -> Firebase -> Eff (firebase :: FIREBASE | eff) Unit
 saveChunkToFirebase (Chunk chunk) firebase = do
@@ -53,7 +53,7 @@ listenToTerrain :: forall eff. Firebase
                 -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Reference
 listenToTerrain firebase resolve = do
     ref <- database firebase >>= ref "terrain"
-    ref # on ChildAdded \snap -> either error resolve $ decode (key snap) (val snap)
+    limitToLast 1 ref >>= on ChildAdded \snap -> either error resolve $ decode (key snap) (val snap)
     ref # on ChildChanged \snap -> either error resolve $ decode (key snap) (val snap)
     pure ref
 
