@@ -14,6 +14,7 @@ import Data.Nullable (Nullable)
 import Data.Set (Set)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.BlockType (BlockType)
+import Game.Cubbit.Captions (Language)
 import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
@@ -86,6 +87,9 @@ data GameMode = SinglePlayerMode | MultiplayerMode
 data ResourceProgress = Loading Int | Complete Resources
 
 newtype State = State {
+
+    
+
     canvas :: Canvas,
     config :: Config,
     res :: ResourceProgress,

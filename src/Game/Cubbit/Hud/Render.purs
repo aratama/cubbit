@@ -10,6 +10,7 @@ import Data.Maybe (Maybe(..), isNothing)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
+import Game.Cubbit.Captions (Language(..), getCaption)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
@@ -17,7 +18,7 @@ import Game.Cubbit.Resources (resourceCount)
 import Game.Cubbit.Types (GameMode(..), Mode(..), ResourceProgress(..), SceneState(..), State(..))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, p, prop, text)
-import Halogen.HTML.Elements (i, p_, a)
+import Halogen.HTML.Elements (a, button, i, p_)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
 import Halogen.HTML.Properties (I, IProp, autofocus, class_, href, id_, src, tabIndex, target)
 import Halogen.HTML.Properties (key) as Properties
@@ -80,10 +81,10 @@ render (State state@{ config: Config config }) = case state.res of
                 ModeSelectionSceneState e -> [
                     div [class_ (ClassName "content-layer mode-root")] [
 
-                        h1 [] [icon "tree", text " Mode Selection!"],
+                        h1 [] [icon "tree", text $ getCaption config.language _.modeSelection],
                         div [class_ (ClassName "home button"), onClick \e -> send' Home] [icon "home"],
-                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text " Single Player Offline Mode"],
-                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text " Multi-player Online Mode"]
+                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text $ getCaption config.language _.singleplayerOfflineMode],
+                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text $ getCaption config.language _.multiplayerOnlineMode]
                     ]
                 ]
 
@@ -147,6 +148,10 @@ render (State state@{ config: Config config }) = case state.res of
                     class_ (ClassName "config-inner"),
                     onClick \e -> send' (Nop (mouseEventToEvent e))
                 ] [
+                    h2 [class_ (ClassName "config-heading")] [icon "language", text " Language"],
+                    languageButton En "English",
+                    languageButton Ja "日本語",
+
                     h2 [class_ (ClassName "config-heading")] [icon "volume-up", text " Sounds"],
                     option "Mute" (toggle config.mute ToggleMute),
                     option "BGM Volume" (slider config.bgmVolume SetBGMVolume),
@@ -178,6 +183,12 @@ render (State state@{ config: Config config }) = case state.res of
           where
             suppressMouseMove = onMouseMove \e -> send' (Nop (mouseEventToEvent e))
             suppressMouseDown = onMouseDown \e -> send' (Nop (mouseEventToEvent e))
+
+            languageButton lang caption = button [
+                class_ $ ClassName $ "config-language" <> if config.language == lang then " active" else "",
+                onClick \_ -> send' $ SetLanguage lang
+            ] [text caption]
+
 
             option caption ui = div [class_ (ClassName "config-option")] [
                 div [

@@ -520,6 +520,21 @@ canvas {
 }
 
 
+.config-root .config-language {
+    font-family: ranobe;
+    padding: 10px;
+    margin: 10px;
+    background-color: transparent;
+    color: grey;
+    border: solid 1px grey;
+    border-radius: 4px;
+    width: 100px;
+}
+
+.config-root .config-language.active {
+    background-color: grey;
+    color: #edede6;
+}
 
 
 

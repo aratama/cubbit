@@ -53,7 +53,9 @@ eval ref query = do
 
             Query q next -> next <$ case q of
 
-                (Repaint state) -> put state
+                (Repaint state) -> do
+                    liftEff $ writeRef ref state
+                    put state
 
                 _ -> pure unit
 
@@ -64,6 +66,13 @@ eval ref query = do
                 (Repaint state') -> do
                     liftEff $ writeRef ref state'
                     put state'
+
+                (SetLanguage lang) -> do
+                    modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+                        config = Config config {
+                            language = lang
+                        }
+                    })
 
                 (PreventDefault e) -> liftEff do
                     preventDefault e

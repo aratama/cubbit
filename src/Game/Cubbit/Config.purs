@@ -1,13 +1,15 @@
 module Game.Cubbit.Config (Config(Config), readConfig, writeConfig) where
 
-import Prelude (bind, pure, Unit)
 import Control.Monad.Eff (Eff)
-import Data.Generic (class Generic)
-import Data.Maybe (fromMaybe)
 import DOM (DOM)
 import DOM.WebStorage (STORAGE, getItem, setItem, getLocalStorage)
+import Data.Generic (class Generic)
+import Data.Maybe (fromMaybe)
+import Game.Cubbit.Captions (Language(..))
+import Prelude (bind, pure, Unit)
 
 newtype Config = Config {
+    language :: Language,
     mute :: Boolean,
     bgmVolume :: Int,
     seVolume :: Int,
@@ -19,6 +21,7 @@ newtype Config = Config {
 
 defaultConfig :: Config
 defaultConfig = Config {
+    language: En,
     mute: false,
     bgmVolume: 3,
     seVolume: 3,

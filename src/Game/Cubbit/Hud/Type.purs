@@ -10,6 +10,7 @@ import DOM.Event.WheelEvent (WheelEvent)
 import DOM.WebStorage (STORAGE)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
+import Game.Cubbit.Captions (Language)
 import Game.Cubbit.Types (GameMode, Mode, State)
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
@@ -37,6 +38,7 @@ data QueryA = PlayingSceneQuery PlayingSceneQuery
              | SetShadowArea Int
              | SetChunkArea Int
              | Repaint State
+             | SetLanguage Language
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode
