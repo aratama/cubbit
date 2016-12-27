@@ -68,6 +68,7 @@ eval ref query = do
                     put state'
 
                 (SetLanguage lang) -> do
+                    liftEff $ play sounds.switchSound
                     modifyAppState ref (\(State state@{ config: Config config }) -> State state {
                         config = Config config {
                             language = lang

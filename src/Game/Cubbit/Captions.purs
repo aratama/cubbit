@@ -14,92 +14,60 @@ instance showLanguage :: Show Language where
 
 derive instance eqLanguage :: Eq Language
 
-type Caption = {
-    ja :: String,
-    en :: String
-}
-
-type Captions = {
-    modeSelection :: Caption,
-    singleplayerOfflineMode :: Caption,
-    multiplayerOnlineMode :: Caption
-}
-
-getCaption :: Language -> (Captions -> Caption) -> String
-getCaption lang f = (case lang of
-    En -> _.en
-    Ja -> _.ja) (f captions)
-
-captions :: Captions
-captions = {
-    modeSelection: {
-        ja: "モード選択",
-        en: "Mode Selection"
-    },
-    singleplayerOfflineMode: {
-        ja: "シングルプレイヤー・オフラインモード",
-        en: "Siingle Player Offline Mode"
-    },
-    multiplayerOnlineMode: {
-        ja: "マルチプレイヤー・オンラインモード",
-        en: "Multi-player Online Mode"
-    }
-}
-
 type L = Language -> String
 
+l :: String -> String -> L
+l en ja = case _ of
+    Ja -> ja
+    En -> en
+
+modeSelection :: L
+modeSelection = l "Mode Selection" "モード選択"
+
+singleplayerOfflineMode :: L
+singleplayerOfflineMode = l "Siingle Player Offline Mode" "シングルプレイヤー・オフラインモード"
+
+multiplayerOnlineMode :: L
+multiplayerOnlineMode = l "Multi-player Online Mode" "マルチプレイヤー・オンラインモード"
+
 clickToStart :: L
-clickToStart En = "Click to Start"
-clickToStart Ja = "マウスクリックでスタートします"
+clickToStart = l "Click to Start" "マウスクリックでスタートします"
 
 on :: L
-on En = "On"
-on Ja = "オン"
+on = l "On" "オン"
 
 off :: L
-off En = "Off"
-off Ja = "オフ"
+off = l "Off" "オフ"
 
 graphics :: L
-graphics Ja = "グラフィックス"
-graphics En = "Graphics"
+graphics = l "Graphics" "グラフィックス"
 
 sounds :: L
-sounds Ja = "サウンド"
-sounds En = "Sound"
+sounds = l "Sound" "サウンド"
 
 terrain :: L
-terrain Ja = "地形表示"
-terrain En = "Terrain"
+terrain = l "Terrain" "地形表示"
 
 language :: L
-language Ja = "言語"
-language En = "Language"
+language = l "Language" "言語"
 
 mute :: L
-mute Ja = "消音"
-mute En = "Mute"
+mute = l "Mute" "消音"
 
 bgmVolume :: L
-bgmVolume Ja = "ＢＧＭ音量"
-bgmVolume En = "BGM Volume"
+bgmVolume = l "BGM Volume" "ＢＧＭ音量"
 
 seVolume :: L
-seVolume Ja = "ＳＥ音量"
-seVolume En = "SE Volume"
+seVolume = l "SE Volume" "ＳＥ音量"
 
 chunkArea :: L
-chunkArea Ja = "チャンク表示距離"
-chunkArea En = "Chunk Display Area"
+chunkArea = l "Chunk Display Area" "チャンク表示距離"
 
 shadow :: L
-shadow Ja = "影"
-shadow En = "Shadow"
+shadow = l "Shadow" "影"
 
 shadowArea :: L
-shadowArea Ja = "影の範囲"
-shadowArea En = "Shadow Area"
+shadowArea = l "Shadow Area" "影の範囲"
 
 vertexColor :: L
-vertexColor Ja = "頂点色"
-vertexColor En = "Vertex Color"
+vertexColor = l "Vertex Color" "頂点色"

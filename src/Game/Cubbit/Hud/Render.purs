@@ -10,7 +10,7 @@ import Data.Maybe (Maybe(Nothing, Just))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
-import Game.Cubbit.Captions (Caption, Captions, Language(Ja, En), bgmVolume, captions, chunkArea, clickToStart, graphics, language, mute, off, on, seVolume, shadow, shadowArea, sounds, terrain, vertexColor)
+import Game.Cubbit.Captions (Language(Ja, En), bgmVolume, chunkArea, clickToStart, graphics, language, modeSelection, multiplayerOnlineMode, mute, off, on, seVolume, shadow, shadowArea, singleplayerOfflineMode, sounds, terrain, vertexColor)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
@@ -83,10 +83,10 @@ render (State state@{ config: Config config }) = case state.res of
                 ModeSelectionSceneState _ -> [
                     div [class_ (ClassName "content-layer mode-root")] [
 
-                        h1 [] [icon "tree", text $ capt _.modeSelection],
+                        h1 [] [icon "tree", mtext modeSelection],
                         div [class_ (ClassName "home button"), onClick \e -> send' Home] [icon "home"],
-                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", text $ capt _.singleplayerOfflineMode],
-                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", text $ capt _.multiplayerOnlineMode]
+                        div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode] [icon "user", mtext singleplayerOfflineMode],
+                        div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode] [icon "users", mtext multiplayerOnlineMode]
                     ]
                 ]
 
@@ -185,11 +185,6 @@ render (State state@{ config: Config config }) = case state.res of
           where
 
             mtext t = text (t config.language)
-
-            capt :: (Captions -> Caption) -> String
-            capt f = " " <> (case config.language of
-                En -> _.en
-                Ja -> _.ja) (f captions)
 
             suppressMouseMove = onMouseMove \e -> send' (Nop (mouseEventToEvent e))
             suppressMouseDown = onMouseDown \e -> send' (Nop (mouseEventToEvent e))
