@@ -13,7 +13,7 @@ import Graphics.Babylon.StandardMaterial (createStandardMaterial, setDiffuseColo
 import Graphics.Babylon.Texture (createTexture, defaultCreateTextureOptions, textureToBaseTexture)
 import Graphics.Babylon.Types (BABYLON, Material, Mesh, Scene, Texture)
 import Graphics.Babylon.Vector3 (createVector3)
-import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce, setColorBlendFactor)
+import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce, setColorBlendFactor, setBackFaceCulling)
 import Prelude (negate, (/))
 
 type Materials = {
@@ -77,6 +77,7 @@ initializeMaterials scene skybox texture alphaTexture (Options options) = do
             addToRenderList (meshToAbstractMesh skybox) mat
             setWaveHeight 0.0 mat
             setWindForce 1.0 mat
+            setBackFaceCulling true mat
             --setColorBlendFactor 0.1 mat
             pure (waterMaterialToMaterial mat)
         else do

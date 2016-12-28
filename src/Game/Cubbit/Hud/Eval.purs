@@ -158,6 +158,16 @@ eval ref query = do
                         meshes <- getMeshes res.scene
                         for_ meshes $ setUseVertexColors config.vertexColor
 
+                (ToggleWaterMaterial) -> do
+                    modifyAppState ref (\(State state@{ config: Config config }) -> State state {
+                        config = Config config {
+                            waterMaterial = not config.waterMaterial
+                        }
+                    })
+                    liftEff do
+                        play sounds.switchSound
+                        State state' <- readRef ref
+                        writeConfig state'.config
 
                 (SetShadowArea value) -> do
 

@@ -37,6 +37,7 @@ data QueryA = PlayingSceneQuery PlayingSceneQuery
              | ToggleVertexColor
              | SetShadowArea Int
              | SetChunkArea Int
+             | ToggleWaterMaterial 
              | Repaint State
              | SetLanguage Language
 

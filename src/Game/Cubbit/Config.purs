@@ -16,7 +16,8 @@ newtype Config = Config {
     shadow :: Boolean,
     shadowArea :: Int,
     vertexColor :: Boolean,
-    chunkArea :: Int
+    chunkArea :: Int,
+    waterMaterial :: Boolean
 }
 
 defaultConfig :: Language -> Config
@@ -28,7 +29,8 @@ defaultConfig lang = Config {
     shadow: true,
     shadowArea: 3,
     vertexColor: true,
-    chunkArea: 3
+    chunkArea: 3,
+    waterMaterial: false
 }
 
 derive instance genericConfig :: Generic Config

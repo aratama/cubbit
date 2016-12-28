@@ -54,7 +54,7 @@ import Graphics.Babylon.Sound (play, setVolume, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
-import Graphics.Babylon.WaterMaterial (clearRenderList, addToRenderList)
+import Graphics.Babylon.WaterMaterial (clearRenderList, addToRenderList, enableRenderTargets)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), (>>=))
@@ -415,30 +415,34 @@ updateBabylon deltaTime res@{ options: Options options } (State state@{ terrain:
                     --log ("unload: " <> show ci.x <> ", " <> show ci.y <> ", " <> show ci.z )
 
         -- update shadow rendering list
-        if config.shadow
+
+        renderingList <- if config.shadow || config.waterMaterial
+                then do
+                    let shadowDisplayRange = 1 + config.shadowArea
+                    let cci = runChunkIndex cameraPositionChunkIndex
+                    neighbors <- filterNeighbors shadowDisplayRange cci.x cci.y cci.z terrain.map
+                    let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
+                                MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
+                                _ -> Nothing
+                            ) <$> neighbors)
+                    pure meshes
+                else pure []
+
+        setRenderList (if config.shadow then renderingList <> res.playerMeshes else []) res.shadowMap
+
+        if config.waterMaterial
             then do
-                let shadowDisplayRange = 1 + config.shadowArea
-                let cci = runChunkIndex cameraPositionChunkIndex
-                neighbors <- filterNeighbors shadowDisplayRange cci.x cci.y cci.z terrain.map
-                let meshes =  catMaybes ((\chunk -> case chunk.standardMaterialMesh of
-                            MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
-                            _ -> Nothing
-                        ) <$> neighbors)
-                let meshes' = meshes <> res.playerMeshes
-                setRenderList meshes' res.shadowMap
-
-                if options.enableWaterMaterial
-                    then do
-                        let waterMaterial = unsafeCoerce res.materials.waterMaterial
-                        clearRenderList waterMaterial
-                        for_ meshes \mesh -> do
-                            addToRenderList mesh waterMaterial
-                        pure unit
-                    else do
-                        pure unit
+                let waterMaterial = unsafeCoerce res.materials.waterMaterial
+                clearRenderList waterMaterial
+                for_ renderingList \mesh -> do
+                    addToRenderList mesh waterMaterial
+                enableRenderTargets true waterMaterial
+                pure unit
             else do
-                setRenderList [] res.shadowMap
-
+                let waterMaterial = unsafeCoerce res.materials.waterMaterial
+                clearRenderList waterMaterial
+                enableRenderTargets false waterMaterial
+                pure unit
 
 
 

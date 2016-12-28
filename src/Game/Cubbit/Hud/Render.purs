@@ -10,7 +10,7 @@ import Data.Maybe (Maybe(Nothing, Just))
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (runBlockIndex)
 import Game.Cubbit.BlockType (dirtBlock, grassBlock, leavesBlock, waterBlock, woodBlock)
-import Game.Cubbit.Captions (Language(Ja, En), bgmVolume, chunkArea, clickToStart, graphics, language, modeSelection, multiplayerOnlineMode, mute, off, on, seVolume, shadow, shadowArea, singleplayerOfflineMode, sounds, terrain, vertexColor)
+import Game.Cubbit.Captions (Language(Ja, En), bgmVolume, chunkArea, clickToStart, graphics, language, modeSelection, waterMaterial, multiplayerOnlineMode, mute, off, on, seVolume, shadow, shadowArea, singleplayerOfflineMode, sounds, terrain, vertexColor)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
@@ -163,6 +163,7 @@ render (State state@{ config: Config config }) = case state.res of
                     option shadow (toggle config.shadow ToggleShadow),
                     option shadowArea (slider config.shadowArea SetShadowArea),
                     option vertexColor (toggle config.vertexColor ToggleVertexColor),
+                    option waterMaterial (toggle config.waterMaterial ToggleWaterMaterial),
 
                     h2 [class_ (ClassName "config-heading")] [icon "cubes", mtext terrain],
                     option chunkArea (slider config.chunkArea SetChunkArea),

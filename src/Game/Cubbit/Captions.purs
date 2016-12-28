@@ -71,3 +71,6 @@ shadowArea = l "Shadow Area" "影の範囲"
 
 vertexColor :: L
 vertexColor = l "Vertex Color" "頂点色"
+
+waterMaterial :: L
+waterMaterial = l "Water Material" "水面素材"
