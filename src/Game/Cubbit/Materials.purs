@@ -13,7 +13,7 @@ import Graphics.Babylon.StandardMaterial (createStandardMaterial, setDiffuseColo
 import Graphics.Babylon.Texture (createTexture, defaultCreateTextureOptions, textureToBaseTexture)
 import Graphics.Babylon.Types (BABYLON, Material, Mesh, Scene, Texture)
 import Graphics.Babylon.Vector3 (createVector3)
-import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce)
+import Graphics.Babylon.WaterMaterial (createWaterMaterial, setBumpTexture, addToRenderList, waterMaterialToMaterial, setWaveHeight, setWindForce, setColorBlendFactor)
 import Prelude (negate, (/))
 
 type Materials = {
@@ -72,11 +72,12 @@ initializeMaterials scene skybox texture alphaTexture (Options options) = do
     waterMaterial <- if options.enableWaterMaterial
         then do
             mat <- createWaterMaterial "water-block" scene
-            tex <- createTexture "waterbump.png" scene defaultCreateTextureOptions
+            tex <- createTexture "./lib/waterbump.png" scene defaultCreateTextureOptions
             setBumpTexture tex mat
             addToRenderList (meshToAbstractMesh skybox) mat
             setWaveHeight 0.0 mat
             setWindForce 1.0 mat
+            --setColorBlendFactor 0.1 mat
             pure (waterMaterialToMaterial mat)
         else do
             mat <- createStandardMaterial "water-block" scene

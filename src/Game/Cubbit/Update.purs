@@ -54,6 +54,7 @@ import Graphics.Babylon.Sound (play, setVolume, stop)
 import Graphics.Babylon.TargetCamera (setTarget, targetCameraToCamera)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
+import Graphics.Babylon.WaterMaterial (clearRenderList, addToRenderList)
 import Halogen (HalogenIO)
 import Math (atan2, cos, pi, sin, sqrt)
 import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), (>>=))
@@ -423,9 +424,22 @@ updateBabylon deltaTime res@{ options: Options options } (State state@{ terrain:
                             MeshLoaded mesh -> Just (meshToAbstractMesh mesh)
                             _ -> Nothing
                         ) <$> neighbors)
-                setRenderList (meshes <> res.playerMeshes) res.shadowMap
+                let meshes' = meshes <> res.playerMeshes
+                setRenderList meshes' res.shadowMap
+
+                if options.enableWaterMaterial
+                    then do
+                        let waterMaterial = unsafeCoerce res.materials.waterMaterial
+                        clearRenderList waterMaterial
+                        for_ meshes \mesh -> do
+                            addToRenderList mesh waterMaterial
+                        pure unit
+                    else do
+                        pure unit
             else do
                 setRenderList [] res.shadowMap
+
+
 
 
         pure nextState
