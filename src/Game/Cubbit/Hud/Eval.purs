@@ -473,3 +473,4 @@ initializeTerrain ref = do
 
 
 foreign import openDevTools :: forall eff. Eff (dom :: DOM | eff) Unit
+

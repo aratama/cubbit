@@ -12,6 +12,10 @@
     left: 816px;
 }
 
+.niconico .config-root.visible {
+    left: 0px;
+}
+
 .niconico .mode-root .mode.button {
     width: 400px;
     height: 160px;

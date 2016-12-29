@@ -5,3 +5,6 @@ exports.openDevTools = function(){
         electron.ipcRenderer.send("command", "openDevTools");
     }
 };
+
+
+

@@ -6,6 +6,7 @@ import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM2)
+import DOM (DOM)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
@@ -130,10 +131,15 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
     wait 1000
     liftEff do
         play res.sounds.forestSound
+
+        reportToSentry
+
     modifyAppState ref (\(State state) -> State state {
         nextScene = false,
         nextBGM = Just res.sounds.rye
     })
+
+
 
 
 
@@ -158,3 +164,4 @@ clearTerrain (Terrain terrain) world = do
     for_ chunkList \chunk -> disposeChunk chunk
 
 
+foreign import reportToSentry :: forall eff. Eff (dom :: DOM | eff) Unit
