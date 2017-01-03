@@ -4,12 +4,13 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Parallel (parallel, sequential)
 import Data.Traversable (for_)
 import Data.Unit (Unit)
 import Graphics.Babylon.Aff.Sound (loadSound)
 import Graphics.Babylon.Sound (defaultCreateSoundOptions, setVolume)
 import Graphics.Babylon.Types (BABYLON, Scene, Sound)
-import Prelude (($), (<>))
+import Prelude (($), (<>), (<$>), (<*>))
 
 type Sounds = {
     yourNatural :: Sound,
@@ -33,10 +34,21 @@ loadSounds :: forall eff. Scene -> Aff (babylon :: BABYLON | eff) Unit -> Aff (b
 loadSounds scene inc = do
 
     -- jingle
-    yourNatural <- load "sound/Your_natural.mp3" true
-    rye <- load "sound/rye.mp3" true
-    cleaning <- load "sound/cleaningstream.mp3" true
-    ichigo <- load "sound/ichigo.mp3" true
+    {
+        yourNatural,
+        rye,
+        cleaning,
+        ichigo
+    } <- sequential $ {
+        yourNatural: _,
+        rye: _,
+        cleaning: _,
+        ichigo: _
+    }
+        <$> parallel (load "sound/Your_natural.mp3" true)
+        <*> parallel (load "sound/rye.mp3" true)
+        <*> parallel (load "sound/cleaningstream.mp3" true)
+        <*> parallel (load "sound/ichigo.mp3" true)
 
     -- environment
     forestSound <- load "sound/forest.mp3" true
@@ -47,6 +59,8 @@ loadSounds scene inc = do
     pickSound <- load "sound/bosu06.mp3" false
     putSound <- load "sound/bosu28_c.mp3" false
     warpSound <- load "sound/warp01.mp3" false
+
+
 
 
     let bgms = [

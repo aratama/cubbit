@@ -80,6 +80,7 @@ type ModeSelectionSceneState = {}
 data SceneState = TitleSceneState TitleSceneState
                 | ModeSelectionSceneState ModeSelectionSceneState
                 | PlayingSceneState PlayingSceneState
+                -- | LoadingSceneState Int
 
 data GameMode = SinglePlayerMode | MultiplayerMode
 
@@ -88,7 +89,7 @@ data ResourceProgress = Loading Int | Complete Resources
 
 newtype State = State {
 
-    
+
 
     canvas :: Canvas,
     config :: Config,

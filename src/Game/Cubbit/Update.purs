@@ -14,21 +14,21 @@ import DOM.HTML.Types (htmlDocumentToNonElementParentNode)
 import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(ElementId))
-import Data.Array (catMaybes, drop, take, any)
+import Data.Array (catMaybes, drop, take, any, (!!))
 import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (floor)
 import Data.Int (toNumber) as Int
-import Data.Maybe (Maybe(Just, Nothing))
+import Data.Maybe (Maybe(Just, Nothing), fromMaybe, maybe)
 import Data.Nullable (Nullable, toMaybe, toNullable)
-import Data.Ord (min, max)
+import Data.Ord (abs, max, min)
 import Data.Set (member)
 import Data.Tuple (Tuple(..))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (runBlockIndex, blockIndexDistance)
-import Game.Cubbit.ChunkInstance (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkIndex (chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkInstance (MeshLoadingState(MeshNotLoaded, MeshLoaded), disposeChunk)
 import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
@@ -41,6 +41,7 @@ import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
+import Gamepad (Gamepad(..), getGamepads)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -64,17 +65,26 @@ import Unsafe.Coerce (unsafeCoerce)
 epsiron :: Number
 epsiron = 0.1
 
-calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Tuple State PlayingSceneState
-calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState = runPure do
+calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Array (Nullable Gamepad) -> Tuple State PlayingSceneState
+calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState gamepads = runPure do
 
     let rot =  negate if playingSceneState.firstPersonView then (playingSceneState.playerRotation + pi) else  playingSceneState.cameraYaw
 
     let keyStep key = if member key state.keys then 1.0 else 0.0
 
+    let padVector = case gamepads !! 0 >>= toMaybe of
+            Just (Gamepad gamepad) -> {
+                x: fromMaybe 0.0 (gamepad.axes !! 0),
+                z: negate (fromMaybe 0.0 (gamepad.axes !! 1))
+            }
+            _ -> { x: 0.0, z: 0.0 }
+
     let keyVector = {
-            x: keyStep "d" - keyStep "a",
-            z: keyStep "w" - keyStep "s"
+            x: (keyStep "d" - keyStep "a") + if 0.1 < abs padVector.x then padVector.x else 0.0,
+            z: (keyStep "w" - keyStep "s") + if 0.1 < abs padVector.z then padVector.z else 0.0
         }
+
+
 
     let rotatedKeyVector = {
             x: cos rot * keyVector.x - sin rot * keyVector.z,
@@ -130,11 +140,12 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             }
 
 
+    let keyVectorLength = keyVector.x * keyVector.x + keyVector.z * keyVector.z
 
     let animation' = if 0 < playingSceneState.landing
             then "land"
             else if isLanding
-                then (if any (\k -> member k state.keys) ["w", "s", "a", "d"] then "run" else "idle")
+                then (if 0.01 < keyVectorLength then "run" else "idle")
                 else "jump"
 
     let globalIndex = runBlockIndex (globalPositionToGlobalIndex playerPosition.x playerPosition.y playerPosition.z)
@@ -256,7 +267,9 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
 
             PlayingSceneState playingSceneState -> do
 
-                Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState
+                gamepads <- getGamepads
+
+                Tuple (State state') playingSceneState' <- pure $ calcurateNextState (Options options) deltaTime (State state) playingSceneState gamepads
 
                 when (playingSceneState'.animation /= playingSceneState.animation) do
                     playAnimation playingSceneState'.animation res.playerMeshes
