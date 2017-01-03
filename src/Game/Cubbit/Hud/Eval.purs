@@ -328,16 +328,18 @@ eval ref query = do
                                         let isRightButton = buttons e == 2
                                             dx = offsetX e - state.mousePosition.x
                                             dy = offsetY e - state.mousePosition.y
-                                                in State state {
-                                                        mousePosition = {
-                                                            x: offsetX e ,
-                                                            y: offsetY e
-                                                        },
-                                                        sceneState = PlayingSceneState playingSceneState {
-                                                            cameraYaw = if isRightButton then playingSceneState.cameraYaw + toNumber dx * options.cameraHorizontalSensitivity else playingSceneState.cameraYaw,
-                                                            cameraPitch = if isRightButton then max (-pi * 0.45) $ min (pi * 0.45) $ playingSceneState.cameraPitch + toNumber dy * options.cameraVertialSensitivity else playingSceneState.cameraPitch
-                                                        }
+                                        in State state {
+                                                mousePosition = {
+                                                    x: offsetX e ,
+                                                    y: offsetY e
+                                                },
+                                                sceneState = case state.sceneState of
+                                                    PlayingSceneState p -> PlayingSceneState p {
+                                                        cameraYaw = if isRightButton then playingSceneState.cameraYaw + toNumber dx * options.cameraHorizontalSensitivity else playingSceneState.cameraYaw,
+                                                        cameraPitch = if isRightButton then max (-pi * 0.45) $ min (pi * 0.45) $ playingSceneState.cameraPitch + toNumber dy * options.cameraVertialSensitivity else playingSceneState.cameraPitch
                                                     }
+                                                    s -> s
+                                            }
 
 
                                 (OnMouseClick e) -> liftEff do
@@ -355,14 +357,12 @@ eval ref query = do
 
                                         let put block = do
                                                 picked <- pickBlock res.scene res.cursor playingSceneState.mode state.terrain state.mousePosition.x state.mousePosition.y
-                                                case picked of
-                                                    Nothing -> pure unit
-                                                    Just blockIndex -> do
-                                                        editBlock ref blockIndex block
-                                                        terrain' <- updateChunkCollesion state.terrain state.world (globalIndexToChunkIndex blockIndex)
-                                                        modifyRef ref \(State state) -> State state {
-                                                            terrain = terrain'
-                                                        }
+                                                for_ picked \blockIndex -> do
+                                                    editBlock ref blockIndex block
+                                                    terrain' <- updateChunkCollesion state.terrain state.world (globalIndexToChunkIndex blockIndex)
+                                                    modifyRef ref \(State state) -> State state {
+                                                        terrain = terrain'
+                                                    }
 
                                         case playingSceneState.mode of
                                             Put blockType -> do
