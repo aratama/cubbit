@@ -410,7 +410,7 @@ updateBabylon deltaTime res@{ options: Options options } (State state@{ terrain:
 
             let ci = runChunkIndex cameraPositionChunkIndex
 
-            let loadAndGenerateChunk index = generateChunk (State state) res.materials res.scene index (Options options) state.config
+            let loadAndGenerateChunk index = generateChunk (State state) res.materials res.scene index (Options options) state.config res
 
             let loadDistance = 3 + config.chunkArea
             nextIndex <- foreachBlocks loadDistance ci.x ci.y ci.z state.updateIndex \x y z -> do

@@ -77,6 +77,7 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
         cameraPosition = { x: 10.0, y: 20.0, z: negate 10.0 },
         cameraTarget = { x: 0.5, y: 11.0, z: 0.5 },
         sceneState = PlayingSceneState {
+            res,
             gameMode: gameMode,
             cameraYaw: 0.0,
             cameraPitch: 0.7,
@@ -109,7 +110,7 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
             forE (-initialWorldSize) initialWorldSize \z -> void do
                 let index = chunkIndex x 0 z
                 State state <- readRef ref
-                generateChunk (State state) res.materials res.scene index res.options state.config
+                generateChunk (State state) res.materials res.scene index res.options state.config res
 
         -- initialize cannon world
         State { world } <- readRef ref

@@ -46,10 +46,12 @@ data Mode = Move | Put BlockType | Remove
 
 
 type TitleSceneState = {
+    res :: Resources,
     position :: Number
 }
 
 type PlayingSceneState = {
+    res :: Resources,
 
     gameMode :: GameMode,
 
@@ -75,25 +77,20 @@ type PlayingSceneState = {
     ref :: Maybe Reference
 }
 
-type ModeSelectionSceneState = {}
+type ModeSelectionSceneState = { res :: Resources }
 
-data SceneState = TitleSceneState TitleSceneState
+data SceneState = LoadingSceneState Int
+                | TitleSceneState TitleSceneState
                 | ModeSelectionSceneState ModeSelectionSceneState
                 | PlayingSceneState PlayingSceneState
-                | LoadingSceneState Int
 
 data GameMode = SinglePlayerMode | MultiplayerMode
-
-
-data ResourceProgress = Loading Int | Complete Resources
 
 newtype State = State {
 
 
 
-    canvas :: Canvas,
     config :: Config,
-    res :: ResourceProgress,
 
     configVisible :: Boolean,
 

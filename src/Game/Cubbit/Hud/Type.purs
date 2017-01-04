@@ -1,4 +1,4 @@
-module Game.Cubbit.Hud.Type (Query(..), QueryA(..), HudEffects, PlayingSceneQuery(..), HudDriver) where
+module Game.Cubbit.Hud.Type (Query(..), QueryA(..), HudEffects, PlayingSceneQuery(..), HudDriver, getRes) where
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (CONSOLE)
@@ -8,10 +8,12 @@ import DOM.Event.KeyboardEvent (KeyboardEvent)
 import DOM.Event.MouseEvent (MouseEvent)
 import DOM.Event.WheelEvent (WheelEvent)
 import DOM.WebStorage (STORAGE)
+import Data.Maybe (Maybe(..))
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.Captions (Language)
-import Game.Cubbit.Types (GameMode, Mode, State)
+import Game.Cubbit.Resources (Resources)
+import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
@@ -25,21 +27,21 @@ data QueryA = PlayingSceneQuery PlayingSceneQuery
              | PreventDefault Event
              | Nop Event
              | ToggleMute
-             | ModeSelect
-             | Home
-             | Start GameMode
-             | ShowConfig
-             | CloseConfig
-             | SetBGMVolume Int
-             | SetSEVolume Int
+             | ModeSelect Resources
+             | Home Resources
+             | Start GameMode Resources
+             | ShowConfig Resources
+             | CloseConfig Resources
+             | SetBGMVolume Resources Int
+             | SetSEVolume Resources Int
              | StopPropagation Event
-             | ToggleShadow
-             | ToggleVertexColor
-             | SetShadowArea Int
-             | SetChunkArea Int
-             | ToggleWaterMaterial 
+             | ToggleShadow Resources
+             | ToggleVertexColor Resources
+             | SetShadowArea Resources Int
+             | SetChunkArea Resources Int
+             | ToggleWaterMaterial Resources
              | Repaint State
-             | SetLanguage Language
+             | SetLanguage Language Resources
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode
@@ -63,3 +65,9 @@ type HudEffects eff = HalogenEffects (
     firebase :: FIREBASE | eff)
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
+
+getRes :: State -> Maybe Resources
+getRes (State state) = case state.sceneState of
+    TitleSceneState { res } -> Just res
+    PlayingSceneState { res } -> Just res
+    _ -> Nothing
