@@ -16,7 +16,9 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="gamepad.svg">
+   sodipodi:docname="gamepad.svg"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
   <defs
      id="defs4">
     <marker
@@ -1171,7 +1173,7 @@
        ry="0" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:31.32356262px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:31.32356262px;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="502.6517"
        y="526.8913"
        id="text12759"
@@ -1328,7 +1330,7 @@
     <flowRoot
        xml:space="preserve"
        id="flowRoot31353"
-       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:Sans;font-style:normal;font-weight:normal;font-size:22.5px;line-height:125%;letter-spacing:0px;word-spacing:0px;"><flowRegion
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-style:normal;font-weight:normal;font-size:22.5px;line-height:125%;letter-spacing:0px;word-spacing:0px;"><flowRegion
          id="flowRegion31355"><rect
            id="rect31357"
            width="342.42856"
@@ -1344,7 +1346,7 @@
      style="display:inline">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="252.90942"
        y="554.21033"
        id="text8269"
@@ -1356,7 +1358,7 @@
          style="font-size:17.61950302px">移動</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="944.9715"
        y="461.44022"
        id="text8717"
@@ -1365,10 +1367,10 @@
          id="tspan8719"
          x="944.9715"
          y="461.44022"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">ジャンプ/キャンセル</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">ジャンプ/キャンセル</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="190.71159"
        y="437.15445"
        id="text8269-5"
@@ -1380,7 +1382,7 @@
          style="font-size:17.61950302px">ツールの切り替え</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="996.42926"
        y="559.56995"
        id="text8269-3"
@@ -1389,10 +1391,10 @@
          id="tspan8271-8"
          x="996.42926"
          y="559.56995"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="189.46828"
        y="287.59424"
        id="text8717-2"
@@ -1401,10 +1403,10 @@
          id="tspan8719-5"
          x="189.46828"
          y="287.59424"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">ジャンプ/キャンセル</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">ジャンプ/キャンセル</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;line-height:125%;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="239.92479"
        y="243.47607"
        id="text8269-9"
@@ -1416,7 +1418,7 @@
          style="font-size:17.61950302px">移動</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="195.94339"
        y="195.27068"
        id="text8269-3-6"
@@ -1425,10 +1427,10 @@
          id="tspan8271-8-4"
          x="195.94339"
          y="195.27068"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="958.52185"
        y="211.17715"
        id="text8269-3-7"
@@ -1437,10 +1439,10 @@
          id="tspan8271-8-9"
          x="958.52185"
          y="211.17715"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">ズームイン/アウト</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">ズームイン/アウト</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="942.54309"
        y="376.39346"
        id="text8717-9"
@@ -1449,12 +1451,12 @@
          id="tspan8719-8"
          x="942.54309"
          y="376.39346"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:sans-serif"><tspan
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:sans-serif"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:sans-serif"><tspan
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:sans-serif"
    id="tspan10376">ブロックをお</tspan>く/決定</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="933.66492"
        y="134.73222"
        id="text8717-9-6"
@@ -1463,12 +1465,12 @@
          id="tspan8719-8-0"
          x="933.66492"
          y="134.73222"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:sans-serif"><tspan
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:sans-serif"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:sans-serif"><tspan
+   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:sans-serif"
    id="tspan10376-9">ブロックをお</tspan>く/決定</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:31.32356262px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:31.32356262px;line-height:125%;-inkscape-font-specification:Normal;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="212.50153"
        y="120.55418"
        id="text8265"
@@ -1477,10 +1479,10 @@
          id="tspan8267"
          x="212.50153"
          y="120.55418"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:22.5px;font-family:sans-serif;-inkscape-font-specification:Normal;fill:#ffffff">操作のしかた</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:22.5px;-inkscape-font-specification:Normal;fill:#ffffff">操作のしかた</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:17.61950302px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="985.28577"
        y="282.32343"
        id="text8269-3-8"
@@ -1489,10 +1491,10 @@
          id="tspan8271-8-7"
          x="985.28577"
          y="282.32343"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;font-family:sans-serif;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.61950302px;-inkscape-font-specification:Normal">周囲を見まわす</tspan></text>
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        x="516.07147"
        y="682.35712"
        id="text8287"
