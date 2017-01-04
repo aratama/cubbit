@@ -1,11 +1,12 @@
 module Game.Cubbit.Main (main) where
 
 import Control.Alternative (when)
-import Control.Bind (bind)
+import Control.Bind (bind, join)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
+import Control.MonadPlus (guard)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
@@ -17,8 +18,10 @@ import DOM.HTML.Window (document, location)
 import DOM.Node.Element (setClassName)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(ElementId))
+import Data.Array (findIndex, length, (!!))
+import Data.BooleanAlgebra (not)
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Nullable (toMaybe, toNullable)
 import Data.Set (empty)
 import Data.Show (show)
@@ -31,15 +34,16 @@ import Game.Cubbit.Hud.Eval (repaint, initializeTerrain)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (loadResources, resourceCount)
 import Game.Cubbit.Terrain (createTerrain)
-import Game.Cubbit.Types (Effects, SceneState(..), State(State))
+import Game.Cubbit.Types (Effects, GameMode(..), SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon, updateSound)
+import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Util (querySelectorCanvasAff)
 import Graphics.Cannon (addBody, createVec3, createWorld, setGravity)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Prelude (negate, (#), ($), (+), (<#>), (<$>), (<<<), (<>), (==), (>>=))
+import Prelude (mod, negate, (#), ($), (+), (<#>), (<$>), (<<<), (<>), (==), (>>=), (&&))
 import Unsafe.Coerce (unsafeCoerce)
 
 main :: forall eff. Eff (Effects eff) Unit
@@ -78,7 +82,8 @@ main = runHalogenAff do
             bgm: Nothing,
             nextBGM: Nothing,
             volume: 1.0,
-            niconico
+            niconico,
+            gamepads: []
         }
 
     ref <- liftEff $ newRef $ State initialState
@@ -128,7 +133,32 @@ main = runHalogenAff do
         res.engine # runRenderLoop do
             State st <- readRef ref
             case st.sceneState of
-                ModeSelectionSceneState _ -> readRef ref >>= updateSound res.sounds >>= writeRef ref
+
+                ModeSelectionSceneState modeSelectionSceneState -> do
+                    gamepads <- getGamepads
+
+                    State state <- readRef ref >>= updateSound res.sounds
+
+                    let modeMaybe = do
+                            Gamepad gamepad <- join (gamepads !! 0)
+                            GamepadButton button <- gamepad.buttons !! 0
+                            Gamepad gamepad' <- join (state.gamepads !! 0)
+                            GamepadButton button' <- gamepad'.buttons !! 0
+                            guard $ not button'.pressed && button.pressed
+                            let xs = [SinglePlayerMode, MultiplayerMode]
+                            i <- findIndex (_ == modeSelectionSceneState.mode) xs
+                            xs !! (mod (i + 1) (length xs))
+
+                    case modeMaybe of
+                        Nothing -> writeRef ref (State state { gamepads = gamepads })
+                        Just mode -> runHalogenAff do
+                            repaint driver $ State state {
+                                sceneState = ModeSelectionSceneState modeSelectionSceneState {
+                                    mode =  mode
+                                },
+                                gamepads = gamepads
+                            }
+
                 _ -> do
                     deltaTime <- getDeltaTime res.engine
                     readRef ref >>=

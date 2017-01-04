@@ -33,7 +33,7 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.PointerLock (exitPointerLock, requestPointerLock)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain(..), createTerrain, globalIndexToChunkIndex)
-import Game.Cubbit.Types (Mode(Move, Remove, Put), SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
+import Game.Cubbit.Types (GameMode(..), Mode(Move, Remove, Put), SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setReceiveShadows, setUseVertexColors)
 import Graphics.Babylon.DebugLayer (show, hide) as DebugLayer
 import Graphics.Babylon.Scene (getDebugLayer, getMeshes)
@@ -54,6 +54,13 @@ eval ref query = case query of
         (Repaint state') -> do
             liftEff $ writeRef ref state'
             put state'
+
+        (SetActiveGameMode res mode) -> do
+            modifyAppState ref (\(State state) -> State state {
+                sceneState = case state.sceneState of
+                    ModeSelectionSceneState s -> ModeSelectionSceneState s { mode = mode }
+                    s -> s
+            })
 
         (SetLanguage lang { sounds }) -> do
             liftEff $ play sounds.switchSound
@@ -213,14 +220,13 @@ eval ref query = case query of
 
         ModeSelect res -> do
             liftEff $ play res.sounds.warpSound
-            let nextScene = ModeSelectionSceneState { res }
             modifyAppState ref (\(State state) -> State state {
                 nextScene = true
             })
             wait 1000
             -- liftEff $ initializeTerrain ref
             modifyAppState ref (\(State state) -> State state {
-                sceneState = nextScene,
+                sceneState = ModeSelectionSceneState { res, mode: SinglePlayerMode },
                 nextBGM = Just res.sounds.ichigo
             })
             wait 1000

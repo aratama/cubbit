@@ -19,6 +19,7 @@ import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
+import Gamepad (Gamepad(..))
 import Graphics.Babylon.Types (BABYLON, Canvas, Sound)
 import Graphics.Cannon.Type (CANNON, World)
 import Graphics.Canvas (CANVAS)
@@ -77,7 +78,10 @@ type PlayingSceneState = {
     ref :: Maybe Reference
 }
 
-type ModeSelectionSceneState = { res :: Resources }
+type ModeSelectionSceneState = {
+    res :: Resources,
+    mode :: GameMode
+}
 
 data SceneState = LoadingSceneState Int
                 | TitleSceneState TitleSceneState
@@ -85,6 +89,8 @@ data SceneState = LoadingSceneState Int
                 | PlayingSceneState PlayingSceneState
 
 data GameMode = SinglePlayerMode | MultiplayerMode
+
+derive instance eqGameMode :: Eq GameMode
 
 newtype State = State {
 
@@ -119,7 +125,9 @@ newtype State = State {
     nextBGM :: Maybe Sound,
     volume :: Number,
 
-    niconico :: Boolean
+    niconico :: Boolean,
+
+    gamepads :: Array (Maybe Gamepad)
 }
 
 foreign import data ForeachIndex :: *

@@ -19,7 +19,7 @@ import Game.Cubbit.Types (GameMode(..), Mode(..), SceneState(..), State(..))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, p, prop, text)
 import Halogen.HTML.Elements (a, button, canvas, i, p_)
-import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove)
+import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseOver)
 import Halogen.HTML.Properties (I, IProp, autofocus, class_, href, id_, src, tabIndex, target)
 import Halogen.HTML.Properties (key) as Properties
 import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==), (<=))
@@ -78,13 +78,12 @@ render (State state@{ config: Config config }) = div [
             div [class_ (ClassName "click-to-start")] [mtext clickToStart]
         ]
 
-        ModeSelectionSceneState { res } -> [
+        ModeSelectionSceneState { res, mode } -> [
             div [class_ (ClassName "content-layer mode-root")] [
-
                 h1 [] [icon "tree", mtext modeSelection],
                 div [class_ (ClassName "home button"), onClick \e -> send' (Home res)] [icon "home"],
-                div [class_ (ClassName "singleplayer mode button"), onClick \e -> send' $ Start SinglePlayerMode res] [icon "user", mtext singleplayerOfflineMode],
-                div [class_ (ClassName "multiplayer mode button"), onClick \e -> send' $ Start MultiplayerMode res] [icon "users", mtext multiplayerOnlineMode]
+                gameModeButton res singleplayerOfflineMode "singleplayer" mode SinglePlayerMode (Start SinglePlayerMode res),
+                gameModeButton res multiplayerOnlineMode "multiplayer" mode MultiplayerMode (Start MultiplayerMode res)
             ]
         ]
 
@@ -184,6 +183,13 @@ render (State state@{ config: Config config }) = div [
         ]
 
   where
+
+    gameModeButton res caption clazz currentMode mode action = div [
+        class_ (ClassName (clazz <> " mode button" <> if currentMode == mode then " active" else "")),
+        onClick \e -> send' action,
+        onMouseOver \e -> send' (SetActiveGameMode res mode)
+    ] [icon "user", mtext caption]
+
 
     mtext t = text (t config.language)
 

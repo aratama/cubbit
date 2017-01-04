@@ -24,6 +24,9 @@ import Web.Firebase (FIREBASE)
 data Query a = Query QueryA a
 
 data QueryA = PlayingSceneQuery PlayingSceneQuery
+
+             | SetActiveGameMode Resources GameMode
+
              | PreventDefault Event
              | Nop Event
              | ToggleMute

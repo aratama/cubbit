@@ -4,8 +4,10 @@ import Control.Monad.Eff (Eff)
 import DOM (DOM)
 import Data.Eq (class Eq)
 import Data.Generic.Rep (class Generic)
-import Data.Nullable (Nullable)
+import Data.Maybe (Maybe)
+import Data.Nullable (Nullable, toMaybe)
 import Data.Ord (class Ord)
+import Prelude (map, (>>=), map, (<$>))
 
 newtype GamepadButton = GamepadButton {
     value :: Number,
@@ -26,5 +28,7 @@ newtype Gamepad = Gamepad {
 
 derive instance genericGamepad :: Generic Gamepad _
 
-foreign import getGamepads :: forall eff. Eff (dom :: DOM | eff) (Array (Nullable Gamepad))
+foreign import _getGamepads :: forall eff. Eff (dom :: DOM | eff) (Array (Nullable Gamepad))
 
+getGamepads :: forall eff. Eff (dom :: DOM | eff) (Array (Maybe Gamepad))
+getGamepads = map toMaybe <$> _getGamepads

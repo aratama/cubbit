@@ -2,7 +2,8 @@ module Game.Cubbit.Update (update, updateBabylon, updateSound) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
-import Control.Bind (bind)
+import Control.Bind (bind, join)
+import Control.Category (id)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff, runPure)
 import Control.Monad.Eff.Console (error)
@@ -14,7 +15,8 @@ import DOM.HTML.Types (htmlDocumentToNonElementParentNode)
 import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(ElementId))
-import Data.Array (catMaybes, drop, take, any, (!!))
+import Data.Array (any, catMaybes, drop, findIndex, take, (!!))
+import Data.Array (length) as Array
 import Data.BooleanAlgebra (not)
 import Data.Foldable (for_)
 import Data.Int (floor)
@@ -34,13 +36,14 @@ import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Control (playAnimation, pickBlock)
 import Game.Cubbit.Hud.Driver (queryToHud)
+import Game.Cubbit.Hud.Eval (repaint)
 import Game.Cubbit.Hud.Type (Query(..), QueryA(..), PlayingSceneQuery(..))
 import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
+import Game.Cubbit.Types (Effects, ForeachIndex, GameMode(..), Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
 import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -57,23 +60,24 @@ import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Graphics.Babylon.WaterMaterial (clearRenderList, addToRenderList, enableRenderTargets)
 import Halogen (HalogenIO)
+import Halogen.Aff (runHalogenAff)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (||), (>>=))
+import Prelude (mod, negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (>>=), (||))
 import Unsafe.Coerce (unsafeCoerce)
 
 
 epsiron :: Number
 epsiron = 0.1
 
-calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Array (Nullable Gamepad) -> Tuple State PlayingSceneState
+calcurateNextState :: Options -> Number -> State -> PlayingSceneState -> Array (Maybe Gamepad) -> Tuple State PlayingSceneState
 calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain terrain }) playingSceneState gamepads = runPure do
 
     let rot =  negate if playingSceneState.firstPersonView then (playingSceneState.playerRotation + pi) else  playingSceneState.cameraYaw
 
     let keyStep key = if member key state.keys then 1.0 else 0.0
 
-    let padVector = case gamepads !! 0 >>= toMaybe of
-            Just (Gamepad gamepad) -> {
+    let padVector = case gamepads !! 0 of
+            Just (Just (Gamepad gamepad)) -> {
                 x: fromMaybe 0.0 (gamepad.axes !! 0),
                 z: negate (fromMaybe 0.0 (gamepad.axes !! 1))
             }
@@ -100,8 +104,8 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             Just block | isSolidBlock block -> true
             _ -> false
 
-    let isJumpButtonPressed = member " " state.keys || case gamepads !! 0 >>= toMaybe of
-            Just (Gamepad gamepad) -> maybe false (\(GamepadButton button) -> button.pressed) (gamepad.buttons !! 0)
+    let isJumpButtonPressed = member " " state.keys || case gamepads !! 0 of
+            Just (Just (Gamepad gamepad)) -> maybe false (\(GamepadButton button) -> button.pressed) (gamepad.buttons !! 0)
             _ -> false
     let isStartingJump = playingSceneState.jumpable && isLanding && isJumpButtonPressed && playingSceneState.landing == 0
     let jumpVelocity = if isStartingJump then options.jumpVelocity else 0.0
@@ -223,17 +227,17 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let keyboardYawing = keyValue "e" - keyValue "q"
     let gamepadYawing = fromMaybe 0.0 do
-            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            Gamepad gamepad <- join (gamepads !! 0)
             gamepad.axes !! 2
 
     let keyboardPitching = keyValue "f" - keyValue "r"
     let gamepadPitching = fromMaybe 0.0 do
-            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            Gamepad gamepad <- join (gamepads !! 0)
             gamepad.axes !! 3
 
     let keyboardZooming = keyValue "g" - keyValue "t"
     let gamepadZooming = fromMaybe 0.0 do
-            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            Gamepad gamepad <- join (gamepads !! 0)
             GamepadButton zoominButton <- gamepad.buttons !! 6
             GamepadButton zoomoutButton <- gamepad.buttons !! 7
             pure (zoominButton.value - zoomoutButton.value)
@@ -281,14 +285,15 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
         case state.sceneState of
 
             TitleSceneState titleSceneState -> do
-                let state' = state {
-                        cameraPosition = { x: 5.0 - titleSceneState.position, y: 20.0, z: negate 10.0 + titleSceneState.position },
-                        cameraTarget = { x: 0.5 - titleSceneState.position, y: 11.0, z: titleSceneState.position },
-                        sceneState = TitleSceneState titleSceneState {
-                            position = titleSceneState.position + deltaTime * 0.0008
-                        }
-                    }
-                pure (State state')
+                gamepads <- getGamepads
+                pure (State state {
+                    cameraPosition = { x: 5.0 - titleSceneState.position, y: 20.0, z: negate 10.0 + titleSceneState.position },
+                    cameraTarget = { x: 0.5 - titleSceneState.position, y: 11.0, z: titleSceneState.position },
+                    sceneState = TitleSceneState titleSceneState {
+                        position = titleSceneState.position + deltaTime * 0.0008
+                    },
+                    gamepads = gamepads
+                })
 
             PlayingSceneState playingSceneState -> do
 
@@ -305,7 +310,6 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
                     AbstractMesh.setPosition positionVector mesh
                     setRotation playerRotationVector mesh
                     setVisibility (if playingSceneState.firstPersonView then 0.0 else 1.0) mesh
-
 
                 -- picking
                 do
@@ -357,7 +361,7 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
                             then stop res.sounds.stepSound
                             else pure unit
 
-                pure (State state')
+                pure (State state' { gamepads = gamepads })
 
 
             _ -> pure (State state)
