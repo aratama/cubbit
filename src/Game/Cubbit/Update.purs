@@ -41,7 +41,7 @@ import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
 import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
-import Gamepad (Gamepad(..), getGamepads)
+import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
 import Graphics.Babylon.Camera (setPosition) as Camera
@@ -100,7 +100,10 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
             Just block | isSolidBlock block -> true
             _ -> false
 
-    let isStartingJump = playingSceneState.jumpable && isLanding && member " " state.keys && playingSceneState.landing == 0
+    let isJumpButtonPressed = member " " state.keys || case gamepads !! 0 >>= toMaybe of
+            Just (Gamepad gamepad) -> maybe false (\(GamepadButton button) -> button.pressed) (gamepad.buttons !! 0)
+            _ -> false
+    let isStartingJump = playingSceneState.jumpable && isLanding && isJumpButtonPressed && playingSceneState.landing == 0
     let jumpVelocity = if isStartingJump then options.jumpVelocity else 0.0
 
     let speed = options.moveSpeed
@@ -216,11 +219,31 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     -- final state
 
+    let keyValue key = if member key state.keys then 1.0 else 0.0
+
+    let keyboardYawing = keyValue "q" - keyValue "e"
+    let gamepadYawing = fromMaybe 0.0 do
+            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            gamepad.axes !! 2
+
+    let keyboardPitching = keyValue "r" - keyValue "f"
+    let gamepadPitching = fromMaybe 0.0 do
+            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            gamepad.axes !! 3
+
+    let keyboardZooming = keyValue "g" - keyValue "t"
+    let gamepadZooming = fromMaybe 0.0 do
+            Gamepad gamepad <- gamepads !! 0 >>= toMaybe
+            GamepadButton zoominButton <- gamepad.buttons !! 6
+            GamepadButton zoomoutButton <- gamepad.buttons !! 7
+            pure (zoominButton.value - zoomoutButton.value)
+
+    let clamp x = min 1.0 (max (negate 1.0) x)
 
     let sceneState =  playingSceneState {
-                cameraYaw = playingSceneState.cameraYaw + ((if member "q" state.keys then 1.0 else 0.0) - (if member "e" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed,
-                cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + ((if member "r" state.keys then 1.0 else 0.0) - (if member "f" state.keys then 1.0 else 0.0)) * options.cameraRotationSpeed)),
-                cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + ((if member "g" state.keys then 1.0 else 0.0) - (if member "t" state.keys then 1.0 else 0.0)) * options.cameraZoomSpeed)),
+                cameraYaw = playingSceneState.cameraYaw + clamp (keyboardYawing + gamepadYawing) * options.cameraRotationSpeed,
+                cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + clamp (keyboardPitching + gamepadPitching) * options.cameraRotationSpeed)),
+                cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + clamp (keyboardZooming + gamepadZooming) * options.cameraZoomSpeed)),
                 velocity = velocity,
                 playerRotation = playerRotation',
                 animation = animation',
