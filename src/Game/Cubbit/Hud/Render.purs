@@ -57,7 +57,7 @@ render (State state@{ config: Config config }) = div [
     div [Properties.key "content-inner"] case state.sceneState of
 
         LoadingSceneState progress -> [
-            img [class_ (ClassName "content-layer"), src "image/loading.png"],
+            img [class_ (ClassName "content-layer"), src "image/gamepad.svg"],
             div [class_ (ClassName "progress")] $ mapFlipped (0 .. resourceCount) \i ->
                 div [class_ (ClassName ("cell" <> if i <= progress then " fill" else ""))] []
         ]

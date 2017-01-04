@@ -6,8 +6,7 @@ import Data.Eq (class Eq)
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe)
 import Data.Nullable (Nullable, toMaybe)
-import Data.Ord (class Ord)
-import Prelude (map, (>>=), map, (<$>))
+import Prelude (map, (<$>))
 
 newtype GamepadButton = GamepadButton {
     value :: Number,
@@ -15,6 +14,8 @@ newtype GamepadButton = GamepadButton {
 }
 
 derive instance genericGamepadButton :: Generic GamepadButton _
+
+derive instance eqGamepadButton :: Eq GamepadButton
 
 newtype Gamepad = Gamepad {
     id :: String,
@@ -27,6 +28,8 @@ newtype Gamepad = Gamepad {
 }
 
 derive instance genericGamepad :: Generic Gamepad _
+
+derive instance eqGamepad :: Eq Gamepad
 
 foreign import _getGamepads :: forall eff. Eff (dom :: DOM | eff) (Array (Nullable Gamepad))
 
