@@ -4,7 +4,7 @@ import Control.Alternative (when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Console (error, log)
+import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Ref (modifyRef, newRef, readRef, writeRef)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.HTML (window)
@@ -35,7 +35,7 @@ import Game.Cubbit.Types (Effects, SceneState(..), State(State))
 import Game.Cubbit.Update (update, updateBabylon, updateSound)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
-import Graphics.Babylon.Util (querySelectorCanvas, querySelectorCanvasAff)
+import Graphics.Babylon.Util (querySelectorCanvasAff)
 import Graphics.Cannon (addBody, createVec3, createWorld, setGravity)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
@@ -44,8 +44,6 @@ import Unsafe.Coerce (unsafeCoerce)
 
 main :: forall eff. Eff (Effects eff) Unit
 main = runHalogenAff do
-
-    bodyElement <- awaitBody
 
     Config config <- liftEff $ readConfig
 
@@ -86,8 +84,8 @@ main = runHalogenAff do
     ref <- liftEff $ newRef $ State initialState
 
     -- initialize ui
+    bodyElement <- awaitBody
     driver <- initializeHud (State initialState) ref bodyElement
-
     canvasGL <- querySelectorCanvasAff "#renderCanvas"
 
     -- load resources
