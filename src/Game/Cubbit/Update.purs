@@ -240,12 +240,16 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let clamp x = min 1.0 (max (negate 1.0) x)
 
+    let gamepadPlayerRotating = if playingSceneState.firstPersonView then gamepadYawing * 0.04 else 0.0
+    let gamepadPlayerPitching = if playingSceneState.firstPersonView then gamepadPitching * 0.04 else 0.0
+
     let sceneState =  playingSceneState {
                 cameraYaw = playingSceneState.cameraYaw + clamp (keyboardYawing + gamepadYawing) * options.cameraRotationSpeed,
                 cameraPitch = max 0.1 (min (pi * 0.48) (playingSceneState.cameraPitch + clamp (keyboardPitching + gamepadPitching) * options.cameraRotationSpeed)),
                 cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + clamp (keyboardZooming + gamepadZooming) * options.cameraZoomSpeed)),
                 velocity = velocity,
-                playerRotation = playerRotation',
+                playerRotation = playerRotation' + gamepadPlayerRotating,
+                playerPitch = max (-pi * 0.45) (min (pi * 0.45) (playingSceneState.playerPitch - gamepadPlayerPitching)),
                 animation = animation',
                 landing = max 0 (landingCount - 1),
                 jumpable = if isLanding && not (member " " state.keys) then true else if member " " state.keys then false else playingSceneState.jumpable
@@ -285,8 +289,6 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
                         }
                     }
                 pure (State state')
-
-            ModeSelectionSceneState ms -> pure (State state)
 
             PlayingSceneState playingSceneState -> do
 
@@ -358,7 +360,7 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
                 pure (State state')
 
 
-
+            _ -> pure (State state)
 
 updateBabylon :: forall eff. Number
                    -> Resources

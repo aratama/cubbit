@@ -64,6 +64,8 @@ render (State state@{ config: Config config }) = case state.res of
 
             div [Properties.key "content-inner"] case state.sceneState of
 
+                LoadingSceneState s -> []
+
                 TitleSceneState titleSceneState -> [
                     img [
                         class_ (ClassName "content-layer"),

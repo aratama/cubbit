@@ -80,7 +80,7 @@ type ModeSelectionSceneState = {}
 data SceneState = TitleSceneState TitleSceneState
                 | ModeSelectionSceneState ModeSelectionSceneState
                 | PlayingSceneState PlayingSceneState
-                -- | LoadingSceneState Int
+                | LoadingSceneState Int
 
 data GameMode = SinglePlayerMode | MultiplayerMode
 

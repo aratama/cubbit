@@ -253,11 +253,7 @@ eval ref query = do
                     -- todo
                     State gameState <- liftEff $ readRef ref
                     case gameState.sceneState of
-                        TitleSceneState titleSceneState -> pure unit
-
-                        ModeSelectionSceneState s -> pure unit
-
-
+                        
                         PlayingSceneState playingSceneState -> do
 
                             case playingSceneQuery of
@@ -305,21 +301,19 @@ eval ref query = do
                                             then requestPointerLock (\e -> do
                                                 modifyRef ref (\(State state) -> State state {
                                                     sceneState = case state.sceneState of
-                                                        TitleSceneState ts -> TitleSceneState ts
-                                                        ModeSelectionSceneState ms -> ModeSelectionSceneState ms
                                                         PlayingSceneState ps -> PlayingSceneState ps {
                                                             playerRotation = ps.playerRotation + e.movementX * options.pointerHorizontalSensitivity,
                                                             playerPitch = max (-pi * 0.45) (min (pi * 0.45) ps.playerPitch - e.movementY * options.pointerVerticalSensitivity)
                                                         }
+                                                        s -> s
                                                 })
                                                 pure unit
                                             ) (modifyRef ref (\(State state) -> State state {
                                                 sceneState = case state.sceneState of
-                                                    TitleSceneState ts -> TitleSceneState ts
-                                                    ModeSelectionSceneState ms -> ModeSelectionSceneState ms
                                                     PlayingSceneState ps -> PlayingSceneState ps {
                                                         firstPersonView = false
                                                     }
+                                                    s -> s
                                             }))
                                             else exitPointerLock
 
@@ -411,7 +405,7 @@ eval ref query = do
                                     pure unit
 
 
-
+                        otherSceneState -> pure unit
 
 
 
