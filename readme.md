@@ -10,7 +10,7 @@ Minecraft-like sandbox game development project written in PureScript. See [the 
 You can play the working demo at some one of following links if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge. Unfortunately, it isn't work on Safari now.
 
 * [Playable Demo on GitHub Pages](https://aratama.github.io/cubbit/)
-* [Playable Demo on RawGit](https://cdn.rawgit.com/aratama/cubbit/6909a1cc5af47cafbb9a5151bb9a42c000addce4/docs/index.html) (Faster than GitHub pages!)
+* [Playable Demo on RawGit](https://cdn.rawgit.com/aratama/cubbit/dd8bab64568823f84f067065f317d835e4b78aac/docs/index.html) (Faster than GitHub pages!)
 
 W/A/S/D key to move the charactor. Right mouse drag or Q/E/R/F/T/G key to look  around. Space key to jump. To edit terrain blocks, press some button at the bottom of screen. Have fun!
 
