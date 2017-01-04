@@ -32,7 +32,8 @@ newtype Options = Options {
     landingVelocityLimit :: Number,
     landingDuration :: Int,
     blockPickingMaxDistance :: Int,
-    profile :: Profile
+    profile :: Profile,
+    wheelSpeed :: Number
 }
 
 derive instance genericOptions :: Generic Options _

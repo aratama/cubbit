@@ -12,7 +12,7 @@
     "moveSpeed": 0.6,
     "cameraTargetSpeed": 0.1,
     "cameraRotationSpeed": 0.04,
-    "cameraZoomSpeed": 0.02,
+    "cameraZoomSpeed": 0.2,
     "cameraMaxZ": 10000.0,
     "cameraMinZ": 0.1,
     "cameraFOV": 1.2,
@@ -25,6 +25,7 @@
     "landingVelocityLimit": -1.5,
     "landingDuration": 40,
     "blockPickingMaxDistance": 10,
+    "wheelSpeed": 0.04,
     "profile": {
         "apiKey": "AIzaSyD9RzQFA2YrliZwXGPG7_DuOW3ErDi8VFU",
         "authDomain": "cubbit-test.firebaseapp.com",

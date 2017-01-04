@@ -221,12 +221,12 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
     let keyValue key = if member key state.keys then 1.0 else 0.0
 
-    let keyboardYawing = keyValue "q" - keyValue "e"
+    let keyboardYawing = keyValue "e" - keyValue "q"
     let gamepadYawing = fromMaybe 0.0 do
             Gamepad gamepad <- gamepads !! 0 >>= toMaybe
             gamepad.axes !! 2
 
-    let keyboardPitching = keyValue "r" - keyValue "f"
+    let keyboardPitching = keyValue "f" - keyValue "r"
     let gamepadPitching = fromMaybe 0.0 do
             Gamepad gamepad <- gamepads !! 0 >>= toMaybe
             gamepad.axes !! 3

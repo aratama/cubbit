@@ -3,12 +3,12 @@ module Game.Cubbit.Resources (Resources, loadResources, resourceCount) where
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
-import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Console (CONSOLE)
 import Control.Monad.Eff.Exception (error)
 import Control.Monad.Eff.Ref (REF)
 import Control.Monad.Except (runExcept, throwError)
+import Control.Parallel (parallel, sequential)
 import DOM (DOM)
 import Data.Either (Either(..))
 import Data.Foldable (for_)
@@ -41,7 +41,7 @@ import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateT
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Canvas, Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Vector3 (createVector3)
 import Network.HTTP.Affjax (AJAX, get)
-import Prelude (negate, void, ($), (/))
+import Prelude (negate, void, ($), (/), (<$>), (<*>))
 import Unsafe.Coerce (unsafeCoerce)
 import Web.Firebase (FIREBASE, Firebase, initializeApp)
 
@@ -88,12 +88,6 @@ loadResources canvasGL inc = do
             inc
             pure (res.response :: String)
 
-
-    -- load images
-    loadImage' "./image/loading.png"
-    loadImage' "./image/title.png"
-    loadImage' "./image/screenshade.png"
-
     -- load options
     response <- get "options.json"
     Options options <- case runExcept (readOptions response.response) of
@@ -113,16 +107,22 @@ loadResources canvasGL inc = do
         setCollisionsEnabled true sce
         pure sce
 
-    texture <- loadTexture' "./image/texture.png" scene defaultCreateTextureOptions
-    alphaTexture <- loadTexture' "./image/alpha.png" scene defaultCreateTextureOptions
-
-    loadTexture' "./alice/texture.png" scene defaultCreateTextureOptions             -- make sure the texture loaded
-    playerMeshes <- loadMesh' "" "./alice/" "alice.babylon" scene pure
-    loadText "./alice/cellShading.fragment.fx"
-    loadText "./alice/cellShading.vertex.fx"
-    loadText "./alice/outline.fragment.fx"
-    loadText "./alice/outline.vertex.fx"
-    loadText "./alice/alice.babylon.manifest"
+    { texture, alphaTexture, aliceTexture, playerMeshes } <- sequential $ {
+        texture: _, alphaTexture: _, aliceTexture: _, playerMeshes: _,
+        loadingImage: _, titleImage: _, shadeImage: _,
+        cellShadingFragment: _, cellShadingVertex: _, outlineFragment: _, outlineVertex: _, manufest: _
+    } <$> parallel (loadTexture' "./image/texture.png" scene defaultCreateTextureOptions)
+      <*> parallel (loadTexture' "./image/alpha.png" scene defaultCreateTextureOptions)
+      <*> parallel (loadImage' "./alice/texture.png")             -- make sure the texture loaded
+      <*> parallel (loadMesh' "" "./alice/" "alice.babylon" scene pure)
+      <*> parallel (loadImage' "./image/loading.png")
+      <*> parallel (loadImage' "./image/title.png")
+      <*> parallel (loadImage' "./image/screenshade.png")
+      <*> parallel (loadText "./alice/cellShading.fragment.fx")
+      <*> parallel (loadText "./alice/cellShading.vertex.fx")
+      <*> parallel (loadText "./alice/outline.fragment.fx")
+      <*> parallel (loadText "./alice/outline.vertex.fx")
+      <*> parallel (loadText "./alice/alice.babylon.manifest")
 
     sounds <- loadSounds scene inc
 
@@ -216,4 +216,4 @@ loadResources canvasGL inc = do
 
 
 
-foreign import loadScript :: forall eff. String -> Eff (dom :: DOM | eff) Unit
+

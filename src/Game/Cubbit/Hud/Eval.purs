@@ -369,7 +369,7 @@ eval ref query = case query of
 
                             modifyRef ref \(State state) -> State state {
                                 sceneState = PlayingSceneState playingSceneState {
-                                    cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + (toNumber (deltaY e) * options.cameraZoomSpeed)))
+                                    cameraRange = max options.cameraMinimumRange (min options.cameraMaximumRange (playingSceneState.cameraRange + (toNumber (deltaY e) * options.wheelSpeed * options.cameraZoomSpeed)))
                                 }
                             }
                             preventDefault (wheelEventToEvent e)
