@@ -1,4 +1,4 @@
-module Game.Cubbit.PointerLock (requestPointerLock, exitPointerLock) where
+module PointerLock (requestPointerLock, exitPointerLock) where
 
 import Control.Monad.Eff (Eff)
 import DOM (DOM)

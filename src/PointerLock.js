@@ -15,16 +15,23 @@ exports.requestPointerLock = function(callback){
                     onExit();
                 }
             };
-            document.body.addEventListener("mousemove", mousemoveListener);
-            document.addEventListener("pointerlockchange", pointerlockchangeListener);
+
+            function addListeners(){
+                document.body.addEventListener("mousemove", mousemoveListener);
+                document.addEventListener("pointerlockchange", pointerlockchangeListener);
+            }
 
             if(document.body.requestPointerLock){
+                addListeners();
                 document.body.requestPointerLock();
             }else if(document.body.webkitRequestPointerLock){
+                addListeners();
                 document.body.webkitRequestPointerLock();
             }else if(document.body.mozRequestPointerLock){
+                addListeners();
                 document.body.mozRequestPointerLock();
             }else if(document.body.msRequestPointerLock){
+                addListeners();
                 document.body.msRequestPointerLock();
             }
         };
@@ -32,5 +39,7 @@ exports.requestPointerLock = function(callback){
 };
 
 exports.exitPointerLock = function(){
-    document.exitPointerLock();
+    if(document.exitPointerLock){
+        document.exitPointerLock();
+    }
 };
