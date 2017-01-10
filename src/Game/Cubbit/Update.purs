@@ -43,7 +43,7 @@ import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, GameMode(..), Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, ModeSelectionSceneState, TitleSceneState), State(State))
+import Game.Cubbit.Types (Effects, ForeachIndex, GameMode(..), Mode(Move, Remove, Put), PlayingSceneState, SceneState(..), State(State))
 import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -60,11 +60,9 @@ import Graphics.Babylon.Types (BABYLON)
 import Graphics.Babylon.Vector3 (createVector3, length, subtract)
 import Graphics.Babylon.WaterMaterial (clearRenderList, addToRenderList, enableRenderTargets)
 import Halogen (HalogenIO)
-import Halogen.Aff (runHalogenAff)
 import Math (atan2, cos, pi, sin, sqrt)
-import Prelude (mod, negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (>>=), (||))
+import Prelude (negate, ($), (&&), (*), (+), (-), (/), (/=), (<), (<$>), (<>), (==), (>>=), (||))
 import Unsafe.Coerce (unsafeCoerce)
-
 
 epsiron :: Number
 epsiron = 0.1

@@ -16,11 +16,12 @@ import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..), getRes)
 import Game.Cubbit.Resources (resourceCount)
 import Game.Cubbit.Types (GameMode(..), Mode(..), SceneState(..), State(..))
-import Halogen (ComponentHTML)
-import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, p, prop, text)
+import Halogen (AttrName(..), ComponentHTML)
+import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, object, p, prop, text)
+import Halogen.HTML.Core (Prop(..))
 import Halogen.HTML.Elements (a, button, canvas, i, p_)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseOver)
-import Halogen.HTML.Properties (I, IProp, autofocus, class_, href, id_, src, tabIndex, target)
+import Halogen.HTML.Properties (I, IProp, class_, href, id_, src, tabIndex, target)
 import Halogen.HTML.Properties (key) as Properties
 import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==), (<=))
 import Unsafe.Coerce (unsafeCoerce)
@@ -40,11 +41,9 @@ send' q = Just (Query q unit)
 render :: State -> ComponentHTML Query
 render (State state@{ config: Config config }) = div [
     id_ "content",
-    Properties.key "root-content",
     class_ (ClassName "content-layer"),
-    onContextMenu \e ->send' (PreventDefault (mouseEventToEvent e)),
     tabIndex 0,
-    unsafeCoerce (autofocus true),
+    onContextMenu \e -> send' (PreventDefault (mouseEventToEvent e)),
     onKeyDown \e -> send (OnKeyDown e),
     onKeyUp \e -> send (OnKeyUp e),
     onMouseMove \e -> send (SetMousePosition e),
@@ -57,7 +56,13 @@ render (State state@{ config: Config config }) = div [
     div [Properties.key "content-inner"] case state.sceneState of
 
         LoadingSceneState progress -> [
-            img [class_ (ClassName "content-layer"), src "image/gamepad.svg"],
+
+            -- img [class_ (ClassName "content-layer"), src "image/gamepad.svg"],
+            object [
+                class_ (ClassName "content-layer"),
+                unsafeCoerce (Attr Nothing (AttrName "data") "image/gamepad.svg")
+            ] [],
+
             div [class_ (ClassName "progress")] $ mapFlipped (0 .. resourceCount) \i ->
                 div [class_ (ClassName ("cell" <> if i <= progress then " fill" else ""))] []
         ]

@@ -16,7 +16,7 @@ import Data.Show (show)
 import Data.String (Pattern(..), contains)
 import Data.Unit (Unit)
 import Game.Cubbit.Aff (loadImage)
-import Game.Cubbit.Constants (skyBoxRenderingGruop)
+import Game.Cubbit.Constants (skyBoxRenderingGruop, terrainRenderingGroup)
 import Game.Cubbit.Materials (Materials, initializeMaterials)
 import Game.Cubbit.Option (Options(Options), readOptions)
 import Game.Cubbit.Sounds (Sounds, loadSounds)
@@ -56,7 +56,8 @@ type Resources = {
     targetCamera :: TargetCamera,
     playerMeshes :: Array AbstractMesh,
     sounds :: Sounds,
-    firebase :: Firebase
+    firebase :: Firebase,
+    akane :: Array AbstractMesh
 }
 
 -- Note: Keep the number up-to-date
@@ -123,6 +124,14 @@ loadResources canvasGL inc = do
       <*> parallel (loadText "./alice/outline.fragment.fx")
       <*> parallel (loadText "./alice/outline.vertex.fx")
       <*> parallel (loadText "./alice/alice.babylon.manifest")
+
+    akane <- loadMesh' "" "./akane/" "akane.babylon" scene pure
+
+    liftEff do
+        for_ akane \mesh -> do
+            p <- createVector3 13.0 5.0 13.0
+            setPosition p mesh
+            setRenderingGroupId terrainRenderingGroup mesh
 
     sounds <- loadSounds scene inc
 
@@ -211,7 +220,7 @@ loadResources canvasGL inc = do
             setIsVisible false mesh
 
         pure {
-            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase
+            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase, akane
         }
 
 
