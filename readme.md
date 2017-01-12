@@ -7,7 +7,7 @@ Minecraft-like sandbox game development project written in PureScript. See [the 
 
 ## Demo
 
-You can play the working demo at some one of following links if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge. Unfortunately, it isn't work on Safari now.
+You can play the working demo at some one of following links if you are luckey. Google Chrome is most suitable but it is also available in other modern browsers include Mozilla Firefox and Microsoft Edge. Unfortunately, it doesn't work on Safari now.
 
 * [Playable Demo on GitHub Pages](https://aratama.github.io/cubbit/)
 * [Playable Demo on RawGit](https://cdn.rawgit.com/aratama/cubbit/9e1f874869434c40e7853f2766c34221ae7cf26b/docs/index.html) (Faster than GitHub pages!)
