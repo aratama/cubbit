@@ -8,14 +8,14 @@ import Control.Monad.Eff.Ref (REF, Ref, readRef, writeRef)
 import DOM (DOM)
 import Data.Array (length)
 import Data.Foldable (traverse_)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockType, BlockTypes, blockTypes)
 import Game.Cubbit.BoxelMap (insert)
 import Game.Cubbit.Chunk (Chunk(..))
-import Game.Cubbit.ChunkInstance(ChunkInstance, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.ChunkIndex (ChunkIndex, chunkIndex, runChunkIndex)
+import Game.Cubbit.ChunkInstance (ChunkInstance, MeshLoadingState(..), VertexDataPropsData(..), disposeChunk)
 import Game.Cubbit.Collesion (disposeCollesion)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (chunkSize, terrainRenderingGroup)
@@ -159,9 +159,8 @@ generateMesh index verts mat scene (Config config) = do
 
 
 
-editBlock :: forall eff. Ref State -> BlockIndex -> BlockType -> Resources -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, firebase :: FIREBASE | eff) Unit
-editBlock ref globalBlockIndex block res = do
-    State state <- readRef ref
+editBlock :: forall eff. State -> BlockIndex -> BlockType -> Resources -> Eff (dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE | eff) Unit
+editBlock (State state) globalBlockIndex block res = do
     let editChunkIndex = globalIndexToChunkIndex globalBlockIndex
     chunkMaybe <- lookupChunk editChunkIndex state.terrain
     case chunkMaybe of
@@ -170,7 +169,7 @@ editBlock ref globalBlockIndex block res = do
             let localIndex = globalIndexToLocalIndex globalBlockIndex
             let li = runLocalIndex localIndex
             let blocks = insert localIndex block chunkData.blocks
-            updateChunkMesh ref res.materials res.scene chunkData {
+            updateChunkMesh (State state) res.materials res.scene chunkData {
                 blocks = blocks,
                 edited = true
             } res.options state.config
@@ -188,7 +187,7 @@ editBlock ref globalBlockIndex block res = do
                     targetChunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
                     case targetChunkMaybe of
                         Nothing -> pure unit
-                        Just targetChunkData -> updateChunkMesh ref res.materials res.scene targetChunkData res.options state.config
+                        Just targetChunkData -> updateChunkMesh (State state) res.materials res.scene targetChunkData res.options state.config
 
             when (li.x == 0) (refreash (-1) 0 0)
             when (li.x == chunkSize - 1) (refreash 1 0 0)
@@ -202,37 +201,31 @@ editBlock ref globalBlockIndex block res = do
 
 
 
-putBlocks :: forall eff. Ref State -> Resources -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Unit
+
+putBlocks :: forall eff. Ref State -> Resources -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Terrain
 putBlocks ref res (Chunk chunk) = do
     State state <- readRef ref
-    lookupChunk chunk.index state.terrain >>= traverse_ \chunkData -> do
+    lookupChunk chunk.index state.terrain >>= maybe (pure state.terrain) \chunkData -> do
         -- generate neighbor terrain -------------------------------
         generateNeighborChunks state.terrain chunk.index
 
         -- overwrite the chunk
-        updateChunkMesh ref res.materials res.scene chunkData {
+        updateChunkMesh (State state) res.materials res.scene chunkData {
             blocks = chunk.blocks,
             edited = true
         } res.options state.config
 
         -- update collesion
         State st <- readRef ref
-        terrain' <- disposeCollesion st.terrain st.world chunk.index
-        writeRef ref $ State st {
-            terrain = terrain'
-        }
+        disposeCollesion st.terrain st.world chunk.index
 
 
 
 
 
 
-
-
-updateChunkMesh :: forall eff. Ref State -> Materials -> Scene -> ChunkInstance -> Options -> Config -> Eff (ref :: REF, babylon :: BABYLON | eff) Unit
-updateChunkMesh ref materials scene chunkWithMesh (Options options) (Config config) = void do
-
-    State state <- readRef ref
+updateChunkMesh :: forall eff. State -> Materials -> Scene -> ChunkInstance -> Options -> Config -> Eff (babylon :: BABYLON | eff) Unit
+updateChunkMesh (State state) materials scene chunkWithMesh (Options options) (Config config) = void do
 
     let index = chunkWithMesh.index
 

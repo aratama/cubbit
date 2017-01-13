@@ -1,12 +1,13 @@
 module Game.Cubbit.Hud.Start (start, clearTerrain, modifyAppState) where
 
 import Control.Alt (void)
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff, forE)
 import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM2)
 import DOM (DOM)
+import Data.Array ((..))
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
@@ -19,12 +20,12 @@ import Game.Cubbit.ChunkInstance (createChunkWithMesh, disposeChunk)
 import Game.Cubbit.ChunkMap (toList)
 import Game.Cubbit.ChunkMap (insert) as CHUNKMAP
 import Game.Cubbit.Collesion (buildCollesionTerrain)
-import Game.Cubbit.Firebase (listenOnceToTerrainAff, listenToTerrain)
+import Game.Cubbit.Firebase (listenOnceToTerrainAff, listenToTerrain, createTerrainRef, listenToTerrain')
 import Game.Cubbit.Hud.Type (HudEffects, Query)
 import Game.Cubbit.MeshBuilder (generateChunk, putBlocks)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (Resources)
-import Game.Cubbit.Storage (listenAllChunks)
+import Game.Cubbit.Storage (listenAllChunks, getAllChunks)
 import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain)
 import Game.Cubbit.Types (GameMode(MultiplayerMode, SinglePlayerMode), Mode(Move), SceneState(PlayingSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
@@ -33,6 +34,7 @@ import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON, removeBody)
 import Graphics.Cannon.Type (World)
 import Halogen (ComponentDSL, liftEff, put)
+import Halogen.Query (get, modify)
 import Prelude (bind, negate, pure, ($), (-), (<$>))
 
 start :: forall eff. Ref State -> State -> Resources -> GameMode -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
@@ -40,7 +42,7 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
 
     -- fade out --
     liftEff $ play res.sounds.warpSound
-    modifyAppState ref (\(State state) -> State state { nextScene = true })
+    modify \(State state) -> State state { nextScene = true }
     wait 1000
 
     -- initialize play screen --
@@ -55,24 +57,33 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
             -- fetch initial terrain state from firebase
             initialChunks <- listenOnceToTerrainAff res.firebase
 
-            liftEff do
+            do
 
                 -- insert chunkMesh object to the terrain
                 for_ initialChunks \(Chunk chunk) -> do
                     let i = runChunkIndex chunk.index
-                    CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk) true) emptyTerrain.map
+                    liftEff $ CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk) true) emptyTerrain.map
 
                 -- start listening events
-                r <- Just <$> listenToTerrain res.firebase \(Chunk chunk) -> do
+                r <- liftEff $ createTerrainRef res.firebase
+
+
+                -- listenToTerrain res.firebase \(Chunk chunk) -> do
                     -- CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk)) emptyTerrain.map
                     -- TODO refresah nighbor chunks
-                    putBlocks ref res (Chunk chunk)
 
-                    pure unit
 
-                pure r
 
-    modifyAppState ref (\(State state) -> State state {
+                    -- terrain <-  putBlocks ref res (Chunk chunk)
+
+                    -- TODO
+                    -- modify \(State state) -> State state { terrain = terrain }
+
+                    -- pure unit
+
+                pure $ Just r
+
+    modify \(State state) -> State state {
         terrain = Terrain emptyTerrain,
         cameraPosition = { x: 10.0, y: 20.0, z: negate 10.0 },
         cameraTarget = { x: 0.5, y: 11.0, z: 0.5 },
@@ -100,45 +111,52 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
 
             ref: reference
         }
-    })
+    }
+
+    -- load neighbor meshes
+    let initialWorldSize = options.initialWorldSize
+    for_ ((-initialWorldSize) .. initialWorldSize) \x -> do
+        for_ ((-initialWorldSize) .. initialWorldSize) \z -> void do
+            let index = chunkIndex x 0 z
+            State state <- get
+            liftEff $ generateChunk (State state) res.materials res.scene index res.options state.config res
+
+
+    -- initialize cannon world
+    State { world } <- get
+    terrain <- tailRecM2 (\ter -> case _ of
+        0 -> pure $ Done ter
+        i -> do
+            ter' <- liftEff $ buildCollesionTerrain ter world (chunkIndex 0 0 0)
+            pure $ Loop { a: ter', b: i - 1 }
+    ) (Terrain emptyTerrain) 9
+    modify \(State state) -> State state { terrain = terrain }
+
+
+
+
 
     liftEff do
-
-        -- load neighbor meshes
-        let initialWorldSize = options.initialWorldSize
-        forE (-initialWorldSize) initialWorldSize \x -> do
-            forE (-initialWorldSize) initialWorldSize \z -> void do
-                let index = chunkIndex x 0 z
-                State state <- readRef ref
-                generateChunk (State state) res.materials res.scene index res.options state.config res
-
-        -- initialize cannon world
-        State { world } <- readRef ref
-        terrain <- tailRecM2 (\ter -> case _ of
-            0 -> pure $ Done ter
-            i -> do
-                ter' <- buildCollesionTerrain ter world (chunkIndex 0 0 0)
-                pure $ Loop { a: ter', b: i - 1 }
-        ) (Terrain emptyTerrain) 9
-        modifyRef ref \(State state) -> State state { terrain = terrain }
-
         for_ res.playerMeshes \mesh -> void do
             setIsVisible true mesh
 
-        case gameMode of
-            SinglePlayerMode -> listenAllChunks $ putBlocks ref res
-            MultiplayerMode -> pure unit
+    case gameMode of
+        SinglePlayerMode -> do
+            chunks <- liftAff $ makeAff \_ resolve -> getAllChunks resolve
+            for_ chunks $ \chunk -> do
+                terrain <- liftEff $ putBlocks ref res chunk
+                modify \(State state) -> State state { terrain = terrain }
+        MultiplayerMode -> pure unit
 
     wait 1000
     liftEff do
         play res.sounds.forestSound
-
         reportToSentry
 
-    modifyAppState ref (\(State state) -> State state {
+    modify \(State state) -> State state {
         nextScene = false,
         nextBGM = Just res.sounds.rye
-    })
+    }
 
 
 

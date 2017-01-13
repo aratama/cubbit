@@ -1,4 +1,4 @@
-module Game.Cubbit.Firebase (saveChunkToFirebase, listenAllChunksFromForebase, listenOnceToTerrainAff, decode, listenToTerrain) where
+module Game.Cubbit.Firebase (saveChunkToFirebase, listenAllChunksFromForebase, listenOnceToTerrainAff, decode, listenToTerrain, createTerrainRef, listenToTerrain') where
 
 import Control.Alternative (pure)
 import Control.Monad.Aff (Aff, makeAff)
@@ -56,6 +56,28 @@ listenToTerrain firebase resolve = do
     limitToLast 1 ref >>= on ChildAdded \snap -> either error resolve $ decode (key snap) (val snap)
     ref # on ChildChanged \snap -> either error resolve $ decode (key snap) (val snap)
     pure ref
+
+
+createTerrainRef :: forall eff. Firebase
+                -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Reference
+createTerrainRef firebase = database firebase >>= ref "terrain"
+
+listenToTerrain' :: forall eff. Reference
+                -> (Chunk -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit)
+                -> Eff (firebase :: FIREBASE, console :: CONSOLE, ref :: REF | eff) Unit
+listenToTerrain' ref resolve = do
+    limitToLast 1 ref >>= on ChildAdded \snap -> either error resolve $ decode (key snap) (val snap)
+    ref # on ChildChanged \snap -> either error resolve $ decode (key snap) (val snap)
+
+
+
+
+
+
+
+
+
+
 
 
 decode :: String -> Foreign -> Either String Chunk
