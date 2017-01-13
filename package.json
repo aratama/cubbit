@@ -8,7 +8,7 @@
     "posttest": "node public/index.js",
     "lint": "eslint src",
     "prebuild": "psc bower_components/purescript-*/src/**/*.purs ../purescript-cannon/src/**/*.purs ../purescript-babylon/src/**/*.purs ../purescript-firebase3/src/**/*.purs src/**/*.purs",
-    "build": "psc-bundle --module Main --main Main output/**/*.js | browserify - > public/index.js",
+    "build": "psc-bundle --module Main --main Main output/**/*.js > public/index.js",
     "preelectron": "npm run build",
     "electron": "electron-packager public cubbit --platform=\"win32\" --arch=x64 --version=1.4.10 --overwrite --icon=./res/icon.ico --asar",
     "postelectron": "cd ./cubbit-win32-x64/ && cubbit",
@@ -17,7 +17,7 @@
     "server": "start http-server public",
     "prepublish": "node res/license.js",
     "publish": "rimraf docs && cpx public/**/*.* docs",
-    "____postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/lib/babylon.custom.js -o docs/lib/babylon.custom.js",
+    "postpublish": "uglifyjs public/index.js -o docs/index.js && uglifyjs public/lib/babylon.custom.js -o docs/lib/babylon.custom.js",
     "clean": "rimraf output node_modules bower_components public/index.js cubbit-win32-x64 docs",
     "license": "node res/license.js",
     "nicogame": "node res/nico.js"
@@ -27,10 +27,9 @@
   "directories": {},
   "description": "",
   "dependencies": {
-    "glob": "^7.1.1",
-    "virtual-dom": "^2.1.1"
   },
   "devDependencies": {
+    "glob": "^7.1.1",
     "bestzip": "^1.1.3",
     "cpx": "^1.5.0",
     "eslint": "^3.11.1",
