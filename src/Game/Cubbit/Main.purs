@@ -4,7 +4,6 @@ import Control.Alternative (when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
-import Control.Monad.Eff.Ref (newRef)
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
 import DOM.HTML.HTMLElement (setTitle)
@@ -75,10 +74,8 @@ main = do
                 gamepads: []
             }
 
-        ref <- liftEff $ newRef $ State initialState
-
         -- initialize ui
         bodyElement <- awaitBody
-        driver <- initializeHud (State initialState) ref bodyElement
+        driver <- initializeHud (State initialState) bodyElement
         driver.query $ action $ Query Gameloop
 

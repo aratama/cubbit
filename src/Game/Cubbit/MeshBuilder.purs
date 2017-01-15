@@ -4,10 +4,9 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void, when)
 import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Ref (REF, Ref, readRef, writeRef)
+import Control.Monad.Eff.Ref (REF, Ref, readRef)
 import DOM (DOM)
 import Data.Array (length)
-import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(..), maybe)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
@@ -202,9 +201,8 @@ editBlock (State state) globalBlockIndex block res = do
 
 
 
-putBlocks :: forall eff. Ref State -> Resources -> Chunk -> Eff (dom :: DOM, ref :: REF, babylon :: BABYLON, cannon :: CANNON | eff) Terrain
-putBlocks ref res (Chunk chunk) = do
-    State state <- readRef ref
+putBlocks :: forall eff. State -> Resources -> Chunk -> Eff (dom :: DOM, babylon :: BABYLON, cannon :: CANNON | eff) Terrain
+putBlocks (State state) res (Chunk chunk) = do
     lookupChunk chunk.index state.terrain >>= maybe (pure state.terrain) \chunkData -> do
         -- generate neighbor terrain -------------------------------
         generateNeighborChunks state.terrain chunk.index
@@ -216,8 +214,7 @@ putBlocks ref res (Chunk chunk) = do
         } res.options state.config
 
         -- update collesion
-        State st <- readRef ref
-        disposeCollesion st.terrain st.world chunk.index
+        disposeCollesion state.terrain state.world chunk.index
 
 
 

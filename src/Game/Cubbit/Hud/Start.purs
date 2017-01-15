@@ -3,8 +3,8 @@ module Game.Cubbit.Hud.Start (start, clearTerrain, modifyAppState) where
 import Control.Alt (void)
 import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Aff.Class (liftAff)
-import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Ref (Ref, modifyRef, readRef, writeRef)
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Ref (Ref, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM2)
 import DOM (DOM)
 import Data.Array ((..))
@@ -20,12 +20,12 @@ import Game.Cubbit.ChunkInstance (createChunkWithMesh, disposeChunk)
 import Game.Cubbit.ChunkMap (toList)
 import Game.Cubbit.ChunkMap (insert) as CHUNKMAP
 import Game.Cubbit.Collesion (buildCollesionTerrain)
-import Game.Cubbit.Firebase (listenOnceToTerrainAff, listenToTerrain, createTerrainRef, listenToTerrain')
+import Game.Cubbit.Firebase (createTerrainRef, listenOnceToTerrainAff, listenToTerrain')
 import Game.Cubbit.Hud.Type (HudEffects, Query)
 import Game.Cubbit.MeshBuilder (generateChunk, putBlocks)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (Resources)
-import Game.Cubbit.Storage (listenAllChunks, getAllChunks)
+import Game.Cubbit.Storage (getAllChunks)
 import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain)
 import Game.Cubbit.Types (GameMode(MultiplayerMode, SinglePlayerMode), Mode(Move), SceneState(PlayingSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setIsVisible)
@@ -35,10 +35,10 @@ import Graphics.Cannon (CANNON, removeBody)
 import Graphics.Cannon.Type (World)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (get, modify)
-import Prelude (bind, negate, pure, ($), (-), (<$>))
+import Prelude (bind, negate, pure, ($), (-))
 
-start :: forall eff. Ref State -> State -> Resources -> GameMode -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
-start ref (State currentState) res@{ options: Options options } gameMode = do
+start :: forall eff. State -> Resources -> GameMode -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
+start (State currentState) res@{ options: Options options } gameMode = do
 
     -- fade out --
     liftEff $ play res.sounds.warpSound
@@ -66,21 +66,6 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
 
                 -- start listening events
                 r <- liftEff $ createTerrainRef res.firebase
-
-
-                -- listenToTerrain res.firebase \(Chunk chunk) -> do
-                    -- CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk)) emptyTerrain.map
-                    -- TODO refresah nighbor chunks
-
-
-
-                    -- terrain <-  putBlocks ref res (Chunk chunk)
-
-                    -- TODO
-                    -- modify \(State state) -> State state { terrain = terrain }
-
-                    -- pure unit
-
                 pure $ Just r
 
     modify \(State state) -> State state {
@@ -124,13 +109,13 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
 
     -- initialize cannon world
     State { world } <- get
-    terrain <- tailRecM2 (\ter -> case _ of
+    initialTerrain <- tailRecM2 (\ter -> case _ of
         0 -> pure $ Done ter
         i -> do
             ter' <- liftEff $ buildCollesionTerrain ter world (chunkIndex 0 0 0)
             pure $ Loop { a: ter', b: i - 1 }
     ) (Terrain emptyTerrain) 9
-    modify \(State state) -> State state { terrain = terrain }
+    modify \(State state) -> State state { terrain = initialTerrain }
 
 
 
@@ -144,7 +129,8 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
         SinglePlayerMode -> do
             chunks <- liftAff $ makeAff \_ resolve -> getAllChunks resolve
             for_ chunks $ \chunk -> do
-                terrain <- liftEff $ putBlocks ref res chunk
+                State s <- get
+                terrain <- liftEff $ putBlocks (State s) res chunk
                 modify \(State state) -> State state { terrain = terrain }
         MultiplayerMode -> pure unit
 
@@ -158,8 +144,22 @@ start ref (State currentState) res@{ options: Options options } gameMode = do
         nextBGM = Just res.sounds.rye
     }
 
+    -- -----------------------------------------------------------
+    -- **HACK** start listening
+    -- Following sequence is called repeadly!
+    ---------------------------------------------------------------------
+    case reference of
+        Nothing -> pure unit
+        Just firebaseRef -> do
+            Chunk chunk <- liftAff $ makeAff \_ resolve -> listenToTerrain' firebaseRef resolve
+            liftEff $ CHUNKMAP.insert chunk.index (createChunkWithMesh (Chunk chunk) true) emptyTerrain.map
+            -- TODO refresah nighbor chunks
 
+            State s <- get
+            editedTerrain <- liftEff $ putBlocks (State s) res (Chunk chunk)
 
+            -- TODO
+            modify \(State state) -> State state { terrain = editedTerrain }
 
 
 
