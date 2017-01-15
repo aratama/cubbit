@@ -8,8 +8,10 @@ import DOM.Event.Event (Event)
 import DOM.Event.KeyboardEvent (KeyboardEvent)
 import DOM.Event.MouseEvent (MouseEvent)
 import DOM.Event.WheelEvent (WheelEvent)
+import DOM.HTML.Types (HTMLElement)
 import DOM.WebStorage (STORAGE)
 import Data.Maybe (Maybe(..))
+import Data.Nullable (Nullable)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.Captions (Language)
@@ -23,42 +25,45 @@ import Halogen (HalogenEffects, HalogenIO)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE)
 
-data Query a = Query QueryA a
+data Query a
+    = Query QueryA a
 
-data QueryA = PlayingSceneQuery PlayingSceneQuery
+data QueryA
+    = PlayingSceneQuery PlayingSceneQuery
+    | SetActiveGameMode Resources GameMode
+    | PreventDefault Event
+    | Nop Event
+    | ToggleMute
+    | ModeSelect Resources
+    | Home Resources
+    | Start GameMode Resources
+    | ShowConfig Resources
+    | CloseConfig Resources
+    | SetBGMVolume Resources Int
+    | SetSEVolume Resources Int
+    | StopPropagation Event
+    | ToggleShadow Resources
+    | ToggleVertexColor Resources
+    | SetShadowArea Resources Int
+    | SetChunkArea Resources Int
+    | ToggleWaterMaterial Resources
+    | Repaint State
+    | SetLanguage Language Resources
+    | Gameloop
 
-             | SetActiveGameMode Resources GameMode
-
-             | PreventDefault Event
-             | Nop Event
-             | ToggleMute
-             | ModeSelect Resources
-             | Home Resources
-             | Start GameMode Resources
-             | ShowConfig Resources
-             | CloseConfig Resources
-             | SetBGMVolume Resources Int
-             | SetSEVolume Resources Int
-             | StopPropagation Event
-             | ToggleShadow Resources
-             | ToggleVertexColor Resources
-             | SetShadowArea Resources Int
-             | SetChunkArea Resources Int
-             | ToggleWaterMaterial Resources
-             | Repaint State
-             | SetLanguage Language Resources
-             | Gameloop
-
-data PlayingSceneQuery = SetCursorPosition BlockIndex
-                         | SetMode Mode
-                         | SetPosition Vec
-                         | TogglePointerLock
-                         | SetMousePosition MouseEvent
-                         | OnMouseClick MouseEvent
-                         | Zoom WheelEvent
-                         | OnKeyDown KeyboardEvent
-                         | OnKeyUp KeyboardEvent
-                         | SetCenterPanelVisible Boolean
+data PlayingSceneQuery
+    = SetCursorPosition BlockIndex
+    | SetMode Mode
+    | SetPosition Vec
+    | TogglePointerLock
+    | SetMousePosition MouseEvent
+    | OnMouseClick MouseEvent
+    | Zoom WheelEvent
+    | OnKeyDown KeyboardEvent
+    | OnKeyUp KeyboardEvent
+    | SetCenterPanelVisible Boolean
+    | OnChangePointerlock (Maybe HTMLElement)
+    | OnMovePointer { movementX :: Number, movementY :: Number }
 
 
 type HudEffects eff = HalogenEffects (

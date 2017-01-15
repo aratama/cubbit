@@ -1,30 +1,26 @@
 module Game.Cubbit.Hud.Eval (eval) where
 
-
 import Control.Monad.Aff (Aff)
 import Control.Monad.RWS (modify)
 import DOM.Event.Event (preventDefault, stopPropagation)
-import DOM.Event.MouseEvent (MouseEvent)
-import DOM.Event.WheelEvent (WheelEvent)
 import Data.BooleanAlgebra (not)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for_)
-import Data.Unit (Unit, unit)
+import Data.Unit (unit)
 import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.Config (Config(Config), writeConfig)
 import Game.Cubbit.Hud.Gameloop (gameloop, initializeTerrain)
 import Game.Cubbit.Hud.Start (start)
-import Game.Cubbit.Hud.Type (HudDriver, HudEffects, Query(Query), QueryA(Repaint, PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Gameloop), getRes)
+import Game.Cubbit.Hud.Type (HudEffects, Query(Query), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
 import Game.Cubbit.Hud.EvalPlayingSceneQuery (evalPlayingSceneQuery)
 import Game.Cubbit.Types (GameMode(SinglePlayerMode), SceneState(ModeSelectionSceneState, TitleSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setReceiveShadows, setUseVertexColors)
 import Graphics.Babylon.Scene (getMeshes)
 import Graphics.Babylon.Sound (play, stop)
 import Halogen (ComponentDSL, liftEff, put)
-import Halogen.Query (action, get)
+import Halogen.Query (get)
 import Prelude (type (~>), bind, pure, ($), (<$))
-import Unsafe.Coerce (unsafeCoerce)
 
 eval :: forall eff. (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval query = case query of

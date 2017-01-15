@@ -1,6 +1,6 @@
-module Game.Cubbit.Option (Options(Options), readOptions) where
+module Game.Cubbit.Option (Options(Options)) where
 
-import Data.Foreign (F, Foreign)
+import Data.Foreign.Class (class IsForeign)
 import Data.Foreign.Generic (readGeneric, defaultOptions)
 import Data.Generic.Rep (class Generic)
 import Web.Firebase (Profile)
@@ -38,5 +38,5 @@ newtype Options = Options {
 
 derive instance genericOptions :: Generic Options _
 
-readOptions :: Foreign -> F Options
-readOptions = readGeneric defaultOptions { unwrapSingleConstructors = true }
+instance isForeignOptions :: IsForeign Options where
+    read = readGeneric defaultOptions { unwrapSingleConstructors = true }

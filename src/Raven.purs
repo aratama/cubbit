@@ -4,4 +4,4 @@ import Control.Monad.Eff (Eff)
 import DOM (DOM)
 import Data.Unit (Unit)
 
-foreign import install :: forall eff. String -> Eff (dom :: DOM | eff) Unit
+foreign import installRaven :: forall eff. String -> Eff (dom :: DOM | eff) Unit

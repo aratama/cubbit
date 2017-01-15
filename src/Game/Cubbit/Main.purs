@@ -18,20 +18,21 @@ import Data.Traversable (for_)
 import Data.Unit (Unit)
 import Game.Cubbit.Config (Config(Config), readConfig)
 import Game.Cubbit.Hud.Driver (initializeHud)
-import Game.Cubbit.Hud.Type (Query(..), QueryA(..))
+import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
 import Game.Cubbit.Terrain (createTerrain)
 import Game.Cubbit.Types (Effects, SceneState(LoadingSceneState), State(State))
 import Graphics.Cannon (createWorld)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
 import Halogen.Query (action)
+import PointerLock (addPointerlockchangeListener, addPointerMoveListener)
 import Prelude (negate, ($), (<<<), (==), (>>=), (>>>))
-import Raven (install)
+import Raven (installRaven)
 import Unsafe.Coerce (unsafeCoerce)
 
 main :: forall eff. Eff (Effects eff) Unit
 main = do
-    install "https://da2118a331e045bf9c23882ddea0a172@sentry.io/125164"
+    installRaven "https://da2118a331e045bf9c23882ddea0a172@sentry.io/125164"
 
     window >>= document >>= (unsafeCoerce >>> setTitle "Cubbit×Cubbit Playable Demo")
 
@@ -77,5 +78,15 @@ main = do
         -- initialize ui
         bodyElement <- awaitBody
         driver <- initializeHud (State initialState) bodyElement
+
+        liftEff do
+            addPointerlockchangeListener \element -> runHalogenAff do
+                driver.query $ action $ Query $ PlayingSceneQuery $ OnChangePointerlock $ toMaybe element
+            addPointerMoveListener \e -> runHalogenAff do
+                driver.query $ action $ Query $ PlayingSceneQuery $ OnMovePointer e
+
+        -- **HACK** put it the last of the sequence
         driver.query $ action $ Query Gameloop
+
+
 

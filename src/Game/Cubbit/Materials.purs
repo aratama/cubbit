@@ -20,6 +20,7 @@ type Materials = {
     blockMaterial :: Material,
     waterMaterial :: Material,
     cellShadingMaterial :: Material,
+    akaneCellShadingMaterial :: Material,
     bushMaterial :: Material,
     outlineMaterial :: Material
 }
@@ -29,25 +30,30 @@ initializeMaterials scene skybox texture alphaTexture (Options options) = do
 
     setHasAlpha true (textureToBaseTexture alphaTexture)
 
-    cellShadingMaterial <- do
+    let createCellShadingMaterial textureURL = do
 
-        mat <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
-            needAlphaBlending: false,
-            needAlphaTesting: false,
-            attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
-            uniforms: ["world", "viewProjection", "mBones"],
-            samplers: ["textureSampler"],
-            defines: []
-        }
-        lightPosition <- createVector3 0.0 20.0 (-10.0)
-        lightColor <- createColor3 1.0 1.0 1.0
-        cellShadingMaterialTexture <- createTexture "./alice/texture.png" scene defaultCreateTextureOptions
-        setTexture "textureSampler" cellShadingMaterialTexture mat
-        setVector3 "vLightPosition" lightPosition mat
-        setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] mat
-        setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] mat
-        setColor3 "vLightColor" lightColor mat
-        pure mat
+            mat <- createShaderMaterial "cellShading" scene "./alice/cellShading" {
+                needAlphaBlending: false,
+                needAlphaTesting: false,
+                attributes: ["position", "uv", "normal", "matricesIndices", "matricesWeights"],
+                uniforms: ["world", "viewProjection", "mBones"],
+                samplers: ["textureSampler"],
+                defines: []
+            }
+            lightPosition <- createVector3 0.0 20.0 (-10.0)
+            lightColor <- createColor3 1.0 1.0 1.0
+            cellShadingMaterialTexture <- createTexture textureURL scene defaultCreateTextureOptions
+            setTexture "textureSampler" cellShadingMaterialTexture mat
+            setVector3 "vLightPosition" lightPosition mat
+            setFloats "ToonThresholds" [0.2, -0.45, -5.0, -5.0] mat
+            setFloats "ToonBrightnessLevels" [1.0, 0.9, 0.75, 0.75, 0.75] mat
+            setColor3 "vLightColor" lightColor mat
+            pure mat
+
+
+
+    cellShadingMaterial <- createCellShadingMaterial "./alice/texture.png"
+    akaneCellShadingMaterial <- createCellShadingMaterial "./akane/texture.png"
 
     outlineMaterial <- do
         mat <- createShaderMaterial "outlineShaderMaterial" scene "./alice/outline" {
@@ -102,6 +108,7 @@ initializeMaterials scene skybox texture alphaTexture (Options options) = do
         blockMaterial: standardMaterialToMaterial solidBlockMaterial,
         waterMaterial: waterMaterial,
         cellShadingMaterial: shaderMaterialToMaterial cellShadingMaterial,
+        akaneCellShadingMaterial: shaderMaterialToMaterial akaneCellShadingMaterial,
         bushMaterial: standardMaterialToMaterial bushMaterial,
         outlineMaterial: shaderMaterialToMaterial outlineMaterial
     }

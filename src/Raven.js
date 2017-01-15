@@ -1,5 +1,5 @@
-exports.install = function(url){
+exports.installRaven = function(url){
     return function(){
-        Raven.config(url).install();
+        //Raven.config(url).install();
     };
 };
