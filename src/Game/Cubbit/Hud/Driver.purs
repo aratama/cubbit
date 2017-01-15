@@ -21,21 +21,22 @@ import Game.Cubbit.Types (State(..))
 import Graphics.Babylon.Types (Mesh, Scene)
 import Halogen (Component, HalogenIO, component)
 import Halogen.HTML (HTML)
-import Halogen.VirtualDOM.Driver (runUI)
+-- import Halogen.VirtualDOM.Driver (runUI)
+import Halogen.VDom.Driver (runUI)
 import Prelude (pure, ($))
 
-ui :: forall eff. State -> Ref State -> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
-ui initialState ref mute = component {
+ui :: forall eff. State -> Boolean -> Component HTML Query Void (Aff (HudEffects eff))
+ui initialState mute = component {
     render,
-    eval: eval ref,
+    eval,
     initialState: initialState
 }
 
 
 
-initializeHud :: forall eff. State -> Ref State -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
-initializeHud (State state@{ config: Config config }) ref body = do
-    runUI (ui (State state) ref config.mute) body
+initializeHud :: forall eff. State -> HTMLElement -> Aff (HudEffects eff) (HudDriver eff)
+initializeHud (State state@{ config: Config config }) body = do
+    runUI (ui (State state) config.mute) body
 
 queryToHud :: forall eff. HalogenIO Query Void (Aff (HudEffects eff)) -> (Unit -> Query Unit) -> Eff (HudEffects eff) Unit
 queryToHud driver query = void $ runAff logShow (\_ -> pure unit) (driver.query (query unit))

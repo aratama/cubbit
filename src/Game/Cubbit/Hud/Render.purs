@@ -22,7 +22,6 @@ import Halogen.HTML.Core (Prop(..))
 import Halogen.HTML.Elements (a, button, canvas, i, p_)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseOver)
 import Halogen.HTML.Properties (I, IProp, class_, href, id_, src, tabIndex, target)
-import Halogen.HTML.Properties (key) as Properties
 import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==), (<=))
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -53,14 +52,16 @@ render (State state@{ config: Config config }) = div [
 
     canvas [id_ "renderCanvas", class_ (ClassName "content-layer")],
 
-    div [Properties.key "content-inner"] case state.sceneState of
+    div [
+        --Properties.key "content-inner"
+    ] case state.sceneState of
 
         LoadingSceneState progress -> [
 
             -- img [class_ (ClassName "content-layer"), src "image/gamepad.svg"],
             object [
                 class_ (ClassName "content-layer"),
-                unsafeCoerce (Attr Nothing (AttrName "data") "image/gamepad.svg")
+                unsafeCoerce (Attribute Nothing "data" "image/gamepad.svg")
             ] [],
 
             div [class_ (ClassName "progress")] $ mapFlipped (0 .. resourceCount) \i ->
@@ -71,7 +72,7 @@ render (State state@{ config: Config config }) = div [
             img [
                 class_ (ClassName "content-layer"),
                 src "image/title.png",
-                Properties.key "image/title.png",
+                --Properties.key "image/title.png",
                 onClick \e -> send' (ModeSelect titleSceneState.res)
             ],
 
@@ -94,7 +95,7 @@ render (State state@{ config: Config config }) = div [
 
         PlayingSceneState playingSceneState -> let index = runBlockIndex playingSceneState.cursorPosition in [
             img [
-                Properties.key "image/screenshade.png",
+                --Properties.key "image/screenshade.png",
                 id_ "screen-shade",
                 class_ (ClassName "content-layer"),
                 src "image/screenshade.png"
@@ -144,7 +145,7 @@ render (State state@{ config: Config config }) = div [
     case getRes (State state) of
         Nothing -> text ""
         Just res -> div [
-                Properties.key "config-root",
+                --Properties.key "config-root",
                 class_ (ClassName ("content-layer config-root" <> if state.configVisible then " visible" else "")),
                 onClick \e -> send' (CloseConfig res),
                 suppressMouseDown,
@@ -182,8 +183,8 @@ render (State state@{ config: Config config }) = div [
 
             div [
                 id_ "shadow",
-                class_ (ClassName ("content-layer" <> if state.nextScene then "" else " hide")),
-                Properties.key "shadow"
+                class_ (ClassName ("content-layer" <> if state.nextScene then "" else " hide")) --,
+                --Properties.key "shadow"
             ] []
         ]
 

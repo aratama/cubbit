@@ -1,4 +1,4 @@
-module Game.Cubbit.Update (update, updateBabylon, updateSound) where
+module Game.Cubbit.Update (updateH, updateBabylon, updateSound) where
 
 import Control.Alt (void)
 import Control.Alternative (pure, when)
@@ -35,15 +35,15 @@ import Game.Cubbit.ChunkMap (delete, filterNeighbors, getSortedChunks, size)
 import Game.Cubbit.Config (Config(..))
 import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Control (playAnimation, pickBlock)
-import Game.Cubbit.Hud.Driver (queryToHud)
-import Game.Cubbit.Hud.Eval (repaint)
-import Game.Cubbit.Hud.Type (Query(..), QueryA(..), PlayingSceneQuery(..))
+--import Game.Cubbit.Hud.Driver (queryToHud)
+--import Game.Cubbit.Hud.Eval (repaint)
+import Game.Cubbit.Hud.Type (Query)
 import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Sounds (Sounds)
 import Game.Cubbit.Terrain (Terrain(Terrain), globalPositionToChunkIndex, globalPositionToGlobalIndex, isSolidBlock, lookupBlockByVec, lookupChunk)
-import Game.Cubbit.Types (Effects, ForeachIndex, GameMode(..), Mode(Move, Remove, Put), PlayingSceneState, SceneState(..), State(State))
+import Game.Cubbit.Types (Effects, ForeachIndex, Mode(Move, Remove, Put), PlayingSceneState, SceneState(PlayingSceneState, TitleSceneState), State(State))
 import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
 import Graphics.Babylon.AbstractMesh (abstractMeshToNode, setIsVisible, setRotation, setVisibility)
 import Graphics.Babylon.AbstractMesh (setPosition) as AbstractMesh
@@ -274,12 +274,13 @@ calcurateNextState (Options options) deltaTime (State state@{ terrain: Terrain t
 
 
 
-update :: forall eff. Number
+
+
+updateH :: forall eff. Number
                     -> Resources
-                   -> HalogenIO Query Void (Aff (Effects eff))
                    -> State
                    -> Eff (Effects eff) State
-update deltaTime res@{ options: Options options } driver (State state@{ terrain: Terrain terrain }) = do
+updateH deltaTime res@{ options: Options options } (State state@{ terrain: Terrain terrain }) = do
         case state.sceneState of
 
             TitleSceneState titleSceneState -> do
@@ -342,7 +343,7 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
                                         let rbi = runBlockIndex bi
                                         r <- createVector3 (Int.toNumber rbi.x + 0.5) (Int.toNumber rbi.y + 0.5) (Int.toNumber rbi.z + 0.5)
                                         setPosition r res.cursor
-                                        queryToHud driver (Query (PlayingSceneQuery (SetCursorPosition bi)))
+                                        -- queryToHud driver (Query (PlayingSceneQuery (SetCursorPosition bi)))
 
 
                 do
@@ -363,6 +364,25 @@ update deltaTime res@{ options: Options options } driver (State state@{ terrain:
 
 
             _ -> pure (State state)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 updateBabylon :: forall eff. Number
                    -> Resources

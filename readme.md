@@ -3,7 +3,8 @@
 
 ![screenshot](https://rawgit.com/aratama/cubbit/master/res/screenshot/screenshot4.png)
 
-Minecraft-like sandbox game written in PureScript. This project is quite primitive. See [my article](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Japanese) for more information. 
+Minecraft-like sandbox game written in PureScript. This project is quite primitive yet. See [my article](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Jaapanese) for more information.
+
 
 ## Demo
 

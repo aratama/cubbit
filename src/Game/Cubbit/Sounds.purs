@@ -1,8 +1,9 @@
-module Game.Cubbit.Sounds (Sounds, loadSounds, setMute, setBGMVolume, setSEVolume) where
+module Game.Cubbit.Sounds (Sounds, loadSounds, loadSoundsH, setMute, setBGMVolume, setSEVolume) where
 
 import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Parallel (parallel, sequential)
 import Data.Traversable (for_)
@@ -10,6 +11,7 @@ import Data.Unit (Unit)
 import Graphics.Babylon.Aff.Sound (loadSound)
 import Graphics.Babylon.Sound (defaultCreateSoundOptions, setVolume)
 import Graphics.Babylon.Types (BABYLON, Scene, Sound)
+import Halogen (liftAff)
 import Prelude (($), (<>), (<$>), (<*>))
 
 type Sounds = {
@@ -100,6 +102,68 @@ loadSounds scene inc = do
         sound <- loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }
         inc
         pure sound
+
+loadSoundsH :: forall m eff. (MonadAff  (babylon :: BABYLON | eff) m) => Scene -> m Unit -> m Sounds
+loadSoundsH scene inc = do
+
+    -- jingle
+    yourNatural <- load "sound/Your_natural.mp3" true
+    rye <- load "sound/rye.mp3" true
+    cleaning <- load "sound/cleaningstream.mp3" true
+    ichigo <- load "sound/ichigo.mp3" true
+
+    -- environment
+    forestSound <- load "sound/forest.mp3" true
+    stepSound <- load "sound/step13a.mp3" true
+
+    -- effects
+    switchSound <- load "sound/tm2_switch001.mp3" false
+    pickSound <- load "sound/bosu06.mp3" false
+    putSound <- load "sound/bosu28_c.mp3" false
+    warpSound <- load "sound/warp01.mp3" false
+
+
+
+
+    let bgms = [
+            rye,
+            yourNatural,
+            cleaning,
+            ichigo
+        ]
+    let ses = [
+            forestSound,
+            switchSound,
+            pickSound,
+            putSound,
+            stepSound,
+            warpSound
+        ]
+    pure $ {
+        rye,
+        yourNatural,
+        cleaning,
+        ichigo,
+
+        forestSound,
+        switchSound,
+        pickSound,
+        putSound,
+        stepSound,
+        warpSound,
+
+        bgms,
+        ses,
+        all: bgms <> ses
+    }
+
+  where
+    load :: String -> Boolean -> m Sound
+    load url loop = do
+        sound <- liftAff $ loadSound url url scene defaultCreateSoundOptions { autoplay = false, loop = loop }
+        inc
+        pure sound
+
 
 setMute :: forall eff. Boolean -> Sounds -> Eff (babylon :: BABYLON | eff) Unit
 setMute mute sounds = for_ sounds.all (setVolume (if mute then 0.0 else 1.0))

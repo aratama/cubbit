@@ -2,6 +2,7 @@ module Game.Cubbit.Hud.Type (Query(..), QueryA(..), HudEffects, PlayingSceneQuer
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Timer (TIMER)
 import DOM.Event.Event (Event)
 import DOM.Event.KeyboardEvent (KeyboardEvent)
@@ -17,6 +18,7 @@ import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
+import Graphics.Canvas (CANVAS)
 import Halogen (HalogenEffects, HalogenIO)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE)
@@ -45,6 +47,7 @@ data QueryA = PlayingSceneQuery PlayingSceneQuery
              | ToggleWaterMaterial Resources
              | Repaint State
              | SetLanguage Language Resources
+             | Gameloop
 
 data PlayingSceneQuery = SetCursorPosition BlockIndex
                          | SetMode Mode
@@ -59,6 +62,8 @@ data PlayingSceneQuery = SetCursorPosition BlockIndex
 
 
 type HudEffects eff = HalogenEffects (
+    now :: NOW,
+    canvas :: CANVAS,
     console :: CONSOLE,
     ajax :: AJAX,
     babylon :: BABYLON,

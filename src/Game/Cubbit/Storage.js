@@ -47,3 +47,23 @@ exports.listenAllChunks = function(callback) {
 };
 
 
+
+exports.getAllChunks = function(callback) {
+    return function() {
+        getCubbitDatabase(function(db){
+            var transaction = db.transaction(["terrain"]);
+            var objectStore = transaction.objectStore("terrain");
+            var chunks = [];
+            objectStore.openCursor().onsuccess = function(event) {
+                var cursor = event.target.result;
+                if (cursor) {
+                    chunks.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    callback(chunks)();
+                }
+            };
+        });
+    };
+};
+
