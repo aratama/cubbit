@@ -16,7 +16,7 @@ import Game.Cubbit.Constants (sliderMaxValue)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..), getRes)
 import Game.Cubbit.Resources (resourceCount)
 import Game.Cubbit.Types (GameMode(..), Mode(..), SceneState(..), State(..))
-import Halogen (AttrName(..), ComponentHTML)
+import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, object, p, prop, text)
 import Halogen.HTML.Core (Prop(..))
 import Halogen.HTML.Elements (a, button, canvas, i, p_)
@@ -40,7 +40,7 @@ send' q = Just (Query q unit)
 render :: State -> ComponentHTML Query
 render (State state@{ config: Config config }) = div [
     id_ "content",
-    class_ (ClassName "content-layer"),
+    class_ $ ClassName $ "content-layer" <> if state.niconico then " niconico" else "",
     tabIndex 0,
     onContextMenu \e -> send' (PreventDefault (mouseEventToEvent e)),
     onKeyDown \e -> send (OnKeyDown e),

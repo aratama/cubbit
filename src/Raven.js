@@ -1,6 +1,8 @@
 exports.installRaven = function(url){
     return function(){
-        //Raven.config(url).install();
+        if(window.location.host === "aratama.github.io"){
+            Raven.config(url).install();
+        }
     };
 };
 

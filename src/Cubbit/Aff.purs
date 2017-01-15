@@ -13,7 +13,6 @@ import Prelude (void)
 wait :: forall m eff. (MonadAff (timer :: TIMER | eff) m) => Int -> m Unit
 wait msecs = liftAff (makeAff \reject resolve -> void (setTimeout msecs (resolve unit)))
 
-
 loadImage :: forall eff. String -> Aff (dom :: DOM | eff) HTMLElement
 loadImage src = makeAff (loadImageEff src)
 
