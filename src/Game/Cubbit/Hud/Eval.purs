@@ -14,23 +14,45 @@ import Game.Cubbit.Hud.EvalPlayingSceneQuery (evalPlayingSceneQuery)
 import Game.Cubbit.Hud.Gameloop (gameloop)
 import Game.Cubbit.Hud.ModeSelect (modeSelect)
 import Game.Cubbit.Hud.Start (start)
-import Game.Cubbit.Hud.Type (HudEffects, Query(Query), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
-import Game.Cubbit.Types (GameMode(SinglePlayerMode), SceneState(..), State(State))
+import Game.Cubbit.Hud.Type (HudEffects, Query(Query, LoadResources, Initialize), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
+import Game.Cubbit.Option (Options(..))
+import Game.Cubbit.Resources (loadResourcesH)
+import Game.Cubbit.Types (SceneState(TitleSceneState, ModeSelectionSceneState, LoadingSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setReceiveShadows, setUseVertexColors)
 import Graphics.Babylon.Scene (getMeshes)
 import Graphics.Babylon.Sound (play, stop)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (get)
-import Prelude (type (~>), bind, pure, ($), (<$))
+import Prelude (type (~>), bind, pure, ($), (<$), (+), (<$>))
 
 import Game.Cubbit.Hud.Terrain (initializeTerrain)
 
 eval :: forall eff. (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval query = case query of
 
+    LoadResources f -> f <$> loadResourcesH do
+        modify \(State state) -> State state {
+            sceneState = case state.sceneState of
+                LoadingSceneState count -> LoadingSceneState $ count + 1
+                x -> x
+        }
+
+    Initialize res@{ options: Options options } next -> next <$ do
+
+        modify \(State state) -> State state {
+            nextBGM = Just res.sounds.cleaning,
+            sceneState = TitleSceneState {
+                res: res,
+                position: 0.0
+            }
+        }
+
+        -- clear terrain mesh and terrain bodies
+        initializeTerrain res
+
     Query q next -> next <$ case q of
 
-        Gameloop -> gameloop
+        Gameloop res -> gameloop res
 
         (Repaint state') -> put state'
 

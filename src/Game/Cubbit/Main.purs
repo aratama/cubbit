@@ -4,13 +4,18 @@ import Control.Alternative (when)
 import Control.Bind (bind)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.HTML (window)
 import DOM.HTML.Document (body)
-import DOM.HTML.HTMLElement (setTitle)
+import DOM.HTML.Event.EventTypes (resize) as DOM
+import DOM.HTML.HTMLElement (focus, setTitle)
 import DOM.HTML.Location (hostname)
-import DOM.HTML.Types (htmlElementToElement)
+import DOM.HTML.Types (htmlElementToElement, htmlDocumentToNonElementParentNode, windowToEventTarget)
 import DOM.HTML.Window (document, location)
 import DOM.Node.Element (setClassName)
+import DOM.Node.NonElementParentNode (getElementById)
+import DOM.Node.Types (ElementId(..))
+import Data.Foldable (traverse_)
 import Data.Maybe (Maybe(Nothing))
 import Data.Nullable (toMaybe, toNullable)
 import Data.Set (empty)
@@ -21,15 +26,15 @@ import Game.Cubbit.Hud.Driver (initializeHud)
 import Game.Cubbit.Hud.Type (PlayingSceneQuery(..), Query(..), QueryA(..))
 import Game.Cubbit.Terrain (createTerrain)
 import Game.Cubbit.Types (Effects, SceneState(LoadingSceneState), State(State))
+import Graphics.Babylon.Engine (resize, runRenderLoop)
 import Graphics.Cannon (createWorld)
 import Halogen.Aff (awaitBody)
 import Halogen.Aff.Util (runHalogenAff)
-import Halogen.Query (action)
+import Halogen.Query (action, request)
 import PointerLock (addPointerlockchangeListener, addPointerMoveListener)
-import Prelude (negate, ($), (<<<), (==), (>>=), (>>>))
+import Prelude (negate, ($), (<<<), (==), (>>=), (>>>), (<#>), (<$>))
 import Raven (installRaven)
 import Unsafe.Coerce (unsafeCoerce)
-import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 
 main :: forall eff. Eff (Effects eff) Unit
 main = do
@@ -79,6 +84,7 @@ main = do
         -- initialize ui
         bodyElement <- awaitBody
         driver <- initializeHud (State initialState) bodyElement
+        res <- driver.query $ request LoadResources
 
         liftEff do
             addPointerlockchangeListener \element -> runHalogenAff do
@@ -86,8 +92,17 @@ main = do
             addPointerMoveListener \e -> runHalogenAff do
                 driver.query $ action $ Query $ PlayingSceneQuery $ OnMovePointer e
 
-        -- **HACK** put it the last of the sequence
-        driver.query $ action $ Query Gameloop
+            -- focus the element
+            (window >>= document <#> htmlDocumentToNonElementParentNode >>= getElementById (ElementId "content") <#> toMaybe) >>= traverse_ (focus <<< unsafeCoerce)
+
+            -- add resize event listener
+            (windowToEventTarget <$> window) >>= addEventListener DOM.resize (eventListener $ \_ -> resize res.engine) false
+
+        driver.query $ action $ Initialize res
+
+        liftEff $ runRenderLoop (runHalogenAff $ driver.query $ action $ Query $ Gameloop res) res.engine
+
+
 
 
 

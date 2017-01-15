@@ -19,6 +19,7 @@ import Game.Cubbit.Aff (loadImage)
 import Game.Cubbit.Constants (skyBoxRenderingGruop, terrainRenderingGroup)
 import Game.Cubbit.Materials (Materials, initializeMaterials)
 import Game.Cubbit.Option (Options(Options))
+import Game.Cubbit.Physics (createPlayerCollesion)
 import Game.Cubbit.Sounds (Sounds, loadSoundsH)
 import Graphics.Babylon.AbstractMesh (setIsPickable, setIsVisible, getSkeleton, setMaterial, setPosition, setReceiveShadows, setRenderingGroupId)
 import Graphics.Babylon.Aff.SceneLoader (loadMesh)
@@ -39,7 +40,12 @@ import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCul
 import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
 import Graphics.Babylon.Types (AbstractMesh, BABYLON, Canvas, Engine, Mesh, Scene, ShadowMap, TargetCamera)
+import Graphics.Babylon.Util (querySelectorCanvasAff)
 import Graphics.Babylon.Vector3 (createVector3)
+import Graphics.Cannon (CANNON, addBody)
+import Graphics.Cannon.Type (Body, World)
+import Graphics.Cannon.Vec3 (createVec3)
+import Graphics.Cannon.World (createWorld, setGravity)
 import Halogen (liftAff)
 import Network.HTTP.Affjax (AJAX, get)
 import Prelude (negate, ($), (/))
@@ -58,18 +64,21 @@ type Resources = {
     playerMeshes :: Array AbstractMesh,
     sounds :: Sounds,
     firebase :: Firebase,
-    akane :: Array AbstractMesh
+    akane :: Array AbstractMesh,
+    world :: World,
+    playerBox :: Body
 }
 
 -- Note: Keep the number up-to-date
 resourceCount :: Int
 resourceCount = 21
 
-loadResourcesH :: forall m eff. (MonadAff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE | eff) m)
-        => Canvas
-        -> m Unit
+loadResourcesH :: forall m eff. (MonadAff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE, cannon :: CANNON | eff) m)
+        => m Unit
         -> m Resources
-loadResourcesH canvasGL inc = do
+loadResourcesH inc = do
+
+    canvasGL <- liftAff $ querySelectorCanvasAff "#renderCanvas"
 
     let loadImage' url = do
             img <- liftAff $ loadImage url
@@ -222,8 +231,18 @@ loadResourcesH canvasGL inc = do
 
             -- replaceMeshMaterial
 
+
+        world <- createWorld    -- cannon
+        playerBox <- do
+            gravity <- createVec3 0.0 options.gravity 0.0
+            setGravity gravity world
+            pBox <- createPlayerCollesion
+            addBody pBox world
+            pure pBox
+
         pure {
-            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase, akane
+            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase, akane,
+            world, playerBox
         }
 
 

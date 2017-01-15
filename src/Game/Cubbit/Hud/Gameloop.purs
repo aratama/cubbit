@@ -25,7 +25,7 @@ import Game.Cubbit.Hud.ModeSelect (modeSelect)
 import Game.Cubbit.Hud.Terrain (initializeTerrain)
 import Game.Cubbit.Hud.Type (HudEffects, Query)
 import Game.Cubbit.Option (Options(Options))
-import Game.Cubbit.Resources (loadResourcesH)
+import Game.Cubbit.Resources (Resources, loadResourcesH)
 import Game.Cubbit.Types (GameMode(MultiplayerMode, SinglePlayerMode), SceneState(ModeSelectionSceneState, TitleSceneState, LoadingSceneState), State(State))
 import Game.Cubbit.Update (updateBabylon, updateH, updateSound)
 import Gamepad (getGamepads, onButtonPress)
@@ -39,54 +39,10 @@ import Halogen.Query (get, lift)
 import Prelude (bind, pure, ($), (+), (<#>), (<$>), (<<<), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
-gameloop :: forall eff. ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
-gameloop = do
-
-    let inc = modify \(State state) -> State state {
-                sceneState = case state.sceneState of
-                    LoadingSceneState count -> LoadingSceneState $ count + 1
-                    x -> x
-            }
-
-    canvasGL <- liftAff $ querySelectorCanvasAff "#renderCanvas"
-
-    res@{ options: Options options } <- loadResourcesH canvasGL inc
 
 
-    modify \(State state) -> State state {
-        nextBGM = Just res.sounds.cleaning,
-        sceneState = TitleSceneState {
-            res: res,
-            position: 0.0
-        }
-    }
-
-    -- initialize cannon --
-    State state <- get
-
-
-    playerBox <- liftEff do
-        gravity <- createVec3 0.0 options.gravity 0.0
-        setGravity gravity state.world
-        pBox <- createPlayerCollesion
-        addBody pBox state.world
-        pure pBox
-
-    -- clear terrain mesh and terrain bodies
-    initializeTerrain res
-
-    liftEff do
-        -- focus the element
-        (window >>= document <#> htmlDocumentToNonElementParentNode >>= getElementById (ElementId "content") <#> toMaybe) >>= traverse_ (focus <<< unsafeCoerce)
-
-        -- add resize event listener
-        (windowToEventTarget <$> window) >>= addEventListener DOM.resize (eventListener $ \_ -> resize res.engine) false
-
-
-    -- ********************************************************
-    -- **HACK** runRenderLoop invoke the effect repeatedly!!
-    -- *************************************************************
-    lift $ makeAff \reject resolve -> runRenderLoop (resolve unit) res.engine
+gameloop :: forall eff. Resources -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
+gameloop res@{ options: Options options } = do
 
     let updateAll st = do
             liftEff do
@@ -95,7 +51,7 @@ gameloop = do
                     updateH deltaTime res >>=
                         updateBabylon deltaTime res >>=
                             updateSound res.sounds >>=
-                                updatePhysics deltaTime playerBox state.world
+                                updatePhysics deltaTime res.playerBox res.world
 
                 render res.scene
 

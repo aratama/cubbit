@@ -27,7 +27,9 @@ import Web.Firebase (FIREBASE)
 
 data Query a
     = Query QueryA a
-    
+    | LoadResources (Resources -> a)
+    | Initialize Resources a
+
 
 data QueryA
     = PlayingSceneQuery PlayingSceneQuery
@@ -50,7 +52,7 @@ data QueryA
     | ToggleWaterMaterial Resources
     | Repaint State
     | SetLanguage Language Resources
-    | Gameloop
+    | Gameloop Resources
 
 data PlayingSceneQuery
     = SetCursorPosition BlockIndex
