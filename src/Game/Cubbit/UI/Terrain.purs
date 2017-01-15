@@ -47,7 +47,7 @@ initializeTerrain :: forall eff. Resources -> ComponentDSL State Query Void (Aff
 initializeTerrain res@{ options: Options options } = do
     State state@{ terrain: Terrain terrain } <- get
 
-    liftEff $ clearTerrain (Terrain terrain) state.world
+    liftEff $ clearTerrain (Terrain terrain) res.world
 
     -- update state
     emptyTerrain <- liftEff $ createTerrain 0
@@ -67,7 +67,7 @@ initializeTerrain res@{ options: Options options } = do
     terrain' <- tailRecM2 (\ter -> case _ of
         0 -> pure $ Done ter
         i -> do
-            ter' <- liftEff $ buildCollesionTerrain ter state.world (chunkIndex 0 0 0)
+            ter' <- liftEff $ buildCollesionTerrain ter res.world (chunkIndex 0 0 0)
             pure $ Loop { a: ter', b: i - 1 }
     ) emptyTerrain 9
 

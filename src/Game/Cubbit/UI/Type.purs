@@ -11,14 +11,13 @@ import DOM.Event.WheelEvent (WheelEvent)
 import DOM.HTML.Types (HTMLElement)
 import DOM.WebStorage (STORAGE)
 import Data.Maybe (Maybe(..))
-import Data.Nullable (Nullable)
 import Data.Void (Void)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.Captions (Language)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (BABYLON, Engine)
+import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
 import Graphics.Canvas (CANVAS)
 import Halogen (HalogenEffects, HalogenIO)
@@ -28,8 +27,6 @@ import Web.Firebase (FIREBASE)
 data Query a
     = Query QueryA a
     | LoadResources (Resources -> a)
-    | Initialize Resources a
-
 
 data QueryA
     = PlayingSceneQuery PlayingSceneQuery

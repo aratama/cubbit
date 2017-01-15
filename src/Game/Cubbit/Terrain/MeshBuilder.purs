@@ -222,7 +222,7 @@ putBlocks (State state) res (Chunk chunk) = do
         } res.options state.config
 
         -- update collesion
-        disposeCollesion state.terrain state.world chunk.index
+        disposeCollesion state.terrain res.world chunk.index
 
 
 

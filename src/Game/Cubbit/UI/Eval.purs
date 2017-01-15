@@ -10,12 +10,12 @@ import Data.Unit (unit)
 import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.Config (Config(Config), writeConfig)
+import Game.Cubbit.Hud.Terrain (initializeTerrain)
 import Game.Cubbit.Hud.EvalPlayingSceneQuery (evalPlayingSceneQuery)
 import Game.Cubbit.Hud.Gameloop (gameloop)
 import Game.Cubbit.Hud.ModeSelect (modeSelect)
 import Game.Cubbit.Hud.Start (start)
-import Game.Cubbit.Hud.Type (HudEffects, Query(Query, LoadResources, Initialize), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
-import Game.Cubbit.Option (Options(..))
+import Game.Cubbit.Hud.Type (HudEffects, Query(Query, LoadResources), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
 import Game.Cubbit.Resources (loadResourcesH)
 import Game.Cubbit.Types (SceneState(TitleSceneState, ModeSelectionSceneState, LoadingSceneState), State(State))
 import Graphics.Babylon.AbstractMesh (setReceiveShadows, setUseVertexColors)
@@ -25,19 +25,17 @@ import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (get)
 import Prelude (type (~>), bind, pure, ($), (<$), (+), (<$>))
 
-import Game.Cubbit.Hud.Terrain (initializeTerrain)
-
 eval :: forall eff. (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval query = case query of
 
-    LoadResources f -> f <$> loadResourcesH do
-        modify \(State state) -> State state {
-            sceneState = case state.sceneState of
-                LoadingSceneState count -> LoadingSceneState $ count + 1
-                x -> x
-        }
+    LoadResources f -> f <$> do
 
-    Initialize res@{ options: Options options } next -> next <$ do
+        res <- loadResourcesH do
+            modify \(State state) -> State state {
+                sceneState = case state.sceneState of
+                    LoadingSceneState count -> LoadingSceneState $ count + 1
+                    x -> x
+            }
 
         modify \(State state) -> State state {
             nextBGM = Just res.sounds.cleaning,
@@ -49,6 +47,8 @@ eval query = case query of
 
         -- clear terrain mesh and terrain bodies
         initializeTerrain res
+
+        pure res
 
     Query q next -> next <$ case q of
 

@@ -131,7 +131,7 @@ evalPlayingSceneQuery playingSceneQuery = do
                                 for_ picked \blockIndex -> do
                                     State s <- get
                                     liftEff $ editBlock (State s) blockIndex block res
-                                    terrain' <- liftEff $ updateChunkCollesion s.terrain s.world (globalIndexToChunkIndex blockIndex)
+                                    terrain' <- liftEff $ updateChunkCollesion s.terrain res.world (globalIndexToChunkIndex blockIndex)
                                     modify \(State state) -> State state {
                                         terrain = terrain'
                                     }

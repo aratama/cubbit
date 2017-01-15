@@ -39,7 +39,7 @@ import Graphics.Babylon.ShadowGenerator (createShadowGenerator, getShadowMap, se
 import Graphics.Babylon.StandardMaterial (createStandardMaterial, setBackFaceCulling, setDiffuseColor, setDisableLighting, setReflectionTexture, setSpecularColor, standardMaterialToMaterial)
 import Graphics.Babylon.TargetCamera (createTargetCamera, setTarget, targetCameraToCamera)
 import Graphics.Babylon.Texture (sKYBOX_MODE, setCoordinatesMode, defaultCreateTextureOptions)
-import Graphics.Babylon.Types (AbstractMesh, BABYLON, Canvas, Engine, Mesh, Scene, ShadowMap, TargetCamera)
+import Graphics.Babylon.Types (AbstractMesh, BABYLON, Engine, Mesh, Scene, ShadowMap, TargetCamera)
 import Graphics.Babylon.Util (querySelectorCanvasAff)
 import Graphics.Babylon.Vector3 (createVector3)
 import Graphics.Cannon (CANNON, addBody)
@@ -73,7 +73,14 @@ type Resources = {
 resourceCount :: Int
 resourceCount = 21
 
-loadResourcesH :: forall m eff. (MonadAff (ajax :: AJAX, console :: CONSOLE, ref :: REF, dom :: DOM, babylon :: BABYLON, firebase :: FIREBASE, cannon :: CANNON | eff) m)
+loadResourcesH :: forall m eff. (MonadAff (
+    ajax :: AJAX,
+    console :: CONSOLE,
+    ref :: REF,
+    dom :: DOM,
+    babylon :: BABYLON,
+    firebase :: FIREBASE,
+    cannon :: CANNON | eff) m)
         => m Unit
         -> m Resources
 loadResourcesH inc = do
@@ -241,7 +248,10 @@ loadResourcesH inc = do
             pure pBox
 
         pure {
-            options: Options options, engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, sounds, firebase, akane,
+            options: Options options,
+            engine, scene, skybox, cursor, materials, shadowMap, targetCamera, playerMeshes, akane,
+            sounds,
+            firebase,
             world, playerBox
         }
 

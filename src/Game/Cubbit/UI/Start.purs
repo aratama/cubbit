@@ -46,7 +46,7 @@ start (State currentState) res@{ options: Options options } gameMode = do
 
     -- initialize play screen --
     Terrain emptyTerrain <- liftEff do
-        clearTerrain currentState.terrain currentState.world
+        clearTerrain currentState.terrain res.world
         createTerrain 0
 
     reference <- case gameMode of
@@ -107,11 +107,10 @@ start (State currentState) res@{ options: Options options } gameMode = do
 
 
     -- initialize cannon world
-    State { world } <- get
     initialTerrain <- tailRecM2 (\ter -> case _ of
         0 -> pure $ Done ter
         i -> do
-            ter' <- liftEff $ buildCollesionTerrain ter world (chunkIndex 0 0 0)
+            ter' <- liftEff $ buildCollesionTerrain ter res.world (chunkIndex 0 0 0)
             pure $ Loop { a: ter', b: i - 1 }
     ) (Terrain emptyTerrain) 9
     modify \(State state) -> State state { terrain = initialTerrain }
