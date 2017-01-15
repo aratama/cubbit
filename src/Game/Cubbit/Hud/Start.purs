@@ -1,12 +1,10 @@
-module Game.Cubbit.Hud.Start (start, clearTerrain, modifyAppState) where
+module Game.Cubbit.Hud.Start (start, clearTerrain) where
 
 import Control.Alt (void)
 import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff)
-import Control.Monad.Eff.Ref (Ref, readRef, writeRef)
 import Control.Monad.Rec.Class (Step(..), tailRecM2)
-import DOM (DOM)
 import Data.Array ((..))
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for_)
@@ -33,9 +31,10 @@ import Graphics.Babylon.Sound (play)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON, removeBody)
 import Graphics.Cannon.Type (World)
-import Halogen (ComponentDSL, liftEff, put)
+import Halogen (ComponentDSL, liftEff)
 import Halogen.Query (get, modify)
 import Prelude (bind, negate, pure, ($), (-))
+import Raven (reportToSentry)
 
 start :: forall eff. State -> Resources -> GameMode -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
 start (State currentState) res@{ options: Options options } gameMode = do
@@ -161,18 +160,6 @@ start (State currentState) res@{ options: Options options } gameMode = do
             -- TODO
             modify \(State state) -> State state { terrain = editedTerrain }
 
-
-
-modifyAppState :: forall eff. Ref State -> (State -> State) -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
-modifyAppState ref f = do
-    state <- liftEff $ readRef ref
-    let state' = (f state)
-    liftEff $ writeRef ref state'
-    put state'
-
-
-
-
 clearTerrain :: forall eff. Terrain -> World -> Eff (babylon :: BABYLON, cannon :: CANNON | eff) Unit
 clearTerrain (Terrain terrain) world = do
     -- dispose cannon bodies
@@ -183,4 +170,3 @@ clearTerrain (Terrain terrain) world = do
     for_ chunkList \chunk -> disposeChunk chunk
 
 
-foreign import reportToSentry :: forall eff. Eff (dom :: DOM | eff) Unit

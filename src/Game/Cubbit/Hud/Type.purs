@@ -18,7 +18,7 @@ import Game.Cubbit.Captions (Language)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
-import Graphics.Babylon.Types (BABYLON)
+import Graphics.Babylon.Types (BABYLON, Engine)
 import Graphics.Cannon (CANNON)
 import Graphics.Canvas (CANVAS)
 import Halogen (HalogenEffects, HalogenIO)
@@ -27,6 +27,7 @@ import Web.Firebase (FIREBASE)
 
 data Query a
     = Query QueryA a
+    
 
 data QueryA
     = PlayingSceneQuery PlayingSceneQuery

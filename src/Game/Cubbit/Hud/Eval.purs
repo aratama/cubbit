@@ -10,17 +10,20 @@ import Data.Unit (unit)
 import Data.Void (Void)
 import Game.Cubbit.Aff (wait)
 import Game.Cubbit.Config (Config(Config), writeConfig)
-import Game.Cubbit.Hud.Gameloop (gameloop, initializeTerrain)
+import Game.Cubbit.Hud.EvalPlayingSceneQuery (evalPlayingSceneQuery)
+import Game.Cubbit.Hud.Gameloop (gameloop)
+import Game.Cubbit.Hud.ModeSelect (modeSelect)
 import Game.Cubbit.Hud.Start (start)
 import Game.Cubbit.Hud.Type (HudEffects, Query(Query), QueryA(PlayingSceneQuery, ToggleMute, Start, ModeSelect, Home, SetChunkArea, SetShadowArea, ToggleWaterMaterial, ToggleVertexColor, ToggleShadow, SetSEVolume, SetBGMVolume, CloseConfig, ShowConfig, StopPropagation, Nop, PreventDefault, SetLanguage, SetActiveGameMode, Repaint, Gameloop), getRes)
-import Game.Cubbit.Hud.EvalPlayingSceneQuery (evalPlayingSceneQuery)
-import Game.Cubbit.Types (GameMode(SinglePlayerMode), SceneState(ModeSelectionSceneState, TitleSceneState), State(State))
+import Game.Cubbit.Types (GameMode(SinglePlayerMode), SceneState(..), State(State))
 import Graphics.Babylon.AbstractMesh (setReceiveShadows, setUseVertexColors)
 import Graphics.Babylon.Scene (getMeshes)
 import Graphics.Babylon.Sound (play, stop)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (get)
 import Prelude (type (~>), bind, pure, ($), (<$))
+
+import Game.Cubbit.Hud.Terrain (initializeTerrain)
 
 eval :: forall eff. (Query ~> ComponentDSL State Query Void (Aff (HudEffects eff)))
 eval query = case query of
@@ -191,21 +194,7 @@ eval query = case query of
             }
 
         ModeSelect res -> do
-            liftEff $ play res.sounds.warpSound
-            modify \(State state) -> State state {
-                nextScene = true
-            }
-            wait 1000
-            initializeTerrain res
-            modify \(State state) -> State state {
-                sceneState = ModeSelectionSceneState { res, mode: SinglePlayerMode },
-                nextBGM = Just res.sounds.ichigo
-            }
-            wait 1000
-            modify \(State state) -> State state {
-                nextScene = false
-            }
-            pure unit
+            modeSelect res
 
         (Start gameMode res) -> do
             State state <- get

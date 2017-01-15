@@ -4,10 +4,10 @@ import Control.Alternative (pure)
 import Control.Bind (bind)
 import Control.Monad (void, when)
 import Control.Monad.Eff (Eff, forE)
-import Control.Monad.Eff.Ref (REF, Ref, readRef)
 import DOM (DOM)
 import Data.Array (length)
 import Data.Maybe (Maybe(..), maybe)
+import Data.Traversable (for_)
 import Data.Unit (Unit, unit)
 import Game.Cubbit.BlockIndex (BlockIndex, blockIndex)
 import Game.Cubbit.BlockType (BlockType, BlockTypes, blockTypes)
@@ -33,7 +33,7 @@ import Graphics.Babylon.Types (VertexDataProps(VertexDataProps), Material, BABYL
 import Graphics.Babylon.VertexData (applyToMesh, createVertexData)
 import Graphics.Cannon (CANNON)
 import PerlinNoise (Noise, simplex2)
-import Prelude ((+), (-), (<), (=<<), (==), negate, ($), (>>=))
+import Prelude (negate, (+), (-), (<), (=<<), (==), (>>=))
 import Web.Firebase (FIREBASE)
 
 
@@ -165,28 +165,26 @@ editBlock (State state) globalBlockIndex block res = do
     case chunkMaybe of
 
         Just chunkData -> void do
+
+            -- edit the chunk --
             let localIndex = globalIndexToLocalIndex globalBlockIndex
             let li = runLocalIndex localIndex
             let blocks = insert localIndex block chunkData.blocks
-            updateChunkMesh (State state) res.materials res.scene chunkData {
-                blocks = blocks,
-                edited = true
-            } res.options state.config
+            let chunkData' = chunkData {
+                        blocks = blocks,
+                        edited = true
+                    }
+            updateChunkMesh (State state) res.materials res.scene chunkData' res.options state.config
 
-            case state.sceneState of
-                PlayingSceneState p -> do
-                    case p.gameMode of
-                        SinglePlayerMode -> saveChunk $ Chunk { index: chunkData.index, blocks: blocks }
-                        MultiplayerMode -> saveChunkToFirebase (Chunk { index: chunkData.index, blocks: blocks }) res.firebase
-                _ -> pure unit -- never come here
-
+            -- update neighbors --
             let eci = runChunkIndex editChunkIndex
-
             let refreash dx dy dz = do
-                    targetChunkMaybe <- lookupChunk (chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)) state.terrain
-                    case targetChunkMaybe of
-                        Nothing -> pure unit
-                        Just targetChunkData -> updateChunkMesh (State state) res.materials res.scene targetChunkData res.options state.config
+                    let refreashIndex = chunkIndex (eci.x + dx) (eci.y + dy) (eci.z + dz)
+                    if refreashIndex == editChunkIndex
+                        then pure unit
+                        else do
+                            targetChunkMaybe <- lookupChunk refreashIndex state.terrain
+                            for_ targetChunkMaybe \targetChunkData -> updateChunkMesh (State state) res.materials res.scene targetChunkData res.options state.config
 
             when (li.x == 0) (refreash (-1) 0 0)
             when (li.x == chunkSize - 1) (refreash 1 0 0)
@@ -194,6 +192,16 @@ editBlock (State state) globalBlockIndex block res = do
             when (li.y == chunkSize - 1) (refreash 0 1 0)
             when (li.z == 0) (refreash 0 0 (-1))
             when (li.z == chunkSize - 1) (refreash 0 0 1)
+
+            -- save chunk data to storage --
+            let serverChunkData = Chunk { index: chunkData.index, blocks: blocks }
+            case state.sceneState of
+                PlayingSceneState p -> do
+                    case p.gameMode of
+                        SinglePlayerMode -> saveChunk serverChunkData
+                        MultiplayerMode -> saveChunkToFirebase serverChunkData res.firebase
+                _ -> pure unit -- never come here
+
 
         _ -> pure unit
 

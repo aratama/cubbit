@@ -29,6 +29,7 @@ import PointerLock (addPointerlockchangeListener, addPointerMoveListener)
 import Prelude (negate, ($), (<<<), (==), (>>=), (>>>))
 import Raven (installRaven)
 import Unsafe.Coerce (unsafeCoerce)
+import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 
 main :: forall eff. Eff (Effects eff) Unit
 main = do

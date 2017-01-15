@@ -1,10 +1,9 @@
-module Game.Cubbit.Hud.Gameloop (gameloop, initializeTerrain) where
+module Game.Cubbit.Hud.Gameloop (gameloop) where
 
-import Control.Bind (join)
+import Control.Bind (when)
 import Control.Monad.Aff (Aff, makeAff)
 import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.RWS (modify)
-import Control.Monad.Rec.Class (Step(Loop, Done), tailRecM2)
 import Control.MonadPlus (guard)
 import DOM.Event.EventTarget (addEventListener, eventListener)
 import DOM.HTML (window)
@@ -14,25 +13,22 @@ import DOM.HTML.Types (htmlDocumentToNonElementParentNode, windowToEventTarget)
 import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(..))
-import Data.Array (findIndex, length, (!!), (..))
-import Data.BooleanAlgebra (not)
+import Data.Array (findIndex, length, (!!))
 import Data.EuclideanRing (mod)
 import Data.Maybe (Maybe(..))
 import Data.Nullable (toMaybe)
-import Data.Traversable (for_, traverse_)
+import Data.Traversable (traverse_)
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
-import Game.Cubbit.ChunkIndex (chunkIndex)
-import Game.Cubbit.Collesion (buildCollesionTerrain, createPlayerCollesion, updatePhysics)
-import Game.Cubbit.Hud.Start (clearTerrain)
+import Game.Cubbit.Collesion (createPlayerCollesion, updatePhysics)
+import Game.Cubbit.Hud.ModeSelect (modeSelect)
+import Game.Cubbit.Hud.Terrain (initializeTerrain)
 import Game.Cubbit.Hud.Type (HudEffects, Query)
-import Game.Cubbit.MeshBuilder (generateChunk)
 import Game.Cubbit.Option (Options(Options))
-import Game.Cubbit.Resources (Resources, loadResourcesH)
-import Game.Cubbit.Terrain (Terrain(Terrain), createTerrain)
+import Game.Cubbit.Resources (loadResourcesH)
 import Game.Cubbit.Types (GameMode(MultiplayerMode, SinglePlayerMode), SceneState(ModeSelectionSceneState, TitleSceneState, LoadingSceneState), State(State))
 import Game.Cubbit.Update (updateBabylon, updateH, updateSound)
-import Gamepad (Gamepad(..), GamepadButton(..), getGamepads)
+import Gamepad (getGamepads, onButtonPress)
 import Graphics.Babylon.Engine (getDeltaTime, resize, runRenderLoop)
 import Graphics.Babylon.Scene (render)
 import Graphics.Babylon.Util (querySelectorCanvasAff)
@@ -40,7 +36,7 @@ import Graphics.Cannon (addBody, setGravity)
 import Graphics.Cannon.Vec3 (createVec3)
 import Halogen (ComponentDSL, liftEff, put)
 import Halogen.Query (get, lift)
-import Prelude (bind, negate, pure, ($), (&&), (+), (-), (<#>), (<$>), (<<<), (==), (>>=))
+import Prelude (bind, pure, ($), (+), (<#>), (<$>), (<<<), (==), (>>=))
 import Unsafe.Coerce (unsafeCoerce)
 
 gameloop :: forall eff. ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
@@ -91,37 +87,11 @@ gameloop = do
     -- **HACK** runRenderLoop invoke the effect repeatedly!!
     -- *************************************************************
     lift $ makeAff \reject resolve -> runRenderLoop (resolve unit) res.engine
-    State st <- get
-    case st.sceneState of
-        ModeSelectionSceneState modeSelectionSceneState -> do
-            gamepads <- liftEff $ getGamepads
 
-            State st' <- liftEff $ updateSound res.sounds (State st)
-
-            let modeMaybe = do
-                    Gamepad gamepad <- join (gamepads !! 0)
-                    GamepadButton button <- gamepad.buttons !! 0
-                    Gamepad gamepad' <- join (state.gamepads !! 0)
-                    GamepadButton button' <- gamepad'.buttons !! 0
-                    guard $ not button'.pressed && button.pressed
-                    let xs = [SinglePlayerMode, MultiplayerMode]
-                    i <- findIndex (_ == modeSelectionSceneState.mode) xs
-                    xs !! (mod (i + 1) (length xs))
-
-            case modeMaybe of
-                Nothing -> put (State st' { gamepads = gamepads })
-                Just mode -> put $ State st' {
-                    sceneState = ModeSelectionSceneState modeSelectionSceneState {
-                        mode =  mode
-                    },
-                    gamepads = gamepads
-                }
-
-        _ -> do
-            st' <- liftEff do
+    let updateAll st = do
+            liftEff do
                 deltaTime <- getDeltaTime res.engine
-
-                st'' <- pure (State st) >>=
+                State st'' <- pure (State st) >>=
                     updateH deltaTime res >>=
                         updateBabylon deltaTime res >>=
                             updateSound res.sounds >>=
@@ -129,45 +99,39 @@ gameloop = do
 
                 render res.scene
 
-                pure st''
+                pure $ State st''
 
-            put st'
+    gamepads <- liftEff $ getGamepads
+    State st <- get
+    State st''' <- case st.sceneState of
+
+        TitleSceneState titleSceneState -> do
+            when (onButtonPress 0 0 st.gamepads gamepads) do
+                modeSelect titleSceneState.res
+            updateAll st
+
+        ModeSelectionSceneState modeSelectionSceneState -> do
+            State st' <- liftEff $ updateSound res.sounds (State st)
+            let modeMaybe = do
+                    guard $ onButtonPress 0 0 st.gamepads gamepads
+                    let xs = [SinglePlayerMode, MultiplayerMode]
+                    i <- findIndex (_ == modeSelectionSceneState.mode) xs
+                    xs !! (mod (i + 1) (length xs))
+            pure case modeMaybe of
+                Nothing -> State st' {
+                    gamepads = gamepads
+                }
+                Just mode -> State st' {
+                    sceneState = ModeSelectionSceneState modeSelectionSceneState {
+                        mode =  mode
+                    },
+                    gamepads = gamepads
+                }
+
+        _ -> updateAll st
 
 
 
-    pure unit
-
-
-
-
-
-
-initializeTerrain :: forall eff. Resources -> ComponentDSL State Query Void (Aff (HudEffects eff)) Unit
-initializeTerrain res@{ options: Options options } = do
-    State state@{ terrain: Terrain terrain } <- get
-
-    liftEff $ clearTerrain (Terrain terrain) state.world
-
-    -- update state
-    emptyTerrain <- liftEff $ createTerrain 0
-    put $ State state {
-        terrain = emptyTerrain
+    put $ State st''' {
+        gamepads = gamepads
     }
-
-        -- initialize chunk and mesh
-    let initialWorldSize = options.initialWorldSize
-    for_ ((-initialWorldSize) .. initialWorldSize) \x -> do
-        for_ ((-initialWorldSize) .. initialWorldSize) \z -> do
-            let index = chunkIndex x 0 z
-            State s <- get
-            liftEff $ generateChunk (State s) res.materials res.scene index res.options s.config res
-
-    -- initialize cannon world
-    terrain' <- tailRecM2 (\ter -> case _ of
-        0 -> pure $ Done ter
-        i -> do
-            ter' <- liftEff $ buildCollesionTerrain ter state.world (chunkIndex 0 0 0)
-            pure $ Loop { a: ter', b: i - 1 }
-    ) emptyTerrain 9
-
-    modify $ \(State s) -> State s { terrain = terrain' }
