@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "purescript-now": "^2.0.0",
-    "purescript-affjax": "^3.0.1",
+    "purescript-affjax": "^3.0.2",
     "purescript-halogen": "615bde1",
     "purescript-localstorage": "^3.0.1",
     "purescript-js-timers": "^2.0.0",
