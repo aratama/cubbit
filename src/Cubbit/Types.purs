@@ -14,20 +14,17 @@ import Data.Nullable (Nullable)
 import Data.Set (Set)
 import Game.Cubbit.BlockIndex (BlockIndex)
 import Game.Cubbit.BlockType (BlockType)
-import Game.Cubbit.Captions (Language)
 import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Gamepad (Gamepad(..))
-import Graphics.Babylon.Types (BABYLON, Canvas, Sound)
-import Graphics.Cannon.Type (CANNON, World)
-import Graphics.Canvas (CANVAS)
+import Gamepad (Gamepad)
+import Graphics.Babylon.Types (BABYLON, Sound)
+import Graphics.Cannon.Type (CANNON)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE, Reference)
 
 type CoreEffects eff = (
-    canvas :: CANVAS,
     now :: NOW,
     console :: CONSOLE,
     babylon :: BABYLON,

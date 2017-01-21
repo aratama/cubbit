@@ -19,7 +19,6 @@ import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
-import Graphics.Canvas (CANVAS)
 import Halogen (HalogenEffects, HalogenIO)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE)
@@ -68,7 +67,6 @@ data PlayingSceneQuery
 
 type HudEffects eff = HalogenEffects (
     now :: NOW,
-    canvas :: CANVAS,
     console :: CONSOLE,
     ajax :: AJAX,
     babylon :: BABYLON,
