@@ -18,14 +18,15 @@ import Game.Cubbit.Resources (resourceCount)
 import Game.Cubbit.Types (GameMode(..), Mode(..), SceneState(..), State(..))
 import Halogen (ComponentHTML)
 import Halogen.HTML (ClassName(ClassName), HTML, PropName(PropName), div, h1, h2, img, object, p, prop, text)
-import Halogen.HTML.Core (Prop(..))
+import Halogen.HTML.Core (class IsProp, Prop(..))
 import Halogen.HTML.Elements (a, button, canvas, i, p_)
 import Halogen.HTML.Events (handler, onClick, onContextMenu, onKeyDown, onKeyUp, onMouseDown, onMouseMove, onMouseOver)
-import Halogen.HTML.Properties (I, IProp, class_, href, id_, src, tabIndex, target)
+import Halogen.HTML.Properties (IProp, class_, href, id_, src, tabIndex, target)
 import Prelude (otherwise, show, ($), (-), (<<<), (<>), (==), (<=))
 import Unsafe.Coerce (unsafeCoerce)
 
-slotClass :: forall r i. Boolean -> IProp (class :: I | r) i
+
+slotClass :: forall r i. Boolean -> IProp (class :: String | r) i
 slotClass active = class_ (ClassName ("slot" <> if active then " active" else ""))
 
 icon :: forall p i. String -> HTML p i
@@ -42,7 +43,10 @@ render (State state@{ config: Config config }) = div [
     id_ "content",
     class_ $ ClassName $ "content-layer" <> if state.niconico then " niconico" else "",
     tabIndex 0,
-    onContextMenu \e -> send' (PreventDefault (mouseEventToEvent e)),
+
+    -- HALOGEN'S BUG!
+    unsafeCoerce $ onContextMenu \e -> send' (PreventDefault (mouseEventToEvent e)),
+
     onKeyDown \e -> send (OnKeyDown e),
     onKeyUp \e -> send (OnKeyUp e),
     onMouseMove \e -> send (SetMousePosition e),
@@ -262,11 +266,10 @@ render (State state@{ config: Config config }) = div [
 
 
 
-styleStr :: forall i r. String -> IProp (style :: I | r) i
-styleStr value = unsafeCoerce (prop (PropName "style") Nothing value)
+styleStr :: forall i r. String -> IProp (style :: String | r) i
+styleStr value = unsafeCoerce (prop (PropName "style") value)
 
-
-onWheel :: forall r i. (WheelEvent -> Maybe i) -> IProp (onMouseDown :: I | r) i
+onWheel :: forall r i. (WheelEvent -> Maybe i) -> IProp (onMouseDown :: MouseEvent | r) i
 onWheel = handler (EventType "wheel") <<< unsafeCoerce
 
 mouseHandler :: forall i. (MouseEvent -> Maybe i) -> Event -> Maybe i

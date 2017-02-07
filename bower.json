@@ -17,10 +17,11 @@
   "dependencies": {
     "purescript-now": "^2.0.0",
     "purescript-affjax": "^3.0.2",
-    "purescript-halogen": "615bde1",
+    "purescript-halogen": "v1.0.0-rc.2",
     "purescript-localstorage": "^3.0.1",
     "purescript-js-timers": "^2.0.0",
-    "purescript-foreign-generic": "^3.0.0"
+    "purescript-foreign-generic": "^3.0.0",
+    "purescript-sets": "^2.0.0"
   },
   "devDependencies": {
     "purescript-strongcheck": "^2.0.1"

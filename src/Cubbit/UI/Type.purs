@@ -19,7 +19,8 @@ import Game.Cubbit.Types (GameMode, Mode, State(..), SceneState(..))
 import Game.Cubbit.Vec (Vec)
 import Graphics.Babylon.Types (BABYLON)
 import Graphics.Cannon (CANNON)
-import Halogen (HalogenEffects, HalogenIO)
+import Halogen (HalogenIO)
+import Halogen.Aff (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE)
 
@@ -63,6 +64,7 @@ data PlayingSceneQuery
     | SetCenterPanelVisible Boolean
     | OnChangePointerlock (Maybe HTMLElement)
     | OnMovePointer { movementX :: Number, movementY :: Number }
+
 
 
 type HudEffects eff = HalogenEffects (
