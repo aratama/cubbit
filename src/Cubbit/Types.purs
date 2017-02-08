@@ -18,7 +18,7 @@ import Game.Cubbit.Config (Config)
 import Game.Cubbit.Resources (Resources)
 import Game.Cubbit.Terrain (Terrain)
 import Game.Cubbit.Vec (Vec)
-import Gamepad (Gamepad)
+import Gamepad (GAMEPAD, Gamepad)
 import Graphics.Babylon.Types (BABYLON, Sound)
 import Graphics.Cannon.Type (CANNON)
 import Network.HTTP.Affjax (AJAX)
@@ -33,7 +33,8 @@ type CoreEffects eff = (
     storage :: STORAGE,
     timer :: TIMER,
     cannon :: CANNON,
-    firebase :: FIREBASE | eff)
+    firebase :: FIREBASE,
+    gamepad :: GAMEPAD | eff)
 
 type Effects eff =  CoreEffects (
     dom :: DOM,

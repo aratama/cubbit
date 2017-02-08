@@ -23,6 +23,7 @@ import Halogen (HalogenIO)
 import Halogen.Aff (HalogenEffects)
 import Network.HTTP.Affjax (AJAX)
 import Web.Firebase (FIREBASE)
+import Gamepad (GAMEPAD)
 
 data Query a
     = Query QueryA a
@@ -75,7 +76,8 @@ type HudEffects eff = HalogenEffects (
     storage :: STORAGE,
     timer :: TIMER,
     cannon :: CANNON,
-    firebase :: FIREBASE | eff)
+    firebase :: FIREBASE,
+    gamepad :: GAMEPAD | eff)
 
 type HudDriver eff = HalogenIO Query Void (Aff (HudEffects eff))
 

@@ -15,13 +15,14 @@
     "tests"
   ],
   "dependencies": {
-    "purescript-now": "^2.0.0",
     "purescript-affjax": "^3.0.2",
     "purescript-halogen": "v1.0.0-rc.2",
     "purescript-localstorage": "^3.0.1",
+    "purescript-now": "^2.0.0",
     "purescript-js-timers": "^2.0.0",
     "purescript-foreign-generic": "^3.0.0",
-    "purescript-sets": "^2.0.0"
+    "purescript-sets": "^2.0.0",
+    "purescript-gamepad": "aratama/purescript-gamepad"
   },
   "devDependencies": {
     "purescript-strongcheck": "^2.0.1"
