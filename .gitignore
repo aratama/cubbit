@@ -6,7 +6,6 @@ example/sandbox/public/worker.js
 .psc-ide-port
 **/*.blend1
 **/*.log
-public/index.js
 cubbit-win32-x64
 **/*.rpp
 **/*.rpp-bak
