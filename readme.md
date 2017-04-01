@@ -5,6 +5,9 @@
 
 Minecraft-like sandbox game written in PureScript. This project is quite primitive yet. See [my articles](http://qiita.com/hiruberuto/items/5321d8cebce7b87851f6)(Jaapanese) for more information.
 
+Under maintenance for reboot...
+
+<!--
 
 ## Demo
 
@@ -14,6 +17,8 @@ You can play the working demo at some one of following links if you are luckey. 
 * [Playable Demo on RawGit](https://cdn.rawgit.com/aratama/cubbit/9e1f874869434c40e7853f2766c34221ae7cf26b/docs/index.html) (Faster than GitHub pages!)
 
 W/A/S/D key to move the charactor. Right mouse drag or Q/E/R/F/T/G key to look  around. Space key to jump. To edit terrain blocks, press some button at the bottom of screen. Have fun!
+
+-->
 
 ----
 
